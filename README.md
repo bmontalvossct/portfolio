@@ -7,6 +7,44 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Docker
+
+Build the production image:
+
+```bash
+docker build -t britt-profile .
+```
+
+Generate an application key, then place the result in a local `.env.docker` file:
+
+```bash
+docker run --rm britt-profile php artisan key:generate --show
+```
+
+```dotenv
+APP_NAME="Britt Portfolio"
+APP_ENV=production
+APP_KEY=base64:replace-with-generated-key
+APP_DEBUG=false
+APP_URL=http://localhost:8080
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/storage/database.sqlite
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+FILESYSTEM_DISK=public
+PORTFOLIO_ADMIN_TOKEN=replace-with-a-long-random-secret
+```
+
+Start the portfolio with persistent database and media storage, then migrate and seed the complete portfolio data:
+
+```bash
+docker run -d --name britt-profile -p 8080:80 --env-file .env.docker -v profile-storage:/var/www/html/storage britt-profile
+docker exec britt-profile php artisan migrate --force --seed
+```
+
+The application is then available at `http://localhost:8080`. The image does not automatically run migrations, seeders, queues, or scheduled jobs during startup.
+
 ## Portfolio data sync
 
 The protected admin Sync tab immediately refreshes certificates from Google Drive, badge records from Credly, and the cached GitHub contribution graph. New PDF, PNG, JPEG, JPG, and WebP certificate files are added as featured records; metadata already edited in the admin is preserved.
