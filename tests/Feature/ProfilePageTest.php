@@ -32,7 +32,9 @@ class ProfilePageTest extends TestCase
                 ->where('profile.bio', 'I work across information systems, health technology implementation, data operations, research, and visual publishing. I also provide MikroTik network consulting and serve as a GPTZero Ambassador, promoting responsible and transparent AI use.')
                 ->where('profile.external_links.2.label', 'LinkedIn')
                 ->where('profile.external_links.2.url', 'https://www.linkedin.com/in/britt-kristoff-montalvo/')
-                ->has('badges', 1)
+                ->has('badges', 29)
+                ->where('badges.0.name', 'Networking Basics')
+                ->where('badges.0.issuer', 'Cisco')
                 ->has('publishedWorks', 2)
                 ->has('projects', 5)
                 ->has('portfolioTools', 37)
@@ -62,8 +64,8 @@ class ProfilePageTest extends TestCase
                 ->where('achievements.2.external_url', 'https://mikrotik.com/consultants?category=consultants&f[0]=cert%3AMTCNA&f[1]=cert%3AMTCRE&f[2]=cert%3AMTCUME&region=Philippines')
                 ->where('achievements.3.title', 'GPTZero Ambassador')
                 ->where('achievements.3.image_url', 'https://gptzero.me/favicon.ico')
-                ->where('achievements.3.external_url', 'https://drive.google.com/file/d/1wK0Ek-nkNmDNtrye3rwvxW9Sa-2V_Avx/view')
-                ->has('certificates', 7)
+                ->where('achievements.3.external_url', null)
+                ->has('certificates', 50)
                 ->where('certificates.0.title', 'Lean Six Sigma: Yellow Belt')
                 ->where('certificates.0.issuer', 'Alison')
                 ->where('certificates.0.category', 'project_management')
@@ -76,8 +78,6 @@ class ProfilePageTest extends TestCase
                 ->where('certificates.1.issued_on', 'Mar 2026')
                 ->where('certificates.1.file_url', null)
                 ->where('certificates.1.thumbnail_url', '/storage/portfolio/organizations/sangfor.png')
-                ->where('certificates.5.title', 'Omada Certified Network Administrator (OCNA) - Wireless')
-                ->where('certificates.5.verification_code', '57E94B6682EC4E95')
                 ->has('education', 3)
                 ->where('education.0.institution', 'Caraga State University')
                 ->where('education.0.program', 'Master of Science in Information Technology')
@@ -157,6 +157,28 @@ class ProfilePageTest extends TestCase
                 ->where('items.0.media_type', 'pdf')
             );
     }
+    public function test_complete_portfolio_seeders_are_idempotent_and_exclude_private_certificate_files(): void
+    {
+        $this->seed();
+        $this->seed();
+
+        $this->assertDatabaseCount('profiles', 1);
+        $this->assertDatabaseCount('achievements', 4);
+        $this->assertDatabaseCount('certificates', 50);
+        $this->assertDatabaseCount('credential_badges', 29);
+        $this->assertDatabaseCount('education', 3);
+        $this->assertDatabaseCount('work_experiences', 5);
+        $this->assertDatabaseCount('published_works', 2);
+        $this->assertDatabaseCount('projects', 5);
+        $this->assertDatabaseCount('portfolio_tools', 37);
+        $this->assertDatabaseHas('certificates', [
+            'title' => 'Omada Certified Network Administrator (OCNA) - Wireless',
+            'verification_code' => '57E94B6682EC4E95',
+        ]);
+        $this->assertSame(0, Certificate::query()->where('file_url', 'like', '%drive.google.com%')->count());
+        $this->assertSame(0, Certificate::query()->whereNotNull('local_path')->count());
+        $this->assertDatabaseMissing('credential_badges', ['external_id' => 'credly-profile-brittm']);
+    }
     public function test_guestbook_entries_remain_private_until_the_admin_approves_them(): void
     {
         $this->withoutVite();
@@ -221,9 +243,9 @@ class ProfilePageTest extends TestCase
                 ->where('archiveType', 'badges')
                 ->where('alternate.url', '/certifications')
                 ->has('categories', 8)
-                ->has('items', 1)
-                ->where('items.0.title', 'Credly verified credentials')
-                ->where('items.0.category', 'professional')
+                ->has('items', 29)
+                ->where('items.0.title', 'Networking Basics')
+                ->where('items.0.category', 'networking')
             );
 
         $this->get('/certifications')
@@ -233,7 +255,7 @@ class ProfilePageTest extends TestCase
                 ->where('profile.avatar_url', 'https://avatars.githubusercontent.com/u/52160082?v=4')
                 ->where('archiveType', 'certificates')
                 ->where('alternate.url', '/badges')
-                ->has('items', 8)
+                ->has('items', 51)
                 ->where('items.0.title', 'Lean Six Sigma: Yellow Belt')
                 ->where('items.0.category', 'project_management')
                 ->where('items.0.date', 'Jul 2026')
@@ -247,8 +269,6 @@ class ProfilePageTest extends TestCase
                 ->where('items.2.title', 'Applied Cybersecurity Operations')
                 ->where('items.2.category', 'cybersecurity')
                 ->where('items.2.verify_url', 'https://example.test/certificates/cybersecurity')
-                ->where('items.6.title', 'Omada Certified Network Administrator (OCNA) - Wireless')
-                ->where('items.6.verification_code', '57E94B6682EC4E95')
             );
     }
 

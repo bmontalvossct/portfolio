@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Achievement;
-use App\Models\Certificate;
-use App\Models\CredentialBadge;
 use App\Models\Education;
 use App\Models\Profile;
 use App\Models\Project;
@@ -66,19 +64,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(PortfolioToolSeeder::class);
 
-        if (! CredentialBadge::query()->where('provider', 'credly')->exists()) {
-            CredentialBadge::query()->create([
-                'provider' => 'credly',
-                'external_id' => 'credly-profile-brittm',
-                'name' => 'Credly verified credentials',
-                'issuer' => 'Credly',
-                'description' => 'Verified credential collection connected to the public Credly profile.',
-                'certificate_url' => 'https://www.credly.com/users/brittm',
-                'skills' => ['Verified credentials', 'Digital badges'],
-                'sort_order' => 1,
-                'is_featured' => true,
-            ]);
-        }
+        $this->call(CompleteCredentialBadgeSeeder::class);
 
         Achievement::query()->updateOrCreate(
             ['title' => 'Civil Service Eligibility - Professional'],
@@ -127,28 +113,9 @@ class DatabaseSeeder extends Seeder
                 'issuer' => 'GPTZero',
                 'summary' => 'Certificate-backed GPTZero Ambassador promoting responsible AI use, AI literacy, transparent authorship, and academic integrity.',
                 'image_url' => 'https://gptzero.me/favicon.ico',
-                'external_url' => 'https://drive.google.com/file/d/1wK0Ek-nkNmDNtrye3rwvxW9Sa-2V_Avx/view',
+                'external_url' => null,
                 'tags' => ['Responsible AI', 'AI literacy', 'Academic integrity'],
                 'sort_order' => 4,
-                'is_featured' => true,
-            ],
-        );
-
-        Certificate::query()->updateOrCreate(
-            [
-                'source' => 'google_drive',
-                'external_id' => '1rwt2bAikR6gj7ot-kwBRGvbuvr5XmKAD',
-            ],
-            [
-                'title' => 'Sangfor Network Security and Endpoint Secure Technical Training',
-                'issuer' => 'ITDEPOT / Sangfor',
-                'category' => 'cybersecurity',
-                'description' => 'Certificate of completion for Sangfor Network Security and Endpoint Secure Technical Training conducted on 24-25 March 2026.',
-                'issued_on' => '2026-03-25',
-                'file_url' => 'https://drive.google.com/file/d/1rwt2bAikR6gj7ot-kwBRGvbuvr5XmKAD/view',
-                'thumbnail_url' => 'https://drive.google.com/thumbnail?id=1rwt2bAikR6gj7ot-kwBRGvbuvr5XmKAD&sz=w600',
-                'tags' => ['Sangfor', 'Network security', 'Endpoint security', 'Cybersecurity', 'ITDEPOT'],
-                'sort_order' => 0,
                 'is_featured' => true,
             ],
         );
@@ -359,6 +326,7 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
+        $this->call(CompleteCertificateSeeder::class);
         $this->call(CredentialCategorySeeder::class);
     }
 }

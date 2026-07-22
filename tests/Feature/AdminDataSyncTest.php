@@ -33,7 +33,7 @@ class AdminDataSyncTest extends TestCase
         Http::fake([
             'drive.google.com/drive/folders/*' => Http::response(<<<'HTML'
                 <html><body>
-                    <div data-id="1rwt2bAikR6gj7ot-kwBRGvbuvr5XmKAD" data-tooltip="Sangfor Network Security Endpoint.pdf PDF"></div>
+                    <div data-id="1rwt2bAikR6gj7ot-kwBRGvbuvr5XmKAD" data-tooltip="Sangfor Network Security and Endpoint Secure Technical Training.pdf PDF"></div>
                     <div data-id="adminsync12345678901234567890" data-tooltip="Responsible AI Workshop.pdf PDF"></div>
                 </body></html>
                 HTML),

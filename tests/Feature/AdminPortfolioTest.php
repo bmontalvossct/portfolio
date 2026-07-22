@@ -58,7 +58,7 @@ class AdminPortfolioTest extends TestCase
                 ->where('publishedWorks.1.title', 'SURe-Health: PDOHO-SDN Official Publication')
                 ->has('portfolioTools', 37)
                 ->has('achievements', 4)
-                ->has('credentialBadges', 1)
+                ->has('credentialBadges', 29)
                 ->has('education', 3)
                 ->has('workExperiences', 5)
             );

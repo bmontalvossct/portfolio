@@ -62,6 +62,24 @@ class ImportDriveCertificates extends Command
                 'external_id' => $record['id'],
             ]);
 
+            if (! $certificate->exists) {
+                $seededCertificate = Certificate::query()
+                    ->where('source', 'portfolio_seed')
+                    ->where('title', $title)
+                    ->first();
+
+                if ($seededCertificate) {
+                    $seededCertificate->forceFill([
+                        'source' => 'google_drive',
+                        'external_id' => $record['id'],
+                    ])->save();
+
+                    $preserved++;
+
+                    continue;
+                }
+            }
+
             if ($certificate->exists) {
                 $preserved++;
 
