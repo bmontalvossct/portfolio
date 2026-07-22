@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\GuestbookEntrySubmitted;
 use App\Models\Certificate;
 use App\Models\CredentialBadge;
 use App\Models\GuestbookEntry;
@@ -9,6 +10,7 @@ use App\Support\Profile\CredlyBadgeSyncer;
 use App\Support\Profile\GitHubContributionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -204,6 +206,7 @@ class ProfilePageTest extends TestCase
     public function test_guestbook_entries_remain_private_until_the_admin_approves_them(): void
     {
         $this->withoutVite();
+        Mail::fake();
         $this->seed();
 
         $this->post('/guestbook', [
@@ -218,6 +221,9 @@ class ProfilePageTest extends TestCase
 
         $entry = GuestbookEntry::query()->firstOrFail();
 
+        Mail::assertSent(GuestbookEntrySubmitted::class, function (GuestbookEntrySubmitted $mail) use ($entry): bool {
+            return $mail->hasTo('inquiries@brittmontalvo.dev') && $mail->entry->is($entry);
+        });
         $this->assertSame('pending', $entry->status);
         $this->get('/')
             ->assertOk()
