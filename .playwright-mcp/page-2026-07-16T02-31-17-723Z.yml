@@ -1,0 +1,12 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - link "Portfolio" [ref=e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=e11]:
+      - text: Private index / 01
+      - heading "Portfolio admin" [level=1] [ref=e12]
+      - paragraph [ref=e13]: Enter the private access token to manage the public archive.
+    - generic [ref=e14]:
+      - generic [ref=e15]: Secret token
+      - textbox "Secret token" [active] [ref=e20]
+      - button "Enter admin" [ref=e21] [cursor=pointer]

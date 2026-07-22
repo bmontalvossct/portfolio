@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,300;0,400;0,600;0,700;1,300&family=Saira+Condensed:wght@400;600;700&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../js/**/*.{js,vue}';
+@source '../views/**/*.blade.php';
+
+@theme {
+    --font-sans: 'Saira', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'Saira Condensed', 'Arial Narrow', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Saira', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+    color-scheme: light;
+    --profile-bg: #f7f7f7;
+    --profile-ink: #000000;
+    --profile-50: #ffffff;
+    --profile-100: #ededed;
+    --profile-200: #d3d3d3;
+    --profile-300: #b5b5b5;
+    --profile-400: #7e7e7e;
+    --profile-500: #606060;
+    --profile-700: #2b2b2b;
+    --profile-blue-light: #0066b1;
+    --profile-blue: #1c69d4;
+    --profile-red: #e22718;
+    --profile-shadow: 0 18px 42px -28px rgb(0 0 0 / 55%);
+}
+
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --profile-bg: #000000;
+    --profile-ink: #ffffff;
+    --profile-50: #0d0d0d;
+    --profile-100: #1a1a1a;
+    --profile-200: #262626;
+    --profile-300: #3c3c3c;
+    --profile-400: #7e7e7e;
+    --profile-500: #bbbbbb;
+    --profile-700: #e6e6e6;
+    --profile-blue-light: #0066b1;
+    --profile-blue: #1c69d4;
+    --profile-red: #e22718;
+    --profile-shadow: 0 18px 48px -32px rgb(0 0 0 / 80%);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: var(--profile-bg);
+    color: var(--profile-ink);
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+}
+
+body {
+    min-width: 320px;
+    margin: 0;
+    background: var(--profile-bg);
+    color: var(--profile-ink);
+    font-size: 15px;
+    text-rendering: optimizeLegibility;
+    transition:
+        background-color 500ms ease,
+        color 500ms ease;
+}
+
+body::selection {
+    background: var(--profile-blue);
+    color: #ffffff;
+}
+
+a {
+    color: inherit;
+    text-decoration-color: color-mix(in srgb, var(--profile-ink) 25%, transparent);
+    text-underline-offset: 2px;
+}
+
+a:hover {
+    text-decoration-color: var(--profile-ink);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.profile-shell {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--profile-200) 72%, transparent) 0 1px, transparent 1px 100%),
+        var(--profile-bg);
+    background-size: 9px 9px, auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+    }
+}

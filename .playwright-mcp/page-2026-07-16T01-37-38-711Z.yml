@@ -1,0 +1,355 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - link "Britt Kristoff B. Montalvo, MSIT portfolio" [ref=f1e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f1e6]: BM
+      - strong [ref=f1e7]: Britt Kristoff B. Montalvo, MSIT
+    - navigation "Credential archives" [ref=f1e8]:
+      - link "Portfolio" [ref=f1e9] [cursor=pointer]:
+        - /url: /
+      - link "Badges" [ref=f1e12] [cursor=pointer]:
+        - /url: /badges
+      - link "Certificates" [ref=f1e13] [cursor=pointer]:
+        - /url: /certifications
+    - generic "Color theme" [ref=f1e14]:
+      - button "Light theme" [ref=f1e15] [cursor=pointer]
+      - button "Dark theme" [ref=f1e22] [cursor=pointer]
+  - main [ref=f1e25]:
+    - generic [ref=f1e26]:
+      - text: Evidence archive / 29
+      - heading "credential badges" [level=1] [ref=f1e27]
+      - paragraph [ref=f1e28]: Verified digital badges across data, software, cybersecurity, networking, enterprise platforms, and professional practice.
+      - generic [ref=f1e29]:
+        - searchbox "Search badges" [ref=f1e34]
+        - generic [ref=f1e35]:
+          - generic [ref=f1e36]: Category
+          - combobox "Category" [ref=f1e37]:
+            - option "All categories" [selected]
+            - option "AI & Data"
+            - option "Software & Development"
+            - option "Networking & IT Support"
+            - option "Cybersecurity"
+            - option "Cloud & Enterprise"
+            - option "Project Management"
+            - option "Design & Marketing"
+            - option "Professional Development"
+        - link "Certificate archive" [ref=f1e38] [cursor=pointer]:
+          - /url: /certifications
+    - generic [ref=f1e42]:
+      - generic [ref=f1e43]:
+        - generic [ref=f1e44]: AI & Data
+        - generic [ref=f1e45]: "5"
+      - generic [ref=f1e46]:
+        - article [ref=f1e47]:
+          - button "Google Business Intelligence Professional Certificate(v.2) Google Business Intelligence Professional Certificate(v.2) Coursera Jan 2026" [ref=f1e48] [cursor=pointer]:
+            - img "Google Business Intelligence Professional Certificate(v.2)" [ref=f1e50]
+            - strong [ref=f1e51]: Google Business Intelligence Professional Certificate(v.2)
+            - generic [ref=f1e52]: Coursera
+            - generic [ref=f1e53]: Jan 2026
+          - generic [ref=f1e54]:
+            - button "Details" [ref=f1e55] [cursor=pointer]
+            - link "Verify" [ref=f1e56] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/f0304e9a-ef78-4bd7-b876-7690e65864f1
+        - article [ref=f1e60]:
+          - button "Google Digital Marketing & E-commerce Professional Certificate(v.2) Google Digital Marketing & E-commerce Professional Certificate(v.2) Coursera Jan 2026" [ref=f1e61] [cursor=pointer]:
+            - img "Google Digital Marketing & E-commerce Professional Certificate(v.2)" [ref=f1e63]
+            - strong [ref=f1e64]: Google Digital Marketing & E-commerce Professional Certificate(v.2)
+            - generic [ref=f1e65]: Coursera
+            - generic [ref=f1e66]: Jan 2026
+          - generic [ref=f1e67]:
+            - button "Details" [ref=f1e68] [cursor=pointer]
+            - link "Verify" [ref=f1e69] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/6f523250-7c29-46b4-a390-9aea86e0b6c9
+        - article [ref=f1e73]:
+          - button "Introduction to Modern AI Introduction to Modern AI Cisco Feb 2025" [ref=f1e74] [cursor=pointer]:
+            - img "Introduction to Modern AI" [ref=f1e76]
+            - strong [ref=f1e77]: Introduction to Modern AI
+            - generic [ref=f1e78]: Cisco
+            - generic [ref=f1e79]: Feb 2025
+          - generic [ref=f1e80]:
+            - button "Details" [ref=f1e81] [cursor=pointer]
+            - link "Verify" [ref=f1e82] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/898629e9-a92d-40d1-8c87-1b8217949048
+        - article [ref=f1e86]:
+          - button "Google Data Analytics Professional Certificate Google Data Analytics Professional Certificate Coursera Jul 2024" [ref=f1e87] [cursor=pointer]:
+            - img "Google Data Analytics Professional Certificate" [ref=f1e89]
+            - strong [ref=f1e90]: Google Data Analytics Professional Certificate
+            - generic [ref=f1e91]: Coursera
+            - generic [ref=f1e92]: Jul 2024
+          - generic [ref=f1e93]:
+            - button "Details" [ref=f1e94] [cursor=pointer]
+            - link "Verify" [ref=f1e95] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/5e747efd-1bb6-41d3-9fd5-ba4d1bf11a3b
+        - article [ref=f1e99]:
+          - button "Introduction to Data Science Introduction to Data Science Cisco Jul 2024" [ref=f1e100] [cursor=pointer]:
+            - img "Introduction to Data Science" [ref=f1e102]
+            - strong [ref=f1e103]: Introduction to Data Science
+            - generic [ref=f1e104]: Cisco
+            - generic [ref=f1e105]: Jul 2024
+          - generic [ref=f1e106]:
+            - button "Details" [ref=f1e107] [cursor=pointer]
+            - link "Verify" [ref=f1e108] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/cae5f06c-e0ce-4774-a4c2-538065053498
+    - generic [ref=f1e112]:
+      - generic [ref=f1e113]:
+        - generic [ref=f1e114]: Networking & IT Support
+        - generic [ref=f1e115]: "6"
+      - generic [ref=f1e116]:
+        - article [ref=f1e117]:
+          - button "Networking Basics Networking Basics Cisco Jul 2026" [ref=f1e118] [cursor=pointer]:
+            - img "Networking Basics" [ref=f1e120]
+            - strong [ref=f1e121]: Networking Basics
+            - generic [ref=f1e122]: Cisco
+            - generic [ref=f1e123]: Jul 2026
+          - generic [ref=f1e124]:
+            - button "Details" [ref=f1e125] [cursor=pointer]
+            - link "Verify" [ref=f1e126] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/157eef37-dceb-4c49-a252-3a327601f36c
+        - article [ref=f1e130]:
+          - 'button "English for IT: Advice and Time English for IT: Advice and Time Cisco May 2026" [ref=f1e131] [cursor=pointer]':
+            - 'img "English for IT: Advice and Time" [ref=f1e133]'
+            - strong [ref=f1e134]: "English for IT: Advice and Time"
+            - generic [ref=f1e135]: Cisco
+            - generic [ref=f1e136]: May 2026
+          - generic [ref=f1e137]:
+            - button "Details" [ref=f1e138] [cursor=pointer]
+            - link "Verify" [ref=f1e139] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/860f8dd9-aafb-44c0-9331-8a935df96a54
+        - article [ref=f1e143]:
+          - 'button "English for IT: Needs and Responsibilities English for IT: Needs and Responsibilities Cisco May 2026" [ref=f1e144] [cursor=pointer]':
+            - 'img "English for IT: Needs and Responsibilities" [ref=f1e146]'
+            - strong [ref=f1e147]: "English for IT: Needs and Responsibilities"
+            - generic [ref=f1e148]: Cisco
+            - generic [ref=f1e149]: May 2026
+          - generic [ref=f1e150]:
+            - button "Details" [ref=f1e151] [cursor=pointer]
+            - link "Verify" [ref=f1e152] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/d78c3e54-a111-4b37-b7cb-2ecdbf7b775e
+        - article [ref=f1e156]:
+          - button "IT Customer Support Basics IT Customer Support Basics Cisco Apr 2026" [ref=f1e157] [cursor=pointer]:
+            - img "IT Customer Support Basics" [ref=f1e159]
+            - strong [ref=f1e160]: IT Customer Support Basics
+            - generic [ref=f1e161]: Cisco
+            - generic [ref=f1e162]: Apr 2026
+          - generic [ref=f1e163]:
+            - button "Details" [ref=f1e164] [cursor=pointer]
+            - link "Verify" [ref=f1e165] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/b7a5bc6b-49ce-45f3-905c-5b9aeab00fd4
+        - article [ref=f1e169]:
+          - button "Hardware and Upgrade Support Hardware and Upgrade Support Cisco Sep 2025" [ref=f1e170] [cursor=pointer]:
+            - img "Hardware and Upgrade Support" [ref=f1e172]
+            - strong [ref=f1e173]: Hardware and Upgrade Support
+            - generic [ref=f1e174]: Cisco
+            - generic [ref=f1e175]: Sep 2025
+          - generic [ref=f1e176]:
+            - button "Details" [ref=f1e177] [cursor=pointer]
+            - link "Verify" [ref=f1e178] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/867a5686-393e-432c-b197-5fa52a7a14a6
+        - article [ref=f1e182]:
+          - 'button "Apply AI: Analyze Customer Reviews Apply AI: Analyze Customer Reviews Cisco Sep 2025" [ref=f1e183] [cursor=pointer]':
+            - 'img "Apply AI: Analyze Customer Reviews" [ref=f1e185]'
+            - strong [ref=f1e186]: "Apply AI: Analyze Customer Reviews"
+            - generic [ref=f1e187]: Cisco
+            - generic [ref=f1e188]: Sep 2025
+          - generic [ref=f1e189]:
+            - button "Details" [ref=f1e190] [cursor=pointer]
+            - link "Verify" [ref=f1e191] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/95c6d142-23bf-45bd-b3b2-3ba906721648
+    - generic [ref=f1e195]:
+      - generic [ref=f1e196]:
+        - generic [ref=f1e197]: Cybersecurity
+        - generic [ref=f1e198]: "11"
+      - generic [ref=f1e199]:
+        - article [ref=f1e200]:
+          - 'button "English for IT: People and Quantities English for IT: People and Quantities Cisco May 2026" [ref=f1e201] [cursor=pointer]':
+            - 'img "English for IT: People and Quantities" [ref=f1e203]'
+            - strong [ref=f1e204]: "English for IT: People and Quantities"
+            - generic [ref=f1e205]: Cisco
+            - generic [ref=f1e206]: May 2026
+          - generic [ref=f1e207]:
+            - button "Details" [ref=f1e208] [cursor=pointer]
+            - link "Verify" [ref=f1e209] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/c93e5813-1e7d-44b8-8975-48a773c91ece
+        - article [ref=f1e213]:
+          - button "Google IT Support Professional Certificate(v.3) Google IT Support Professional Certificate(v.3) Coursera Jan 2026" [ref=f1e214] [cursor=pointer]:
+            - img "Google IT Support Professional Certificate(v.3)" [ref=f1e216]
+            - strong [ref=f1e217]: Google IT Support Professional Certificate(v.3)
+            - generic [ref=f1e218]: Coursera
+            - generic [ref=f1e219]: Jan 2026
+          - generic [ref=f1e220]:
+            - button "Details" [ref=f1e221] [cursor=pointer]
+            - link "Verify" [ref=f1e222] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/0a4e2f25-49b8-4108-8f9e-d4f1bbdd3e5c
+        - article [ref=f1e226]:
+          - button "Google Cybersecurity Professional Certificate(v.2) Google Cybersecurity Professional Certificate(v.2) Coursera Jan 2026" [ref=f1e227] [cursor=pointer]:
+            - img "Google Cybersecurity Professional Certificate(v.2)" [ref=f1e229]
+            - strong [ref=f1e230]: Google Cybersecurity Professional Certificate(v.2)
+            - generic [ref=f1e231]: Coursera
+            - generic [ref=f1e232]: Jan 2026
+          - generic [ref=f1e233]:
+            - button "Details" [ref=f1e234] [cursor=pointer]
+            - link "Verify" [ref=f1e235] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/912b3885-5869-448c-a19a-313dd024b5c8
+        - article [ref=f1e239]:
+          - button "Endpoint Security Endpoint Security Cisco Jul 2025" [ref=f1e240] [cursor=pointer]:
+            - img "Endpoint Security" [ref=f1e242]
+            - strong [ref=f1e243]: Endpoint Security
+            - generic [ref=f1e244]: Cisco
+            - generic [ref=f1e245]: Jul 2025
+          - generic [ref=f1e246]:
+            - button "Details" [ref=f1e247] [cursor=pointer]
+            - link "Verify" [ref=f1e248] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/6ff82ae2-512a-4c48-92fb-f7c9b4ff8200
+        - article [ref=f1e252]:
+          - button "English for IT 1 English for IT 1 Cisco Feb 2025" [ref=f1e253] [cursor=pointer]:
+            - img "English for IT 1" [ref=f1e255]
+            - strong [ref=f1e256]: English for IT 1
+            - generic [ref=f1e257]: Cisco
+            - generic [ref=f1e258]: Feb 2025
+          - generic [ref=f1e259]:
+            - button "Details" [ref=f1e260] [cursor=pointer]
+            - link "Verify" [ref=f1e261] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/eb5ec1be-025c-459a-9432-b230f65ac582
+        - article [ref=f1e265]:
+          - button "English for IT 2 English for IT 2 Cisco Feb 2025" [ref=f1e266] [cursor=pointer]:
+            - img "English for IT 2" [ref=f1e268]
+            - strong [ref=f1e269]: English for IT 2
+            - generic [ref=f1e270]: Cisco
+            - generic [ref=f1e271]: Feb 2025
+          - generic [ref=f1e272]:
+            - button "Details" [ref=f1e273] [cursor=pointer]
+            - link "Verify" [ref=f1e274] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/d70f20c5-51bf-49a8-a3f7-dc3a3ebdf49c
+        - article [ref=f1e278]:
+          - button "Cyber Threat Management Cyber Threat Management Cisco Feb 2025" [ref=f1e279] [cursor=pointer]:
+            - img "Cyber Threat Management" [ref=f1e281]
+            - strong [ref=f1e282]: Cyber Threat Management
+            - generic [ref=f1e283]: Cisco
+            - generic [ref=f1e284]: Feb 2025
+          - generic [ref=f1e285]:
+            - button "Details" [ref=f1e286] [cursor=pointer]
+            - link "Verify" [ref=f1e287] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/dab833b1-aa74-42ed-abe7-9e1f258ce39c
+        - article [ref=f1e291]:
+          - button "Ethical Hacker Ethical Hacker Cisco Feb 2025" [ref=f1e292] [cursor=pointer]:
+            - img "Ethical Hacker" [ref=f1e294]
+            - strong [ref=f1e295]: Ethical Hacker
+            - generic [ref=f1e296]: Cisco
+            - generic [ref=f1e297]: Feb 2025
+          - generic [ref=f1e298]:
+            - button "Details" [ref=f1e299] [cursor=pointer]
+            - link "Verify" [ref=f1e300] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/959d121e-9e8b-4569-bbcd-cf214247c433
+        - article [ref=f1e304]:
+          - button "Network Defense Network Defense Cisco Feb 2025" [ref=f1e305] [cursor=pointer]:
+            - img "Network Defense" [ref=f1e307]
+            - strong [ref=f1e308]: Network Defense
+            - generic [ref=f1e309]: Cisco
+            - generic [ref=f1e310]: Feb 2025
+          - generic [ref=f1e311]:
+            - button "Details" [ref=f1e312] [cursor=pointer]
+            - link "Verify" [ref=f1e313] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/af8c29cf-3b93-49f3-ac9d-61c398bf1650
+        - article [ref=f1e317]:
+          - button "Introduction to IoT Introduction to IoT Cisco Jul 2024" [ref=f1e318] [cursor=pointer]:
+            - img "Introduction to IoT" [ref=f1e320]
+            - strong [ref=f1e321]: Introduction to IoT
+            - generic [ref=f1e322]: Cisco
+            - generic [ref=f1e323]: Jul 2024
+          - generic [ref=f1e324]:
+            - button "Details" [ref=f1e325] [cursor=pointer]
+            - link "Verify" [ref=f1e326] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/8e60a6b0-36bd-4158-a009-73944e107458
+        - article [ref=f1e330]:
+          - button "Introduction to Cybersecurity Introduction to Cybersecurity Cisco Jul 2024" [ref=f1e331] [cursor=pointer]:
+            - img "Introduction to Cybersecurity" [ref=f1e333]
+            - strong [ref=f1e334]: Introduction to Cybersecurity
+            - generic [ref=f1e335]: Cisco
+            - generic [ref=f1e336]: Jul 2024
+          - generic [ref=f1e337]:
+            - button "Details" [ref=f1e338] [cursor=pointer]
+            - link "Verify" [ref=f1e339] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/4bcea0d2-a50f-45c5-afea-7ecaf4fc46f7
+    - generic [ref=f1e343]:
+      - generic [ref=f1e344]:
+        - generic [ref=f1e345]: Project Management
+        - generic [ref=f1e346]: "6"
+      - generic [ref=f1e347]:
+        - article [ref=f1e348]:
+          - button "SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite SAP Jun 2026" [ref=f1e349] [cursor=pointer]:
+            - img "SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite" [ref=f1e351]
+            - strong [ref=f1e352]: SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite
+            - generic [ref=f1e353]: SAP
+            - generic [ref=f1e354]: Jun 2026
+          - generic [ref=f1e355]:
+            - button "Details" [ref=f1e356] [cursor=pointer]
+            - link "Verify" [ref=f1e357] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/5fb8dbbb-3d12-43dd-ad85-f301b32e63ae
+        - article [ref=f1e361]:
+          - 'button "English for IT: Describing and Comparing English for IT: Describing and Comparing Cisco May 2026" [ref=f1e362] [cursor=pointer]':
+            - 'img "English for IT: Describing and Comparing" [ref=f1e364]'
+            - strong [ref=f1e365]: "English for IT: Describing and Comparing"
+            - generic [ref=f1e366]: Cisco
+            - generic [ref=f1e367]: May 2026
+          - generic [ref=f1e368]:
+            - button "Details" [ref=f1e369] [cursor=pointer]
+            - link "Verify" [ref=f1e370] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/32cdedc3-fb04-422b-8806-1e2fb7076d23
+        - article [ref=f1e374]:
+          - button "Google IT Automation with Python Professional Certificate(v.1) Google IT Automation with Python Professional Certificate(v.1) Coursera Jan 2026" [ref=f1e375] [cursor=pointer]:
+            - img "Google IT Automation with Python Professional Certificate(v.1)" [ref=f1e377]
+            - strong [ref=f1e378]: Google IT Automation with Python Professional Certificate(v.1)
+            - generic [ref=f1e379]: Coursera
+            - generic [ref=f1e380]: Jan 2026
+          - generic [ref=f1e381]:
+            - button "Details" [ref=f1e382] [cursor=pointer]
+            - link "Verify" [ref=f1e383] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/3b2c2825-d5d9-4721-abf5-b6e8e30aa75e
+        - article [ref=f1e387]:
+          - button "Google Advanced Data Analytics Professional Certificate(v.2) Google Advanced Data Analytics Professional Certificate(v.2) Coursera Jan 2026" [ref=f1e388] [cursor=pointer]:
+            - img "Google Advanced Data Analytics Professional Certificate(v.2)" [ref=f1e390]
+            - strong [ref=f1e391]: Google Advanced Data Analytics Professional Certificate(v.2)
+            - generic [ref=f1e392]: Coursera
+            - generic [ref=f1e393]: Jan 2026
+          - generic [ref=f1e394]:
+            - button "Details" [ref=f1e395] [cursor=pointer]
+            - link "Verify" [ref=f1e396] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/035d5b26-5deb-420c-96a7-4919ea2f9654
+        - article [ref=f1e400]:
+          - button "Google Project Management Professional Certificate(v.3) Google Project Management Professional Certificate(v.3) Coursera Jan 2026" [ref=f1e401] [cursor=pointer]:
+            - img "Google Project Management Professional Certificate(v.3)" [ref=f1e403]
+            - strong [ref=f1e404]: Google Project Management Professional Certificate(v.3)
+            - generic [ref=f1e405]: Coursera
+            - generic [ref=f1e406]: Jan 2026
+          - generic [ref=f1e407]:
+            - button "Details" [ref=f1e408] [cursor=pointer]
+            - link "Verify" [ref=f1e409] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/39e86190-5c5c-4e38-aad5-3703bb8fd269
+        - article [ref=f1e413]:
+          - button "Create Digital Content, Communicate and Collaborate Online Create Digital Content, Communicate and Collaborate Online Cisco Sep 2025" [ref=f1e414] [cursor=pointer]:
+            - img "Create Digital Content, Communicate and Collaborate Online" [ref=f1e416]
+            - strong [ref=f1e417]: Create Digital Content, Communicate and Collaborate Online
+            - generic [ref=f1e418]: Cisco
+            - generic [ref=f1e419]: Sep 2025
+          - generic [ref=f1e420]:
+            - button "Details" [ref=f1e421] [cursor=pointer]
+            - link "Verify" [ref=f1e422] [cursor=pointer]:
+              - /url: https://www.credly.com/badges/f1b9f3a3-8b49-414b-96a6-d0ff3727d523
+    - generic [ref=f1e426]:
+      - generic [ref=f1e427]:
+        - generic [ref=f1e428]: Design & Marketing
+        - generic [ref=f1e429]: "1"
+      - article [ref=f1e431]:
+        - button "Google UX Design Professional Certificate(v.3) Google UX Design Professional Certificate(v.3) Coursera Jan 2026" [ref=f1e432] [cursor=pointer]:
+          - img "Google UX Design Professional Certificate(v.3)" [ref=f1e434]
+          - strong [ref=f1e435]: Google UX Design Professional Certificate(v.3)
+          - generic [ref=f1e436]: Coursera
+          - generic [ref=f1e437]: Jan 2026
+        - generic [ref=f1e438]:
+          - button "Details" [ref=f1e439] [cursor=pointer]
+          - link "Verify" [ref=f1e440] [cursor=pointer]:
+            - /url: https://www.credly.com/badges/d5ce76a3-9520-4f5e-a027-f6d5dbe473ca
+  - contentinfo [ref=f1e444]:
+    - generic [ref=f1e445]: Britt Kristoff B. Montalvo, MSIT
+    - link "Return to portfolio" [ref=f1e446] [cursor=pointer]:
+      - /url: /

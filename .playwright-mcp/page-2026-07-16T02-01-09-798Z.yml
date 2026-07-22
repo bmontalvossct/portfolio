@@ -1,0 +1,1027 @@
+- generic [ref=f9e3]:
+  - banner [ref=f9e4]:
+    - link "Britt Kristoff B. Montalvo, MSIT home" [ref=f9e5] [cursor=pointer]:
+      - /url: "#profile"
+      - generic [ref=f9e6]: BM
+      - generic [ref=f9e7]: Britt Kristoff B. Montalvo, MSIT
+    - navigation "Portfolio sections" [ref=f9e8]:
+      - link "Work" [ref=f9e9] [cursor=pointer]:
+        - /url: "#work"
+      - link "Designs" [ref=f9e10] [cursor=pointer]:
+        - /url: "#designs"
+      - link "Published" [ref=f9e11] [cursor=pointer]:
+        - /url: "#published"
+      - link "Credentials" [ref=f9e12] [cursor=pointer]:
+        - /url: "#credentials"
+      - link "Tools" [ref=f9e13] [cursor=pointer]:
+        - /url: "#tools"
+      - link "Background" [ref=f9e14] [cursor=pointer]:
+        - /url: "#background"
+      - link "Comments" [ref=f9e15] [cursor=pointer]:
+        - /url: "#guestbook"
+    - generic "Color theme" [ref=f9e16]:
+      - button "Light theme" [ref=f9e17] [cursor=pointer]
+      - button "Dark theme" [ref=f9e24] [cursor=pointer]
+  - main [ref=f9e27]:
+    - generic [ref=f9e28]:
+      - generic [ref=f9e29]: Portfolio / 2026
+      - generic [ref=f9e30]:
+        - paragraph [ref=f9e31]: Lead Digitalization Expert, information systems analyst, researcher, and multidisciplinary digital maker.
+        - generic [ref=f9e32]:
+          - heading "Britt Kristoff B. Montalvo, MSIT" [level=1] [ref=f9e33]
+          - paragraph [ref=f9e34]: I work across information systems, health technology implementation, data operations, research, and visual publishing. My practice connects dependable technical work with clear documentation and thoughtful communication.
+          - generic [ref=f9e35]:
+            - generic [ref=f9e36]: Surigao del Norte, Philippines
+            - generic [ref=f9e40]: Open to research, systems, and digital publication collaborations.
+          - generic "Profile links" [ref=f9e44]:
+            - link "Credly" [ref=f9e45] [cursor=pointer]:
+              - /url: https://www.credly.com/users/brittm
+            - link "GitHub" [ref=f9e49] [cursor=pointer]:
+              - /url: https://github.com/bmontalvossct
+            - link "LinkedIn" [ref=f9e53] [cursor=pointer]:
+              - /url: https://www.linkedin.com/in/britt-kristoff-montalvo/
+            - link "Curriculum vitae" [ref=f9e57] [cursor=pointer]:
+              - /url: https://drive.google.com/file/d/1VABvB7-lrvRfiQC08PhfWN4lZHOBKAHp/view
+            - link "Email" [ref=f9e61] [cursor=pointer]:
+              - /url: mailto:brittkristoff.montalvo@carsu.edu.ph
+        - figure "Information systems Research / publishing / design" [ref=f9e65]:
+          - img "Britt Kristoff B. Montalvo, MSIT" [ref=f9e66]
+          - generic [ref=f9e67]:
+            - generic [ref=f9e68]: Information systems
+            - generic [ref=f9e69]: Research / publishing / design
+      - generic "Portfolio summary" [ref=f9e70]:
+        - generic [ref=f9e71]:
+          - strong [ref=f9e72]: "29"
+          - generic [ref=f9e73]: verified badges
+        - generic [ref=f9e74]:
+          - strong [ref=f9e75]: "47"
+          - generic [ref=f9e76]: certificates
+        - generic [ref=f9e77]:
+          - strong [ref=f9e78]: "6"
+          - generic [ref=f9e79]: works
+    - generic [ref=f9e80]:
+      - generic [ref=f9e81]:
+        - generic [ref=f9e82]:
+          - text: 01 / practice
+          - heading "Selected work" [level=2] [ref=f9e83]
+        - paragraph [ref=f9e84]: Websites, information systems, implementation work, and visual design.
+      - generic "Project categories" [ref=f9e85]:
+        - button "All work" [ref=f9e86] [cursor=pointer]
+        - button "Power BI dashboard" [ref=f9e87] [cursor=pointer]
+        - button "Web system" [ref=f9e88] [cursor=pointer]
+        - button "Systems practice" [ref=f9e89] [cursor=pointer]
+      - generic [ref=f9e90]:
+        - article [ref=f9e91]:
+          - iframe [ref=f9e93]:
+            - generic [ref=f10e11]:
+              - link "Microsoft Power BI (Opens in new tab)" [ref=f10e12] [cursor=pointer]:
+                - /url: https://go.microsoft.com/fwlink/?LinkID=722383&clcid=0x409
+                - text: Microsoft Power BI
+              - generic [ref=f10e14]:
+                - button "Previous Page" [disabled] [ref=f10e15]:
+                  - generic [ref=f10e16]: 
+                - generic [ref=f10e18] [cursor=pointer]:
+                  - generic [ref=f10e19]: "1"
+                  - generic [ref=f10e20]: of
+                  - generic [ref=f10e21]: "3"
+                - button "Next Page" [ref=f10e22] [cursor=pointer]:
+                  - generic [ref=f10e23]: 
+              - generic [ref=f10e24]:
+                - button "Share" [ref=f10e28] [cursor=pointer]:
+                  - generic [ref=f10e29]: 
+                - button "Open in full-screen mode" [ref=f10e30] [cursor=pointer]:
+                  - generic [ref=f10e31]: 
+          - generic [ref=f9e94]:
+            - generic [ref=f9e95]:
+              - generic [ref=f9e96]: Power BI dashboard
+              - generic [ref=f9e97]: "2026"
+            - heading "SDN Electronic Medical Records Dashboard" [level=3] [ref=f9e98]
+            - paragraph [ref=f9e99]: An interactive health informatics dashboard for monitoring Surigao del Norte facilities, electronic medical record status, patient activity, accreditation, training schedules, and trained personnel.
+            - generic [ref=f9e100]:
+              - generic [ref=f9e101]: Power BI
+              - generic [ref=f9e102]: Health informatics
+              - generic [ref=f9e103]: Data visualization
+              - generic [ref=f9e104]: Electronic medical records
+            - link "Open dashboard" [ref=f9e106] [cursor=pointer]:
+              - /url: https://app.powerbi.com/view?r=eyJrIjoiMDBmNTFkOTYtMGQ1ZC00MTUzLWIxMmEtMzgwMTUwMmE5ODUzIiwidCI6IjE5NWQzN2JlLTllMGEtNDIwNS1hZGY0LWEyNTk5ZTllMWNjYSIsImMiOjEwfQ%3D%3D&pageName=ReportSection
+        - article [ref=f9e110]:
+          - img "Surigao del Norte State University Public Website" [ref=f9e112]
+          - generic [ref=f9e113]:
+            - generic [ref=f9e114]:
+              - generic [ref=f9e115]: Web system
+              - generic [ref=f9e116]: "2026"
+            - heading "Surigao del Norte State University Public Website" [level=3] [ref=f9e117]
+            - paragraph [ref=f9e118]: A responsive public university portal developed with the SNSU KMIC Office to bring academics, admissions, research, news, events, procurement, careers, library services, and institutional information into one accessible experience.
+            - generic [ref=f9e119]:
+              - generic [ref=f9e120]: University website
+              - generic [ref=f9e121]: Public information
+              - generic [ref=f9e122]: Responsive design
+              - generic [ref=f9e123]: Content management
+            - link "Open project" [ref=f9e125] [cursor=pointer]:
+              - /url: https://gamma.snsu.edu.ph
+        - article [ref=f9e129]:
+          - generic [ref=f9e130]: "03"
+          - generic [ref=f9e137]:
+            - generic [ref=f9e138]:
+              - generic [ref=f9e139]: Web system
+              - generic [ref=f9e140]: "2019"
+            - heading "Amplifier thesis project" [level=3] [ref=f9e141]
+            - paragraph [ref=f9e142]: An undergraduate thesis project developed as a web application and preserved in the public GitHub archive.
+            - generic [ref=f9e143]:
+              - generic [ref=f9e144]: PHP
+              - generic [ref=f9e145]: HTML
+              - generic [ref=f9e146]: CSS
+              - generic [ref=f9e147]: Thesis
+            - link "Repository" [ref=f9e149] [cursor=pointer]:
+              - /url: https://github.com/kristoffmontalvo218/Amplifier-repo
+        - article [ref=f9e154]:
+          - generic [ref=f9e155]: "04"
+          - generic [ref=f9e162]:
+            - generic [ref=f9e163]:
+              - generic [ref=f9e164]: Systems practice
+              - generic [ref=f9e165]: 2021-2024
+            - heading "Health information systems implementation" [level=3] [ref=f9e166]
+            - paragraph [ref=f9e167]: Implementation, training, monitoring, and technical support for electronic medical record systems used by health facilities.
+            - generic [ref=f9e168]:
+              - generic [ref=f9e169]: EMR
+              - generic [ref=f9e170]: Health technology
+              - generic [ref=f9e171]: Training
+              - generic [ref=f9e172]: Data
+    - generic [ref=f9e173]:
+      - generic [ref=f9e175]:
+        - text: 02 / visual archive
+        - heading "Design & media" [level=2] [ref=f9e176]
+      - generic [ref=f9e183]:
+        - strong [ref=f9e184]: Visual archive in progress
+        - paragraph [ref=f9e185]: Selected image, infographic, and motion work will appear here.
+    - generic [ref=f9e186]:
+      - generic [ref=f9e187]:
+        - generic [ref=f9e188]:
+          - text: 03 / authored
+          - heading "Published works" [level=2] [ref=f9e189]
+        - searchbox "Search published works" [ref=f9e194]
+      - generic "Publication types" [ref=f9e195]:
+        - button "All formats" [ref=f9e196] [cursor=pointer]
+        - button "Digital Magazine" [ref=f9e197] [cursor=pointer]
+        - button "Scopus Paper" [ref=f9e198] [cursor=pointer]
+      - generic [ref=f9e199]:
+        - article [ref=f9e200]:
+          - generic [ref=f9e204]:
+            - generic [ref=f9e205]: Digital Magazine
+            - heading "Digital magazine collection" [level=3] [ref=f9e207]
+            - paragraph [ref=f9e208]: Independent digital publishing
+            - paragraph [ref=f9e209]: A growing archive for complete magazine issues, editorial work, and visual publication design.
+            - generic [ref=f9e210]:
+              - generic [ref=f9e211]: Digital magazine
+              - generic [ref=f9e212]: Editorial
+              - generic [ref=f9e213]: Design
+        - article [ref=f9e214]:
+          - generic [ref=f9e219]:
+            - generic [ref=f9e220]: Scopus Paper
+            - heading "Scopus research publication" [level=3] [ref=f9e222]
+            - paragraph [ref=f9e223]: Scopus-indexed venue
+            - paragraph [ref=f9e224]: Research publications and DOI-linked papers will be catalogued here with abstracts and author roles.
+            - generic [ref=f9e225]:
+              - generic [ref=f9e226]: Research
+              - generic [ref=f9e227]: Scopus
+    - generic [ref=f9e228]:
+      - generic [ref=f9e229]:
+        - generic [ref=f9e230]:
+          - text: 04 / open source
+          - heading "GitHub activity" [level=2] [ref=f9e231]
+        - link "@bmontalvossct" [ref=f9e232] [cursor=pointer]:
+          - /url: https://github.com/bmontalvossct
+      - generic [ref=f9e240]:
+        - generic [ref=f9e241]:
+          - strong [ref=f9e242]: "402"
+          - generic [ref=f9e243]: public contributions in the last year
+        - img "402 GitHub contributions from 2025-07-13 to 2026-07-15" [ref=f9e245]:
+          - generic [ref=f9e246]:
+            - generic "No contribution activity on 2025-07-13" [ref=f9e247]
+            - generic "No contribution activity on 2025-07-14" [ref=f9e248]
+            - generic "No contribution activity on 2025-07-15" [ref=f9e249]
+            - generic "No contribution activity on 2025-07-16" [ref=f9e250]
+            - generic "No contribution activity on 2025-07-17" [ref=f9e251]
+            - generic "No contribution activity on 2025-07-18" [ref=f9e252]
+            - generic "No contribution activity on 2025-07-19" [ref=f9e253]
+          - generic [ref=f9e254]:
+            - generic "No contribution activity on 2025-07-20" [ref=f9e255]
+            - generic "No contribution activity on 2025-07-21" [ref=f9e256]
+            - generic "No contribution activity on 2025-07-22" [ref=f9e257]
+            - generic "No contribution activity on 2025-07-23" [ref=f9e258]
+            - generic "No contribution activity on 2025-07-24" [ref=f9e259]
+            - generic "No contribution activity on 2025-07-25" [ref=f9e260]
+            - generic "No contribution activity on 2025-07-26" [ref=f9e261]
+          - generic [ref=f9e262]:
+            - generic "No contribution activity on 2025-07-27" [ref=f9e263]
+            - generic "No contribution activity on 2025-07-28" [ref=f9e264]
+            - generic "No contribution activity on 2025-07-29" [ref=f9e265]
+            - generic "No contribution activity on 2025-07-30" [ref=f9e266]
+            - generic "No contribution activity on 2025-07-31" [ref=f9e267]
+            - generic "No contribution activity on 2025-08-01" [ref=f9e268]
+            - generic "No contribution activity on 2025-08-02" [ref=f9e269]
+          - generic [ref=f9e270]:
+            - generic "No contribution activity on 2025-08-03" [ref=f9e271]
+            - generic "No contribution activity on 2025-08-04" [ref=f9e272]
+            - generic "No contribution activity on 2025-08-05" [ref=f9e273]
+            - generic "No contribution activity on 2025-08-06" [ref=f9e274]
+            - generic "No contribution activity on 2025-08-07" [ref=f9e275]
+            - generic "No contribution activity on 2025-08-08" [ref=f9e276]
+            - generic "No contribution activity on 2025-08-09" [ref=f9e277]
+          - generic [ref=f9e278]:
+            - generic "No contribution activity on 2025-08-10" [ref=f9e279]
+            - generic "No contribution activity on 2025-08-11" [ref=f9e280]
+            - generic "No contribution activity on 2025-08-12" [ref=f9e281]
+            - generic "No contribution activity on 2025-08-13" [ref=f9e282]
+            - generic "No contribution activity on 2025-08-14" [ref=f9e283]
+            - generic "No contribution activity on 2025-08-15" [ref=f9e284]
+            - generic "No contribution activity on 2025-08-16" [ref=f9e285]
+          - generic [ref=f9e286]:
+            - generic "No contribution activity on 2025-08-17" [ref=f9e287]
+            - generic "No contribution activity on 2025-08-18" [ref=f9e288]
+            - generic "No contribution activity on 2025-08-19" [ref=f9e289]
+            - generic "No contribution activity on 2025-08-20" [ref=f9e290]
+            - generic "No contribution activity on 2025-08-21" [ref=f9e291]
+            - generic "No contribution activity on 2025-08-22" [ref=f9e292]
+            - generic "No contribution activity on 2025-08-23" [ref=f9e293]
+          - generic [ref=f9e294]:
+            - generic "No contribution activity on 2025-08-24" [ref=f9e295]
+            - generic "No contribution activity on 2025-08-25" [ref=f9e296]
+            - generic "No contribution activity on 2025-08-26" [ref=f9e297]
+            - generic "No contribution activity on 2025-08-27" [ref=f9e298]
+            - generic "No contribution activity on 2025-08-28" [ref=f9e299]
+            - generic "No contribution activity on 2025-08-29" [ref=f9e300]
+            - generic "No contribution activity on 2025-08-30" [ref=f9e301]
+          - generic [ref=f9e302]:
+            - generic "No contribution activity on 2025-08-31" [ref=f9e303]
+            - generic "No contribution activity on 2025-09-01" [ref=f9e304]
+            - generic "No contribution activity on 2025-09-02" [ref=f9e305]
+            - generic "No contribution activity on 2025-09-03" [ref=f9e306]
+            - generic "No contribution activity on 2025-09-04" [ref=f9e307]
+            - generic "No contribution activity on 2025-09-05" [ref=f9e308]
+            - generic "No contribution activity on 2025-09-06" [ref=f9e309]
+          - generic [ref=f9e310]:
+            - generic "No contribution activity on 2025-09-07" [ref=f9e311]
+            - generic "No contribution activity on 2025-09-08" [ref=f9e312]
+            - generic "No contribution activity on 2025-09-09" [ref=f9e313]
+            - generic "No contribution activity on 2025-09-10" [ref=f9e314]
+            - generic "No contribution activity on 2025-09-11" [ref=f9e315]
+            - generic "No contribution activity on 2025-09-12" [ref=f9e316]
+            - generic "No contribution activity on 2025-09-13" [ref=f9e317]
+          - generic [ref=f9e318]:
+            - generic "No contribution activity on 2025-09-14" [ref=f9e319]
+            - generic "No contribution activity on 2025-09-15" [ref=f9e320]
+            - generic "No contribution activity on 2025-09-16" [ref=f9e321]
+            - generic "No contribution activity on 2025-09-17" [ref=f9e322]
+            - generic "No contribution activity on 2025-09-18" [ref=f9e323]
+            - generic "No contribution activity on 2025-09-19" [ref=f9e324]
+            - generic "No contribution activity on 2025-09-20" [ref=f9e325]
+          - generic [ref=f9e326]:
+            - generic "No contribution activity on 2025-09-21" [ref=f9e327]
+            - generic "No contribution activity on 2025-09-22" [ref=f9e328]
+            - generic "No contribution activity on 2025-09-23" [ref=f9e329]
+            - generic "No contribution activity on 2025-09-24" [ref=f9e330]
+            - generic "No contribution activity on 2025-09-25" [ref=f9e331]
+            - generic "No contribution activity on 2025-09-26" [ref=f9e332]
+            - generic "No contribution activity on 2025-09-27" [ref=f9e333]
+          - generic [ref=f9e334]:
+            - generic "No contribution activity on 2025-09-28" [ref=f9e335]
+            - generic "No contribution activity on 2025-09-29" [ref=f9e336]
+            - generic "No contribution activity on 2025-09-30" [ref=f9e337]
+            - generic "No contribution activity on 2025-10-01" [ref=f9e338]
+            - generic "No contribution activity on 2025-10-02" [ref=f9e339]
+            - generic "No contribution activity on 2025-10-03" [ref=f9e340]
+            - generic "No contribution activity on 2025-10-04" [ref=f9e341]
+          - generic [ref=f9e342]:
+            - generic "No contribution activity on 2025-10-05" [ref=f9e343]
+            - generic "No contribution activity on 2025-10-06" [ref=f9e344]
+            - generic "No contribution activity on 2025-10-07" [ref=f9e345]
+            - generic "No contribution activity on 2025-10-08" [ref=f9e346]
+            - generic "No contribution activity on 2025-10-09" [ref=f9e347]
+            - generic "No contribution activity on 2025-10-10" [ref=f9e348]
+            - generic "No contribution activity on 2025-10-11" [ref=f9e349]
+          - generic [ref=f9e350]:
+            - generic "No contribution activity on 2025-10-12" [ref=f9e351]
+            - generic "No contribution activity on 2025-10-13" [ref=f9e352]
+            - generic "No contribution activity on 2025-10-14" [ref=f9e353]
+            - generic "No contribution activity on 2025-10-15" [ref=f9e354]
+            - generic "No contribution activity on 2025-10-16" [ref=f9e355]
+            - generic "No contribution activity on 2025-10-17" [ref=f9e356]
+            - generic "No contribution activity on 2025-10-18" [ref=f9e357]
+          - generic [ref=f9e358]:
+            - generic "No contribution activity on 2025-10-19" [ref=f9e359]
+            - generic "No contribution activity on 2025-10-20" [ref=f9e360]
+            - generic "No contribution activity on 2025-10-21" [ref=f9e361]
+            - generic "No contribution activity on 2025-10-22" [ref=f9e362]
+            - generic "No contribution activity on 2025-10-23" [ref=f9e363]
+            - generic "No contribution activity on 2025-10-24" [ref=f9e364]
+            - generic "No contribution activity on 2025-10-25" [ref=f9e365]
+          - generic [ref=f9e366]:
+            - generic "No contribution activity on 2025-10-26" [ref=f9e367]
+            - generic "No contribution activity on 2025-10-27" [ref=f9e368]
+            - generic "No contribution activity on 2025-10-28" [ref=f9e369]
+            - generic "No contribution activity on 2025-10-29" [ref=f9e370]
+            - generic "No contribution activity on 2025-10-30" [ref=f9e371]
+            - generic "No contribution activity on 2025-10-31" [ref=f9e372]
+            - generic "No contribution activity on 2025-11-01" [ref=f9e373]
+          - generic [ref=f9e374]:
+            - generic "No contribution activity on 2025-11-02" [ref=f9e375]
+            - generic "No contribution activity on 2025-11-03" [ref=f9e376]
+            - generic "No contribution activity on 2025-11-04" [ref=f9e377]
+            - generic "No contribution activity on 2025-11-05" [ref=f9e378]
+            - generic "No contribution activity on 2025-11-06" [ref=f9e379]
+            - generic "No contribution activity on 2025-11-07" [ref=f9e380]
+            - generic "No contribution activity on 2025-11-08" [ref=f9e381]
+          - generic [ref=f9e382]:
+            - generic "No contribution activity on 2025-11-09" [ref=f9e383]
+            - generic "No contribution activity on 2025-11-10" [ref=f9e384]
+            - generic "No contribution activity on 2025-11-11" [ref=f9e385]
+            - generic "No contribution activity on 2025-11-12" [ref=f9e386]
+            - generic "No contribution activity on 2025-11-13" [ref=f9e387]
+            - generic "No contribution activity on 2025-11-14" [ref=f9e388]
+            - generic "No contribution activity on 2025-11-15" [ref=f9e389]
+          - generic [ref=f9e390]:
+            - generic "No contribution activity on 2025-11-16" [ref=f9e391]
+            - generic "No contribution activity on 2025-11-17" [ref=f9e392]
+            - generic "No contribution activity on 2025-11-18" [ref=f9e393]
+            - generic "No contribution activity on 2025-11-19" [ref=f9e394]
+            - generic "No contribution activity on 2025-11-20" [ref=f9e395]
+            - generic "No contribution activity on 2025-11-21" [ref=f9e396]
+            - generic "No contribution activity on 2025-11-22" [ref=f9e397]
+          - generic [ref=f9e398]:
+            - generic "No contribution activity on 2025-11-23" [ref=f9e399]
+            - generic "No contribution activity on 2025-11-24" [ref=f9e400]
+            - generic "No contribution activity on 2025-11-25" [ref=f9e401]
+            - generic "No contribution activity on 2025-11-26" [ref=f9e402]
+            - generic "No contribution activity on 2025-11-27" [ref=f9e403]
+            - generic "No contribution activity on 2025-11-28" [ref=f9e404]
+            - generic "No contribution activity on 2025-11-29" [ref=f9e405]
+          - generic [ref=f9e406]:
+            - generic "No contribution activity on 2025-11-30" [ref=f9e407]
+            - generic "No contribution activity on 2025-12-01" [ref=f9e408]
+            - generic "No contribution activity on 2025-12-02" [ref=f9e409]
+            - generic "No contribution activity on 2025-12-03" [ref=f9e410]
+            - generic "No contribution activity on 2025-12-04" [ref=f9e411]
+            - generic "No contribution activity on 2025-12-05" [ref=f9e412]
+            - generic "No contribution activity on 2025-12-06" [ref=f9e413]
+          - generic [ref=f9e414]:
+            - generic "No contribution activity on 2025-12-07" [ref=f9e415]
+            - generic "No contribution activity on 2025-12-08" [ref=f9e416]
+            - generic "No contribution activity on 2025-12-09" [ref=f9e417]
+            - generic "No contribution activity on 2025-12-10" [ref=f9e418]
+            - generic "No contribution activity on 2025-12-11" [ref=f9e419]
+            - generic "No contribution activity on 2025-12-12" [ref=f9e420]
+            - generic "No contribution activity on 2025-12-13" [ref=f9e421]
+          - generic [ref=f9e422]:
+            - generic "No contribution activity on 2025-12-14" [ref=f9e423]
+            - generic "High contribution activity on 2025-12-15" [ref=f9e424]
+            - generic "Low contribution activity on 2025-12-16" [ref=f9e425]
+            - generic "No contribution activity on 2025-12-17" [ref=f9e426]
+            - generic "No contribution activity on 2025-12-18" [ref=f9e427]
+            - generic "No contribution activity on 2025-12-19" [ref=f9e428]
+            - generic "No contribution activity on 2025-12-20" [ref=f9e429]
+          - generic [ref=f9e430]:
+            - generic "No contribution activity on 2025-12-21" [ref=f9e431]
+            - generic "No contribution activity on 2025-12-22" [ref=f9e432]
+            - generic "Moderate contribution activity on 2025-12-23" [ref=f9e433]
+            - generic "No contribution activity on 2025-12-24" [ref=f9e434]
+            - generic "No contribution activity on 2025-12-25" [ref=f9e435]
+            - generic "No contribution activity on 2025-12-26" [ref=f9e436]
+            - generic "No contribution activity on 2025-12-27" [ref=f9e437]
+          - generic [ref=f9e438]:
+            - generic "No contribution activity on 2025-12-28" [ref=f9e439]
+            - generic "No contribution activity on 2025-12-29" [ref=f9e440]
+            - generic "No contribution activity on 2025-12-30" [ref=f9e441]
+            - generic "No contribution activity on 2025-12-31" [ref=f9e442]
+            - generic "No contribution activity on 2026-01-01" [ref=f9e443]
+            - generic "No contribution activity on 2026-01-02" [ref=f9e444]
+            - generic "No contribution activity on 2026-01-03" [ref=f9e445]
+          - generic [ref=f9e446]:
+            - generic "No contribution activity on 2026-01-04" [ref=f9e447]
+            - generic "No contribution activity on 2026-01-05" [ref=f9e448]
+            - generic "High contribution activity on 2026-01-06" [ref=f9e449]
+            - generic "Moderate contribution activity on 2026-01-07" [ref=f9e450]
+            - generic "No contribution activity on 2026-01-08" [ref=f9e451]
+            - generic "Low contribution activity on 2026-01-09" [ref=f9e452]
+            - generic "No contribution activity on 2026-01-10" [ref=f9e453]
+          - generic [ref=f9e454]:
+            - generic "No contribution activity on 2026-01-11" [ref=f9e455]
+            - generic "No contribution activity on 2026-01-12" [ref=f9e456]
+            - generic "Low contribution activity on 2026-01-13" [ref=f9e457]
+            - generic "Moderate contribution activity on 2026-01-14" [ref=f9e458]
+            - generic "Low contribution activity on 2026-01-15" [ref=f9e459]
+            - generic "Low contribution activity on 2026-01-16" [ref=f9e460]
+            - generic "No contribution activity on 2026-01-17" [ref=f9e461]
+          - generic [ref=f9e462]:
+            - generic "No contribution activity on 2026-01-18" [ref=f9e463]
+            - generic "Low contribution activity on 2026-01-19" [ref=f9e464]
+            - generic "No contribution activity on 2026-01-20" [ref=f9e465]
+            - generic "No contribution activity on 2026-01-21" [ref=f9e466]
+            - generic "Moderate contribution activity on 2026-01-22" [ref=f9e467]
+            - generic "Low contribution activity on 2026-01-23" [ref=f9e468]
+            - generic "Low contribution activity on 2026-01-24" [ref=f9e469]
+          - generic [ref=f9e470]:
+            - generic "No contribution activity on 2026-01-25" [ref=f9e471]
+            - generic "Moderate contribution activity on 2026-01-26" [ref=f9e472]
+            - generic "Low contribution activity on 2026-01-27" [ref=f9e473]
+            - generic "Low contribution activity on 2026-01-28" [ref=f9e474]
+            - generic "No contribution activity on 2026-01-29" [ref=f9e475]
+            - generic "Low contribution activity on 2026-01-30" [ref=f9e476]
+            - generic "No contribution activity on 2026-01-31" [ref=f9e477]
+          - generic [ref=f9e478]:
+            - generic "No contribution activity on 2026-02-01" [ref=f9e479]
+            - generic "Low contribution activity on 2026-02-02" [ref=f9e480]
+            - generic "High contribution activity on 2026-02-03" [ref=f9e481]
+            - generic "Moderate contribution activity on 2026-02-04" [ref=f9e482]
+            - generic "Low contribution activity on 2026-02-05" [ref=f9e483]
+            - generic "No contribution activity on 2026-02-06" [ref=f9e484]
+            - generic "Low contribution activity on 2026-02-07" [ref=f9e485]
+          - generic [ref=f9e486]:
+            - generic "Low contribution activity on 2026-02-08" [ref=f9e487]
+            - generic "Low contribution activity on 2026-02-09" [ref=f9e488]
+            - generic "No contribution activity on 2026-02-10" [ref=f9e489]
+            - generic "No contribution activity on 2026-02-11" [ref=f9e490]
+            - generic "No contribution activity on 2026-02-12" [ref=f9e491]
+            - generic "Moderate contribution activity on 2026-02-13" [ref=f9e492]
+            - generic "No contribution activity on 2026-02-14" [ref=f9e493]
+          - generic [ref=f9e494]:
+            - generic "No contribution activity on 2026-02-15" [ref=f9e495]
+            - generic "No contribution activity on 2026-02-16" [ref=f9e496]
+            - generic "No contribution activity on 2026-02-17" [ref=f9e497]
+            - generic "No contribution activity on 2026-02-18" [ref=f9e498]
+            - generic "No contribution activity on 2026-02-19" [ref=f9e499]
+            - generic "No contribution activity on 2026-02-20" [ref=f9e500]
+            - generic "No contribution activity on 2026-02-21" [ref=f9e501]
+          - generic [ref=f9e502]:
+            - generic "No contribution activity on 2026-02-22" [ref=f9e503]
+            - generic "No contribution activity on 2026-02-23" [ref=f9e504]
+            - generic "No contribution activity on 2026-02-24" [ref=f9e505]
+            - generic "Low contribution activity on 2026-02-25" [ref=f9e506]
+            - generic "Low contribution activity on 2026-02-26" [ref=f9e507]
+            - generic "No contribution activity on 2026-02-27" [ref=f9e508]
+            - generic "No contribution activity on 2026-02-28" [ref=f9e509]
+          - generic [ref=f9e510]:
+            - generic "No contribution activity on 2026-03-01" [ref=f9e511]
+            - generic "No contribution activity on 2026-03-02" [ref=f9e512]
+            - generic "No contribution activity on 2026-03-03" [ref=f9e513]
+            - generic "Low contribution activity on 2026-03-04" [ref=f9e514]
+            - generic "No contribution activity on 2026-03-05" [ref=f9e515]
+            - generic "No contribution activity on 2026-03-06" [ref=f9e516]
+            - generic "No contribution activity on 2026-03-07" [ref=f9e517]
+          - generic [ref=f9e518]:
+            - generic "No contribution activity on 2026-03-08" [ref=f9e519]
+            - generic "No contribution activity on 2026-03-09" [ref=f9e520]
+            - generic "Low contribution activity on 2026-03-10" [ref=f9e521]
+            - generic "No contribution activity on 2026-03-11" [ref=f9e522]
+            - generic "No contribution activity on 2026-03-12" [ref=f9e523]
+            - generic "No contribution activity on 2026-03-13" [ref=f9e524]
+            - generic "No contribution activity on 2026-03-14" [ref=f9e525]
+          - generic [ref=f9e526]:
+            - generic "No contribution activity on 2026-03-15" [ref=f9e527]
+            - generic "Moderate contribution activity on 2026-03-16" [ref=f9e528]
+            - generic "Moderate contribution activity on 2026-03-17" [ref=f9e529]
+            - generic "No contribution activity on 2026-03-18" [ref=f9e530]
+            - generic "No contribution activity on 2026-03-19" [ref=f9e531]
+            - generic "No contribution activity on 2026-03-20" [ref=f9e532]
+            - generic "No contribution activity on 2026-03-21" [ref=f9e533]
+          - generic [ref=f9e534]:
+            - generic "No contribution activity on 2026-03-22" [ref=f9e535]
+            - generic "High contribution activity on 2026-03-23" [ref=f9e536]
+            - generic "No contribution activity on 2026-03-24" [ref=f9e537]
+            - generic "Low contribution activity on 2026-03-25" [ref=f9e538]
+            - generic "No contribution activity on 2026-03-26" [ref=f9e539]
+            - generic "Low contribution activity on 2026-03-27" [ref=f9e540]
+            - generic "Low contribution activity on 2026-03-28" [ref=f9e541]
+          - generic [ref=f9e542]:
+            - generic "No contribution activity on 2026-03-29" [ref=f9e543]
+            - generic "No contribution activity on 2026-03-30" [ref=f9e544]
+            - generic "No contribution activity on 2026-03-31" [ref=f9e545]
+            - generic "No contribution activity on 2026-04-01" [ref=f9e546]
+            - generic "No contribution activity on 2026-04-02" [ref=f9e547]
+            - generic "No contribution activity on 2026-04-03" [ref=f9e548]
+            - generic "No contribution activity on 2026-04-04" [ref=f9e549]
+          - generic [ref=f9e550]:
+            - generic "No contribution activity on 2026-04-05" [ref=f9e551]
+            - generic "Low contribution activity on 2026-04-06" [ref=f9e552]
+            - generic "Low contribution activity on 2026-04-07" [ref=f9e553]
+            - generic "No contribution activity on 2026-04-08" [ref=f9e554]
+            - generic "Moderate contribution activity on 2026-04-09" [ref=f9e555]
+            - generic "No contribution activity on 2026-04-10" [ref=f9e556]
+            - generic "No contribution activity on 2026-04-11" [ref=f9e557]
+          - generic [ref=f9e558]:
+            - generic "No contribution activity on 2026-04-12" [ref=f9e559]
+            - generic "No contribution activity on 2026-04-13" [ref=f9e560]
+            - generic "No contribution activity on 2026-04-14" [ref=f9e561]
+            - generic "No contribution activity on 2026-04-15" [ref=f9e562]
+            - generic "No contribution activity on 2026-04-16" [ref=f9e563]
+            - generic "No contribution activity on 2026-04-17" [ref=f9e564]
+            - generic "Low contribution activity on 2026-04-18" [ref=f9e565]
+          - generic [ref=f9e566]:
+            - generic "No contribution activity on 2026-04-19" [ref=f9e567]
+            - generic "High contribution activity on 2026-04-20" [ref=f9e568]
+            - generic "No contribution activity on 2026-04-21" [ref=f9e569]
+            - generic "No contribution activity on 2026-04-22" [ref=f9e570]
+            - generic "No contribution activity on 2026-04-23" [ref=f9e571]
+            - generic "No contribution activity on 2026-04-24" [ref=f9e572]
+            - generic "No contribution activity on 2026-04-25" [ref=f9e573]
+          - generic [ref=f9e574]:
+            - generic "No contribution activity on 2026-04-26" [ref=f9e575]
+            - generic "No contribution activity on 2026-04-27" [ref=f9e576]
+            - generic "No contribution activity on 2026-04-28" [ref=f9e577]
+            - generic "No contribution activity on 2026-04-29" [ref=f9e578]
+            - generic "Moderate contribution activity on 2026-04-30" [ref=f9e579]
+            - generic "No contribution activity on 2026-05-01" [ref=f9e580]
+            - generic "No contribution activity on 2026-05-02" [ref=f9e581]
+          - generic [ref=f9e582]:
+            - generic "No contribution activity on 2026-05-03" [ref=f9e583]
+            - generic "No contribution activity on 2026-05-04" [ref=f9e584]
+            - generic "High contribution activity on 2026-05-05" [ref=f9e585]
+            - generic "Moderate contribution activity on 2026-05-06" [ref=f9e586]
+            - generic "High contribution activity on 2026-05-07" [ref=f9e587]
+            - generic "No contribution activity on 2026-05-08" [ref=f9e588]
+            - generic "No contribution activity on 2026-05-09" [ref=f9e589]
+          - generic [ref=f9e590]:
+            - generic "No contribution activity on 2026-05-10" [ref=f9e591]
+            - generic "No contribution activity on 2026-05-11" [ref=f9e592]
+            - generic "Very high contribution activity on 2026-05-12" [ref=f9e593]
+            - generic "No contribution activity on 2026-05-13" [ref=f9e594]
+            - generic "No contribution activity on 2026-05-14" [ref=f9e595]
+            - generic "No contribution activity on 2026-05-15" [ref=f9e596]
+            - generic "No contribution activity on 2026-05-16" [ref=f9e597]
+          - generic [ref=f9e598]:
+            - generic "No contribution activity on 2026-05-17" [ref=f9e599]
+            - generic "No contribution activity on 2026-05-18" [ref=f9e600]
+            - generic "No contribution activity on 2026-05-19" [ref=f9e601]
+            - generic "No contribution activity on 2026-05-20" [ref=f9e602]
+            - generic "Moderate contribution activity on 2026-05-21" [ref=f9e603]
+            - generic "No contribution activity on 2026-05-22" [ref=f9e604]
+            - generic "No contribution activity on 2026-05-23" [ref=f9e605]
+          - generic [ref=f9e606]:
+            - generic "No contribution activity on 2026-05-24" [ref=f9e607]
+            - generic "Moderate contribution activity on 2026-05-25" [ref=f9e608]
+            - generic "No contribution activity on 2026-05-26" [ref=f9e609]
+            - generic "No contribution activity on 2026-05-27" [ref=f9e610]
+            - generic "No contribution activity on 2026-05-28" [ref=f9e611]
+            - generic "No contribution activity on 2026-05-29" [ref=f9e612]
+            - generic "No contribution activity on 2026-05-30" [ref=f9e613]
+          - generic [ref=f9e614]:
+            - generic "No contribution activity on 2026-05-31" [ref=f9e615]
+            - generic "No contribution activity on 2026-06-01" [ref=f9e616]
+            - generic "No contribution activity on 2026-06-02" [ref=f9e617]
+            - generic "No contribution activity on 2026-06-03" [ref=f9e618]
+            - generic "No contribution activity on 2026-06-04" [ref=f9e619]
+            - generic "No contribution activity on 2026-06-05" [ref=f9e620]
+            - generic "No contribution activity on 2026-06-06" [ref=f9e621]
+          - generic [ref=f9e622]:
+            - generic "No contribution activity on 2026-06-07" [ref=f9e623]
+            - generic "No contribution activity on 2026-06-08" [ref=f9e624]
+            - generic "No contribution activity on 2026-06-09" [ref=f9e625]
+            - generic "Moderate contribution activity on 2026-06-10" [ref=f9e626]
+            - generic "High contribution activity on 2026-06-11" [ref=f9e627]
+            - generic "No contribution activity on 2026-06-12" [ref=f9e628]
+            - generic "No contribution activity on 2026-06-13" [ref=f9e629]
+          - generic [ref=f9e630]:
+            - generic "No contribution activity on 2026-06-14" [ref=f9e631]
+            - generic "Very high contribution activity on 2026-06-15" [ref=f9e632]
+            - generic "No contribution activity on 2026-06-16" [ref=f9e633]
+            - generic "No contribution activity on 2026-06-17" [ref=f9e634]
+            - generic "No contribution activity on 2026-06-18" [ref=f9e635]
+            - generic "No contribution activity on 2026-06-19" [ref=f9e636]
+            - generic "No contribution activity on 2026-06-20" [ref=f9e637]
+          - generic [ref=f9e638]:
+            - generic "No contribution activity on 2026-06-21" [ref=f9e639]
+            - generic "Low contribution activity on 2026-06-22" [ref=f9e640]
+            - generic "Moderate contribution activity on 2026-06-23" [ref=f9e641]
+            - generic "Low contribution activity on 2026-06-24" [ref=f9e642]
+            - generic "No contribution activity on 2026-06-25" [ref=f9e643]
+            - generic "No contribution activity on 2026-06-26" [ref=f9e644]
+            - generic "No contribution activity on 2026-06-27" [ref=f9e645]
+          - generic [ref=f9e646]:
+            - generic "No contribution activity on 2026-06-28" [ref=f9e647]
+            - generic "Very high contribution activity on 2026-06-29" [ref=f9e648]
+            - generic "No contribution activity on 2026-06-30" [ref=f9e649]
+            - generic "High contribution activity on 2026-07-01" [ref=f9e650]
+            - generic "No contribution activity on 2026-07-02" [ref=f9e651]
+            - generic "No contribution activity on 2026-07-03" [ref=f9e652]
+            - generic "No contribution activity on 2026-07-04" [ref=f9e653]
+          - generic [ref=f9e654]:
+            - generic "No contribution activity on 2026-07-05" [ref=f9e655]
+            - generic "Low contribution activity on 2026-07-06" [ref=f9e656]
+            - generic "No contribution activity on 2026-07-07" [ref=f9e657]
+            - generic "No contribution activity on 2026-07-08" [ref=f9e658]
+            - generic "Very high contribution activity on 2026-07-09" [ref=f9e659]
+            - generic "No contribution activity on 2026-07-10" [ref=f9e660]
+            - generic "No contribution activity on 2026-07-11" [ref=f9e661]
+          - generic [ref=f9e662]:
+            - generic "No contribution activity on 2026-07-12" [ref=f9e663]
+            - generic "No contribution activity on 2026-07-13" [ref=f9e664]
+            - generic "Moderate contribution activity on 2026-07-14" [ref=f9e665]
+            - generic "No contribution activity on 2026-07-15" [ref=f9e666]
+        - generic [ref=f9e667]:
+          - generic [ref=f9e668]: 2025-07-13
+          - generic [ref=f9e669]:
+            - generic [ref=f9e670]: Less
+            - generic [ref=f9e676]: More
+          - generic [ref=f9e677]: 2026-07-15
+    - generic [ref=f9e678]:
+      - generic [ref=f9e680]:
+        - text: 05 / milestones
+        - heading "Achievements" [level=2] [ref=f9e681]
+      - generic [ref=f9e682]:
+        - article [ref=f9e683]:
+          - generic [ref=f9e688]: Civil Service Commission
+          - heading "Civil Service Eligibility - Professional" [level=3] [ref=f9e690]
+          - paragraph [ref=f9e691]: Professional-level civil service eligibility recorded in the curriculum vitae.
+        - article [ref=f9e692]:
+          - generic [ref=f9e697]:
+            - generic [ref=f9e698]: SAP
+            - generic [ref=f9e699]: Jun 2026
+          - heading "SAP Certified - Implementation Consultant" [level=3] [ref=f9e700]
+          - paragraph [ref=f9e701]: Certified in end-to-end business processes for SAP Business Suite.
+          - link "Evidence" [ref=f9e702] [cursor=pointer]:
+            - /url: https://www.credly.com/users/brittm
+    - generic [ref=f9e706]:
+      - generic [ref=f9e707]:
+        - generic [ref=f9e708]:
+          - text: 06 / verified
+          - heading "Credential badges" [level=2] [ref=f9e709]
+        - generic [ref=f9e710]:
+          - link "Badge archive" [ref=f9e711] [cursor=pointer]:
+            - /url: /badges
+          - link "Credly profile" [ref=f9e715] [cursor=pointer]:
+            - /url: https://www.credly.com/users/brittm
+      - generic [ref=f9e719]:
+        - generic [ref=f9e720]:
+          - button "Networking Basics Cisco Networking Basics Jul 2026" [ref=f9e721] [cursor=pointer]:
+            - img "Networking Basics" [ref=f9e723]
+            - generic [ref=f9e724]:
+              - generic [ref=f9e725]: Cisco
+              - strong [ref=f9e726]: Networking Basics
+              - generic [ref=f9e727]: Jul 2026
+          - button "SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite SAP SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite Jun 2026" [ref=f9e728] [cursor=pointer]:
+            - img "SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite" [ref=f9e730]
+            - generic [ref=f9e731]:
+              - generic [ref=f9e732]: SAP
+              - strong [ref=f9e733]: SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite
+              - generic [ref=f9e734]: Jun 2026
+          - 'button "English for IT: Advice and Time Cisco English for IT: Advice and Time May 2026" [ref=f9e735] [cursor=pointer]':
+            - 'img "English for IT: Advice and Time" [ref=f9e737]'
+            - generic [ref=f9e738]:
+              - generic [ref=f9e739]: Cisco
+              - strong [ref=f9e740]: "English for IT: Advice and Time"
+              - generic [ref=f9e741]: May 2026
+          - 'button "English for IT: Describing and Comparing Cisco English for IT: Describing and Comparing May 2026" [ref=f9e742] [cursor=pointer]':
+            - 'img "English for IT: Describing and Comparing" [ref=f9e744]'
+            - generic [ref=f9e745]:
+              - generic [ref=f9e746]: Cisco
+              - strong [ref=f9e747]: "English for IT: Describing and Comparing"
+              - generic [ref=f9e748]: May 2026
+          - 'button "English for IT: Needs and Responsibilities Cisco English for IT: Needs and Responsibilities May 2026" [ref=f9e749] [cursor=pointer]':
+            - 'img "English for IT: Needs and Responsibilities" [ref=f9e751]'
+            - generic [ref=f9e752]:
+              - generic [ref=f9e753]: Cisco
+              - strong [ref=f9e754]: "English for IT: Needs and Responsibilities"
+              - generic [ref=f9e755]: May 2026
+          - 'button "English for IT: People and Quantities Cisco English for IT: People and Quantities May 2026" [ref=f9e756] [cursor=pointer]':
+            - 'img "English for IT: People and Quantities" [ref=f9e758]'
+            - generic [ref=f9e759]:
+              - generic [ref=f9e760]: Cisco
+              - strong [ref=f9e761]: "English for IT: People and Quantities"
+              - generic [ref=f9e762]: May 2026
+        - complementary [ref=f9e763]:
+          - text: Certificate preview
+          - img "Networking Basics" [ref=f9e764]
+          - paragraph [ref=f9e765]: Cisco
+          - heading "Networking Basics" [level=3] [ref=f9e766]
+          - button "View details" [ref=f9e767] [cursor=pointer]
+      - link "Explore all 29 verified badges" [ref=f9e771] [cursor=pointer]:
+        - /url: /badges
+    - generic [ref=f9e775]:
+      - generic [ref=f9e776]:
+        - generic [ref=f9e777]:
+          - text: 07 / archive
+          - heading "Certificates" [level=2] [ref=f9e778]
+        - link "Certificate archive" [ref=f9e779] [cursor=pointer]:
+          - /url: /certifications
+      - generic [ref=f9e783]:
+        - link "(Bulk) NWMC Women Adding Value through Maximization of Online Platforms for Optimum Opportunities byElwin Argana BRITT(signed) Certificate (Bulk) NWMC Women Adding Value through Maximization of Online Platforms for Optimum Opportunities byElwin Argana BRITT(signed)" [ref=f9e784] [cursor=pointer]:
+          - /url: https://drive.google.com/file/d/1vQ-BIcQHnCykWlorXTm27DKWA0NER9Uc/view
+          - img "(Bulk) NWMC Women Adding Value through Maximization of Online Platforms for Optimum Opportunities byElwin Argana BRITT(signed)" [ref=f9e786]
+          - generic [ref=f9e787]:
+            - generic [ref=f9e788]: Certificate
+            - strong [ref=f9e789]: (Bulk) NWMC Women Adding Value through Maximization of Online Platforms for Optimum Opportunities byElwin Argana BRITT(signed)
+        - link "5G CYBERSECURITY STANDARDS AND SOLUTIONS AND 6G NEW TECHNOLOGY INNOVATION Certificate 5G CYBERSECURITY STANDARDS AND SOLUTIONS AND 6G NEW TECHNOLOGY INNOVATION" [ref=f9e793] [cursor=pointer]:
+          - /url: https://drive.google.com/file/d/1okXODcqofDZCasfdYeg6hv5yw9x6PjO1/view
+          - img "5G CYBERSECURITY STANDARDS AND SOLUTIONS AND 6G NEW TECHNOLOGY INNOVATION" [ref=f9e795]
+          - generic [ref=f9e796]:
+            - generic [ref=f9e797]: Certificate
+            - strong [ref=f9e798]: 5G CYBERSECURITY STANDARDS AND SOLUTIONS AND 6G NEW TECHNOLOGY INNOVATION
+        - link "Agile Project Methodologies Certificate Agile Project Methodologies" [ref=f9e802] [cursor=pointer]:
+          - /url: https://drive.google.com/file/d/1DTsR9pXu_NckHdv24ee16DS3KgPSQcYu/view
+          - img "Agile Project Methodologies" [ref=f9e804]
+          - generic [ref=f9e805]:
+            - generic [ref=f9e806]: Certificate
+            - strong [ref=f9e807]: Agile Project Methodologies
+        - link "AIatWorkAnalyzeCustomerReviews Certificate AIatWorkAnalyzeCustomerReviews" [ref=f9e811] [cursor=pointer]:
+          - /url: https://drive.google.com/file/d/1fwtfC8DUzmHVOAUgyesCfqcjO7stIBXk/view
+          - img "AIatWorkAnalyzeCustomerReviews" [ref=f9e813]
+          - generic [ref=f9e814]:
+            - generic [ref=f9e815]: Certificate
+            - strong [ref=f9e816]: AIatWorkAnalyzeCustomerReviews
+        - link "Anthropic Agent Skills Anthropic Anthropic Agent Skills" [ref=f9e820] [cursor=pointer]:
+          - /url: https://drive.google.com/file/d/1Ru6Xe5op2tuvnK_JDvQGDHSfM2e9Rww3/view
+          - img "Anthropic Agent Skills" [ref=f9e822]
+          - generic [ref=f9e823]:
+            - generic [ref=f9e824]: Anthropic
+            - strong [ref=f9e825]: Anthropic Agent Skills
+        - link "Anthropic API Anthropic Anthropic API" [ref=f9e829] [cursor=pointer]:
+          - /url: https://drive.google.com/file/d/1cvs4f3vmkMzS7b_6xhje_MDyzBZ5RQlm/view
+          - img "Anthropic API" [ref=f9e831]
+          - generic [ref=f9e832]:
+            - generic [ref=f9e833]: Anthropic
+            - strong [ref=f9e834]: Anthropic API
+      - link "Browse all 47 certificates" [ref=f9e838] [cursor=pointer]:
+        - /url: /certifications
+    - generic [ref=f9e842]:
+      - generic [ref=f9e843]:
+        - generic [ref=f9e844]:
+          - text: 08 / toolkit
+          - heading "Tools & technologies" [level=2] [ref=f9e845]
+        - paragraph [ref=f9e846]: The platforms used to build systems, shape interfaces, analyze information, and produce visual work.
+      - generic [ref=f9e847]:
+        - generic [ref=f9e848]:
+          - generic [ref=f9e849]:
+            - generic [ref=f9e850]: "01"
+            - heading "Backend" [level=3] [ref=f9e855]
+          - generic [ref=f9e856]:
+            - generic [ref=f9e857]:
+              - generic [ref=f9e858]:
+                - generic [ref=f9e859]: P
+                - img "PHP" [ref=f9e860]
+              - generic [ref=f9e861]:
+                - strong [ref=f9e862]: PHP
+                - generic [ref=f9e863]: Server-side application development and automation.
+            - generic [ref=f9e864]:
+              - generic [ref=f9e865]:
+                - generic [ref=f9e866]: L
+                - img "Laravel" [ref=f9e867]
+              - generic [ref=f9e868]:
+                - strong [ref=f9e869]: Laravel
+                - generic [ref=f9e870]: Database-backed web applications, APIs, and administration systems.
+            - generic [ref=f9e877]:
+              - strong [ref=f9e878]: SQL databases
+              - generic [ref=f9e879]: Relational data modeling, querying, reporting, and application persistence.
+        - generic [ref=f9e880]:
+          - generic [ref=f9e881]:
+            - generic [ref=f9e882]: "02"
+            - heading "Frontend" [level=3] [ref=f9e885]
+          - generic [ref=f9e886]:
+            - generic [ref=f9e887]:
+              - generic [ref=f9e888]:
+                - generic [ref=f9e889]: V
+                - img "Vue.js" [ref=f9e890]
+              - generic [ref=f9e891]:
+                - strong [ref=f9e892]: Vue.js
+                - generic [ref=f9e893]: Responsive interfaces and component-based application experiences.
+            - generic [ref=f9e894]:
+              - generic [ref=f9e895]:
+                - generic [ref=f9e896]: I
+                - img "Inertia.js" [ref=f9e897]
+              - generic [ref=f9e898]:
+                - strong [ref=f9e899]: Inertia.js
+                - generic [ref=f9e900]: Laravel-driven single-page application workflows.
+            - generic [ref=f9e901]:
+              - generic [ref=f9e902]:
+                - generic [ref=f9e903]: TC
+                - img "Tailwind CSS" [ref=f9e904]
+              - generic [ref=f9e905]:
+                - strong [ref=f9e906]: Tailwind CSS
+                - generic [ref=f9e907]: Responsive interface systems and production UI styling.
+            - generic [ref=f9e908]:
+              - generic [ref=f9e909]:
+                - generic [ref=f9e910]: J
+                - img "JavaScript" [ref=f9e911]
+              - generic [ref=f9e912]:
+                - strong [ref=f9e913]: JavaScript
+                - generic [ref=f9e914]: Interactive browser behavior and application logic.
+        - generic [ref=f9e915]:
+          - generic [ref=f9e916]:
+            - generic [ref=f9e917]: "03"
+            - heading "Data & BI" [level=3] [ref=f9e920]
+          - generic [ref=f9e921]:
+            - generic [ref=f9e922]:
+              - generic [ref=f9e923]:
+                - generic [ref=f9e924]: MP
+                - img "Microsoft Power BI" [ref=f9e925]
+              - generic [ref=f9e926]:
+                - strong [ref=f9e927]: Microsoft Power BI
+                - generic [ref=f9e928]: Interactive dashboards, health informatics, and operational reporting.
+            - generic [ref=f9e929]:
+              - generic [ref=f9e930]:
+                - generic [ref=f9e931]: ME
+                - img "Microsoft Excel" [ref=f9e932]
+              - generic [ref=f9e933]:
+                - strong [ref=f9e934]: Microsoft Excel
+                - generic [ref=f9e935]: Data preparation, analysis, structured records, and reporting.
+        - generic [ref=f9e936]:
+          - generic [ref=f9e937]:
+            - generic [ref=f9e938]: "04"
+            - heading "Design tools" [level=3] [ref=f9e945]
+          - generic [ref=f9e946]:
+            - generic [ref=f9e947]:
+              - generic [ref=f9e948]:
+                - generic [ref=f9e949]: AC
+                - img "Adobe Creative Suite" [ref=f9e950]
+              - generic [ref=f9e951]:
+                - strong [ref=f9e952]: Adobe Creative Suite
+                - generic [ref=f9e953]: Publication design, image editing, graphics, and visual communication.
+            - generic [ref=f9e954]:
+              - generic [ref=f9e955]:
+                - generic [ref=f9e956]: C
+                - img "Canva" [ref=f9e957]
+              - generic [ref=f9e958]:
+                - strong [ref=f9e959]: Canva
+                - generic [ref=f9e960]: Digital publications, campaign graphics, presentations, and social media assets.
+        - generic [ref=f9e961]:
+          - generic [ref=f9e962]:
+            - generic [ref=f9e963]: "05"
+            - heading "Development" [level=3] [ref=f9e968]
+          - generic [ref=f9e969]:
+            - generic [ref=f9e970]:
+              - generic [ref=f9e971]:
+                - generic [ref=f9e972]: G
+                - img "Git" [ref=f9e973]
+              - generic [ref=f9e974]:
+                - strong [ref=f9e975]: Git
+                - generic [ref=f9e976]: Source control and change management for software projects.
+            - generic [ref=f9e977]:
+              - generic [ref=f9e978]:
+                - generic [ref=f9e979]: G
+                - img "GitHub" [ref=f9e980]
+              - generic [ref=f9e981]:
+                - strong [ref=f9e982]: GitHub
+                - generic [ref=f9e983]: Code hosting, collaboration, and public project documentation.
+        - generic [ref=f9e984]:
+          - generic [ref=f9e985]:
+            - generic [ref=f9e986]: "06"
+            - heading "Other" [level=3] [ref=f9e989]
+          - generic [ref=f9e990]:
+            - generic [ref=f9e991]:
+              - generic [ref=f9e992]:
+                - generic [ref=f9e993]: MO
+                - img "Microsoft Office" [ref=f9e994]
+              - generic [ref=f9e995]:
+                - strong [ref=f9e996]: Microsoft Office
+                - generic [ref=f9e997]: Documentation, presentations, administrative work, and professional reporting.
+            - generic [ref=f9e1004]:
+              - strong [ref=f9e1005]: Electronic medical record systems
+              - generic [ref=f9e1006]: Implementation, training, monitoring, support, and health-facility readiness work.
+    - generic [ref=f9e1007]:
+      - generic [ref=f9e1009]:
+        - text: 09 / background
+        - heading "Experience & education" [level=2] [ref=f9e1010]
+      - generic [ref=f9e1011]:
+        - generic [ref=f9e1012]:
+          - generic [ref=f9e1013]: Experience
+          - article [ref=f9e1019]:
+            - generic [ref=f9e1020]: November 25, 2024Present
+            - generic [ref=f9e1021]:
+              - generic [ref=f9e1022]: SD
+              - generic [ref=f9e1024]:
+                - generic [ref=f9e1025]: Surigao del Norte State University
+                - heading "Information Systems Analyst I" [level=3] [ref=f9e1027]
+                - paragraph [ref=f9e1028]: Systems analysis, data operations, technical support, network administration, documentation, and user training for university services.
+                - generic [ref=f9e1029]:
+                  - generic [ref=f9e1030]: Systems analysis and design
+                  - generic [ref=f9e1031]: Data management and reporting
+                  - generic [ref=f9e1032]: Technical and network support
+                  - generic [ref=f9e1033]: User training and documentation
+          - article [ref=f9e1034]:
+            - generic [ref=f9e1035]: April 30, 2024November 25, 2024
+            - generic [ref=f9e1036]:
+              - generic [ref=f9e1037]: DO
+              - generic [ref=f9e1039]:
+                - generic [ref=f9e1040]: Department of Health
+                - heading "Computer Programmer II" [level=3] [ref=f9e1042]
+                - paragraph [ref=f9e1043]: Implemented and supported electronic medical record systems across health facilities, including readiness assessment, training, monitoring, and technical reporting.
+                - generic [ref=f9e1044]:
+                  - generic [ref=f9e1045]: EMR implementation
+                  - generic [ref=f9e1046]: Health facility readiness assessment
+                  - generic [ref=f9e1047]: Training and technical support
+                  - generic [ref=f9e1048]: Compliance monitoring and reporting
+          - article [ref=f9e1049]:
+            - generic [ref=f9e1050]: February 18, 2021April 30, 2024
+            - generic [ref=f9e1051]:
+              - generic [ref=f9e1052]: DO
+              - generic [ref=f9e1054]:
+                - generic [ref=f9e1055]: Department of Health
+                - heading "Computer Programmer I" [level=3] [ref=f9e1057]
+                - paragraph [ref=f9e1058]: Supported health information systems, user accounts, data reports, facility visits, and troubleshooting for regional health programs.
+                - generic [ref=f9e1059]:
+                  - generic [ref=f9e1060]: Health information system support
+                  - generic [ref=f9e1061]: Data and service statistics
+                  - generic [ref=f9e1062]: User account validation
+                  - generic [ref=f9e1063]: Facility monitoring and troubleshooting
+          - article [ref=f9e1064]:
+            - generic [ref=f9e1065]: March 2018June 2018
+            - generic [ref=f9e1066]:
+              - generic [ref=f9e1067]: C
+              - generic [ref=f9e1069]:
+                - generic [ref=f9e1070]: Cebupot
+                - heading "Intern" [level=3] [ref=f9e1072]
+                - paragraph [ref=f9e1073]: Supported database updates, administrative work, image editing, documentation, and ICT equipment setup.
+                - generic [ref=f9e1074]:
+                  - generic [ref=f9e1075]: Excel database updates
+                  - generic [ref=f9e1076]: Photo editing and enhancement
+                  - generic [ref=f9e1077]: Administrative support
+                  - generic [ref=f9e1078]: ICT equipment assistance
+        - generic [ref=f9e1079]:
+          - generic [ref=f9e1080]: Education
+          - article [ref=f9e1085]:
+            - generic [ref=f9e1086]: June 2026
+            - generic [ref=f9e1087]:
+              - generic [ref=f9e1088]: CS
+              - generic [ref=f9e1090]:
+                - generic [ref=f9e1091]: Caraga State University
+                - heading "Master of Science in Information Technology" [level=3] [ref=f9e1093]
+                - paragraph [ref=f9e1094]: Master's degree
+          - article [ref=f9e1095]:
+            - generic [ref=f9e1096]: June 2015December 2019
+            - generic [ref=f9e1097]:
+              - generic [ref=f9e1098]: UO
+              - generic [ref=f9e1100]:
+                - generic [ref=f9e1101]: University of San Carlos
+                - heading "Bachelor of Science in Information Communications Technology" [level=3] [ref=f9e1103]
+                - paragraph [ref=f9e1104]: Bachelor's degree
+                - generic [ref=f9e1105]:
+                  - generic [ref=f9e1106]: Vice President of Finance, June 2018 - June 2019
+                  - generic [ref=f9e1107]: Assistant to the Vice President of Finance, June 2017 - June 2018
+          - article [ref=f9e1108]:
+            - generic [ref=f9e1109]: June 2011March 2015
+            - generic [ref=f9e1110]:
+              - generic [ref=f9e1111]: SN
+              - generic [ref=f9e1113]:
+                - generic [ref=f9e1114]: San Nicolas Academy
+                - heading "High School" [level=3] [ref=f9e1116]
+                - paragraph [ref=f9e1117]: Secondary education
+      - generic [ref=f9e1118]:
+        - generic [ref=f9e1119]: Core capabilities
+        - generic [ref=f9e1120]:
+          - generic [ref=f9e1121]: Systems analysis
+          - generic [ref=f9e1122]: Data management
+          - generic [ref=f9e1123]: Electronic medical records
+          - generic [ref=f9e1124]: Technical support
+          - generic [ref=f9e1125]: Network administration
+          - generic [ref=f9e1126]: Research and reporting
+          - generic [ref=f9e1127]: Laravel and PHP
+          - generic [ref=f9e1128]: Adobe Creative Suite
+    - generic [ref=f9e1129]:
+      - generic [ref=f9e1130]:
+        - generic [ref=f9e1131]:
+          - text: 10 / conversation
+          - heading "Comments" [level=2] [ref=f9e1132]
+        - paragraph [ref=f9e1133]: Share a thought about the work, a possible collaboration, or your experience.
+      - generic [ref=f9e1134]:
+        - generic [ref=f9e1135]:
+          - heading "Leave a comment" [level=3] [ref=f9e1141]
+          - generic [ref=f9e1142]:
+            - generic [ref=f9e1143]:
+              - generic [ref=f9e1144]: Name
+              - textbox "Name" [ref=f9e1145]
+            - generic [ref=f9e1146]:
+              - generic [ref=f9e1147]: Email private
+              - textbox "Email private" [ref=f9e1148]
+          - generic [ref=f9e1149]:
+            - generic [ref=f9e1150]: Role or organization
+            - textbox "Role or organization" [ref=f9e1151]
+          - generic [ref=f9e1152]:
+            - generic [ref=f9e1153]: Comment
+            - textbox "Comment" [ref=f9e1154]
+          - generic [ref=f9e1155]:
+            - generic [ref=f9e1156]: Rating
+            - generic [ref=f9e1157]:
+              - button "1 star rating" [ref=f9e1158] [cursor=pointer]
+              - button "2 star rating" [ref=f9e1161] [cursor=pointer]
+              - button "3 star rating" [ref=f9e1164] [cursor=pointer]
+              - button "4 star rating" [ref=f9e1167] [cursor=pointer]
+              - button "5 star rating" [pressed] [ref=f9e1170] [cursor=pointer]
+          - generic [ref=f9e1173]:
+            - text: Website
+            - textbox [ref=f9e1174]
+          - button "Send comment" [ref=f9e1175] [cursor=pointer]
+        - paragraph [ref=f9e1185]: No comments yet. Start the conversation.
+    - generic [ref=f9e1186]:
+      - generic [ref=f9e1187]:
+        - text: End / index
+        - heading "Let the work speak. Then let’s talk." [level=2] [ref=f9e1188]: Let the work speak.Then let’s talk.
+      - generic [ref=f9e1189]:
+        - link "brittkristoff.montalvo@carsu.edu.ph" [ref=f9e1190] [cursor=pointer]:
+          - /url: mailto:brittkristoff.montalvo@carsu.edu.ph
+        - link "Credly" [ref=f9e1194] [cursor=pointer]:
+          - /url: https://www.credly.com/users/brittm
+        - link "GitHub" [ref=f9e1198] [cursor=pointer]:
+          - /url: https://github.com/bmontalvossct
+        - link "LinkedIn" [ref=f9e1202] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/britt-kristoff-montalvo/
+        - link "Curriculum vitae" [ref=f9e1206] [cursor=pointer]:
+          - /url: https://drive.google.com/file/d/1VABvB7-lrvRfiQC08PhfWN4lZHOBKAHp/view
