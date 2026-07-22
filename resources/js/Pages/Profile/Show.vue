@@ -109,7 +109,7 @@ const filteredDesignMedia = computed(() => props.designMedia.filter((item) => (
 const curatedDesignMedia = computed(() => {
     const selections = [
         (item) => item.media_type === 'video' && item.title === 'University Intramurials Team Indtroductions',
-        (item) => item.title === 'Candidacy Poster',
+        (item) => item.title === 'Instagram Post for Spa',
         (item) => item.title === 'Business Card',
         (item) => item.title === 'Business Logo',
         (item) => item.title === 'Coffeee Sip Poster',
@@ -1187,5 +1187,3 @@ a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underlin
     .guestbook-fields.two { grid-template-columns: 1fr; }
 }
 </style>
-
-
