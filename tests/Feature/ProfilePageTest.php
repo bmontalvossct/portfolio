@@ -29,6 +29,7 @@ class ProfilePageTest extends TestCase
                 ->where('profile.display_name', 'Britt Kristoff B. Montalvo, MSIT')
                 ->where('profile.headline', 'Lead Digitalization Expert, information systems analyst, researcher, and multidisciplinary digital maker.')
                 ->where('profile.github_username', 'bmontalvossct')
+                ->where('profile.email', 'inquiries@brittmontalvo.dev')
                 ->where('profile.bio', 'I work across information systems, health technology implementation, data operations, research, and visual publishing. I also provide MikroTik network consulting and serve as a GPTZero Ambassador, promoting responsible and transparent AI use.')
                 ->where('profile.external_links.2.label', 'LinkedIn')
                 ->where('profile.external_links.2.url', 'https://www.linkedin.com/in/britt-kristoff-montalvo/')
@@ -65,7 +66,7 @@ class ProfilePageTest extends TestCase
                 ->where('achievements.3.title', 'GPTZero Ambassador')
                 ->where('achievements.3.image_url', 'https://gptzero.me/favicon.ico')
                 ->where('achievements.3.external_url', null)
-                ->has('certificates', 50)
+                ->has('certificates', 51)
                 ->where('certificates.0.title', 'Lean Six Sigma: Yellow Belt')
                 ->where('certificates.0.issuer', 'Alison')
                 ->where('certificates.0.category', 'project_management')
@@ -78,6 +79,10 @@ class ProfilePageTest extends TestCase
                 ->where('certificates.1.issued_on', 'Mar 2026')
                 ->where('certificates.1.file_url', null)
                 ->where('certificates.1.thumbnail_url', '/storage/portfolio/organizations/sangfor.png')
+                ->where('certificates.4.title', 'Agile Project Management')
+                ->where('certificates.4.issuer', 'Google')
+                ->where('certificates.4.provider_name', 'Google')
+                ->where('certificates.4.thumbnail_url', 'https://api.iconify.design/logos/google-icon.svg')
                 ->has('education', 3)
                 ->where('education.0.institution', 'Caraga State University')
                 ->where('education.0.program', 'Master of Science in Information Technology')
@@ -164,13 +169,30 @@ class ProfilePageTest extends TestCase
 
         $this->assertDatabaseCount('profiles', 1);
         $this->assertDatabaseCount('achievements', 4);
-        $this->assertDatabaseCount('certificates', 50);
+        $this->assertDatabaseCount('certificates', 51);
         $this->assertDatabaseCount('credential_badges', 29);
         $this->assertDatabaseCount('education', 3);
         $this->assertDatabaseCount('work_experiences', 5);
         $this->assertDatabaseCount('published_works', 2);
         $this->assertDatabaseCount('projects', 5);
         $this->assertDatabaseCount('portfolio_tools', 37);
+        $this->assertDatabaseHas('certificates', [
+            'title' => 'CCNA Routing and Switching: Routing and Switching Essentials',
+            'issuer' => 'Cisco',
+        ]);
+        $this->assertDatabaseHas('certificates', [
+            'title' => 'AWS AI Practitioner Challenge',
+            'issuer' => 'Udacity',
+        ]);
+        $this->assertDatabaseHas('certificates', [
+            'title' => 'Agile Project Management',
+            'issuer' => 'Google',
+        ]);
+        $this->assertDatabaseHas('certificates', [
+            'title' => 'Data Privacy Competency Framework',
+            'issuer' => 'Department of Information and Communications Technology',
+        ]);
+        $this->assertDatabaseMissing('certificates', ['title' => 'Cyber Threat Management']);
         $this->assertDatabaseHas('certificates', [
             'title' => 'Omada Certified Network Administrator (OCNA) - Wireless',
             'verification_code' => '57E94B6682EC4E95',
@@ -255,7 +277,7 @@ class ProfilePageTest extends TestCase
                 ->where('profile.avatar_url', 'https://avatars.githubusercontent.com/u/52160082?v=4')
                 ->where('archiveType', 'certificates')
                 ->where('alternate.url', '/badges')
-                ->has('items', 51)
+                ->has('items', 52)
                 ->where('items.0.title', 'Lean Six Sigma: Yellow Belt')
                 ->where('items.0.category', 'project_management')
                 ->where('items.0.date', 'Jul 2026')

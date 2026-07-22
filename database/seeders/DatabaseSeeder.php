@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
                 'headline' => 'Lead Digitalization Expert, information systems analyst, researcher, and multidisciplinary digital maker.',
                 'availability' => 'Open to research, systems integration, systems development, and digital publication collaborations.',
                 'location' => 'Surigao del Norte, Philippines',
-                'email' => 'kristoffmontalvo218@gmail.com',
+                'email' => 'inquiries@brittmontalvo.dev',
                 'bio' => 'I work across information systems, health technology implementation, data operations, research, and visual publishing. I also provide MikroTik network consulting and serve as a GPTZero Ambassador, promoting responsible and transparent AI use.',
                 'avatar_url' => 'https://avatars.githubusercontent.com/u/52160082?v=4',
                 'credly_username' => 'brittm',

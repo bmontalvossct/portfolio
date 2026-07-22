@@ -218,13 +218,13 @@ watch(selectedItem, (item) => {
 .archive-intro > p { max-width: 42rem; margin: 2rem 0 0; color: var(--profile-700); font-family: var(--font-serif); font-size: 1.15rem; line-height: 1.7; }
 .archive-controls { display: grid; grid-template-columns: repeat(2, minmax(12rem, 1fr)) auto; gap: 0.65rem; align-items: end; margin-top: 2.2rem; }
 .archive-search, .category-filter { display: flex; height: 2.9rem; align-items: center; gap: 0.55rem; border: 1px solid var(--profile-300); border-radius: 4px; padding: 0 0.7rem; }
-.archive-search input, .category-filter select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; padding: 0.7rem 0; color: var(--profile-ink); }
+.archive-search input, .category-filter select { width: 100%; font-size: 0.9rem; min-width: 0; border: 0; outline: 0; background: transparent; padding: 0.7rem 0; color: var(--profile-ink); }
 .archive-search > svg, .category-filter > svg { flex: 0 0 auto; color: var(--profile-500); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 .alternate-link { display: inline-flex; align-items: center; gap: 0.35rem; border-bottom: 1px solid var(--profile-ink); padding: 0.7rem 0 0.2rem; font-family: var(--font-mono); font-size: 0.64rem; text-decoration: none; text-transform: uppercase; }
 .credential-group { margin-top: 4.5rem; }
-.credential-group > header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; }
-.credential-group > header small { display: grid; width: 1.6rem; aspect-ratio: 1; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; }
+.credential-group > header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.035em; text-transform: uppercase; }
+.credential-group > header small { display: grid; font-size: 0.72rem; width: 1.6rem; aspect-ratio: 1; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; }
 .credential-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.45rem; align-items: start; }
 .archive-shell.is-certifications .credential-grid { display: flex; flex-wrap: wrap; justify-content: center; }
 .archive-shell.is-certifications .credential-card { flex: 0 1 calc((100% - 1.35rem) / 4); max-width: 19rem; }
