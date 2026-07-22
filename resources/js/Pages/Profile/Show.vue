@@ -64,6 +64,7 @@ const isDark = ref(false);
 const publicationSearch = ref('');
 const selectedBadge = ref(null);
 const selectedCertificate = ref(null);
+const selectedBackground = ref(null);
 const selectedDesign = ref(null);
 const selectedProject = ref(null);
 const theme = ref('system');
@@ -231,6 +232,14 @@ function openBadge(badge) {
 
 function closeBadge() {
     selectedBadge.value = null;
+}
+
+function openBackground(type, item) {
+    selectedBackground.value = { type, item };
+}
+
+function closeBackground() {
+    selectedBackground.value = null;
 }
 
 function openCertificate(certificate) {
@@ -665,23 +674,25 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                 <div class="background-grid">
                     <div class="timeline-group">
                         <div class="timeline-title"><BriefcaseBusiness :size="18" /><span>Experience</span></div>
-                        <article v-for="role in workExperiences" :key="role.id" class="timeline-row">
-                            <div class="timeline-date">{{ role.start_date }}<br>{{ role.is_current ? 'Present' : role.end_date }}</div>
-                            <div class="timeline-entry">
+                        <button v-for="role in workExperiences" :key="role.id" class="timeline-row timeline-trigger" type="button" :aria-label="`View details for ${role.position} at ${role.organization}`" @click="openBackground('experience', role)">
+                            <span class="timeline-date">{{ role.start_date }}<br>{{ role.is_current ? 'Present' : role.end_date }}</span>
+                            <span class="timeline-entry">
                                 <span class="organization-mark" aria-hidden="true"><span>{{ initials(role.organization) }}</span><img v-if="role.logo_url" :src="role.logo_url" alt="" loading="lazy" @error="$event.currentTarget.remove()"></span>
-                                <div class="timeline-copy"><span class="meta-line"><span>{{ role.organization }}</span></span><h3>{{ role.position }}</h3><p>{{ role.summary }}</p><div class="tag-row"><span v-for="item in role.responsibilities" :key="item">{{ item }}</span></div></div>
-                            </div>
-                        </article>
+                                <span class="timeline-copy"><span class="meta-line"><span>{{ role.organization }}</span></span><strong class="timeline-heading">{{ role.position }}</strong><span class="timeline-summary">{{ role.summary }}</span><span class="tag-row"><span v-for="item in role.responsibilities" :key="item">{{ item }}</span></span></span>
+                            </span>
+                            <Maximize2 class="timeline-expand" :size="15" aria-hidden="true" />
+                        </button>
                     </div>
                     <div class="timeline-group">
                         <div class="timeline-title"><GraduationCap :size="18" /><span>Education</span></div>
-                        <article v-for="item in education" :key="item.id" class="timeline-row education-row">
-                            <div class="timeline-date">{{ item.start_date }}<br>{{ item.end_date }}</div>
-                            <div class="timeline-entry">
+                        <button v-for="item in education" :key="item.id" class="timeline-row timeline-trigger education-row" type="button" :aria-label="`View details for ${item.program} at ${item.institution}`" @click="openBackground('education', item)">
+                            <span class="timeline-date">{{ item.start_date }}<br>{{ item.end_date }}</span>
+                            <span class="timeline-entry">
                                 <span class="organization-mark" aria-hidden="true"><span>{{ initials(item.institution) }}</span><img v-if="item.logo_url" :src="item.logo_url" alt="" loading="lazy" @error="$event.currentTarget.remove()"></span>
-                                <div class="timeline-copy"><span class="meta-line"><span>{{ item.institution }}</span></span><h3>{{ item.program }}</h3><p>{{ item.level }}</p><div class="tag-row"><span v-for="activity in item.activities" :key="activity">{{ activity }}</span></div></div>
-                            </div>
-                        </article>
+                                <span class="timeline-copy"><span class="meta-line school-name"><span>{{ item.institution }}</span></span><strong class="timeline-heading">{{ item.program }}</strong><span class="timeline-summary">{{ item.level }}</span><span class="tag-row"><span v-for="activity in item.activities" :key="activity">{{ activity }}</span></span></span>
+                            </span>
+                            <Maximize2 class="timeline-expand" :size="15" aria-hidden="true" />
+                        </button>
                     </div>
                 </div>
                 <div class="skills-index"><span class="folio-label">Core capabilities</span><div><span v-for="skill in profile.skills" :key="skill">{{ skill }}</span></div></div>
@@ -803,6 +814,31 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                     <div class="modal-actions">
                         <a v-if="selectedCertificate.file_url" :href="selectedCertificate.file_url" target="_blank" rel="noreferrer">Verify credential<ArrowUpRight :size="14" /></a>
                         <span v-else class="certificate-privacy-note">Original document withheld for privacy</span>
+                    </div>
+                </article>
+            </div>
+        </Transition>
+
+        <Transition name="modal">
+            <div v-if="selectedBackground" class="modal-backdrop" role="presentation" @click.self="closeBackground">
+                <article class="badge-modal background-modal" role="dialog" aria-modal="true" :aria-labelledby="`background-title-${selectedBackground.type}-${selectedBackground.item.id}`">
+                    <button class="icon-button modal-close" type="button" title="Close" aria-label="Close" @click="closeBackground"><X :size="17" /></button>
+                    <div class="modal-badge background-organization-mark">
+                        <img v-if="selectedBackground.item.logo_url" :src="selectedBackground.item.logo_url" :alt="`${selectedBackground.type === 'education' ? selectedBackground.item.institution : selectedBackground.item.organization} logo`">
+                        <span v-else>{{ initials(selectedBackground.type === 'education' ? selectedBackground.item.institution : selectedBackground.item.organization) }}</span>
+                    </div>
+                    <span class="folio-label">{{ selectedBackground.type === 'education' ? 'Education' : 'Experience' }}</span>
+                    <h2 :id="`background-title-${selectedBackground.type}-${selectedBackground.item.id}`">{{ selectedBackground.type === 'education' ? selectedBackground.item.program : selectedBackground.item.position }}</h2>
+                    <p class="background-modal-organization">{{ selectedBackground.type === 'education' ? selectedBackground.item.institution : selectedBackground.item.organization }}</p>
+                    <p v-if="selectedBackground.type === 'education' && selectedBackground.item.level" class="background-modal-level">{{ selectedBackground.item.level }}</p>
+                    <p v-if="selectedBackground.type === 'experience' && selectedBackground.item.summary" class="background-modal-summary">{{ selectedBackground.item.summary }}</p>
+                    <dl>
+                        <div><dt>Started</dt><dd>{{ selectedBackground.item.start_date }}</dd></div>
+                        <div><dt>{{ selectedBackground.type === 'experience' && selectedBackground.item.is_current ? 'Status' : 'Completed' }}</dt><dd>{{ selectedBackground.type === 'experience' && selectedBackground.item.is_current ? 'Present' : selectedBackground.item.end_date }}</dd></div>
+                    </dl>
+                    <div v-if="(selectedBackground.type === 'education' ? selectedBackground.item.activities : selectedBackground.item.responsibilities)?.length" class="background-detail-list">
+                        <span class="folio-label">{{ selectedBackground.type === 'education' ? 'Activities and distinctions' : 'Responsibilities' }}</span>
+                        <ul><li v-for="detail in (selectedBackground.type === 'education' ? selectedBackground.item.activities : selectedBackground.item.responsibilities)" :key="detail">{{ detail }}</li></ul>
                     </div>
                 </article>
             </div>
@@ -1019,7 +1055,7 @@ a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underlin
 .tool-entry > svg { color: var(--profile-500); }
 .background-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
 .timeline-title { gap: 0.5rem; border-bottom: 1px solid var(--profile-ink); padding-bottom: 0.7rem; font-size: 0.7rem; text-transform: uppercase; }
-.timeline-row { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: 1rem; border-bottom: 1px solid var(--profile-200); padding: 1.4rem 0; }
+.timeline-row { position: relative; display: grid; width: 100%; grid-template-columns: 8rem minmax(0, 1fr); gap: 1rem; border: 0; border-bottom: 1px solid var(--profile-200); background: transparent; padding: 1.4rem 2rem 1.4rem 0; color: var(--profile-ink); font: inherit; text-align: left; }
 .timeline-date { color: var(--profile-500); font-size: 0.6rem; line-height: 1.6; text-transform: uppercase; }
 .timeline-entry { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); gap: 0.9rem; align-items: start; min-width: 0; }
 .organization-mark { position: relative; display: grid; width: 3.25rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 4px; background: #fff; color: #17251e; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; }
@@ -1066,6 +1102,13 @@ a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underlin
 .footer-links a { gap: 0.35rem; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, #000 55%, transparent); padding: 1rem; backdrop-filter: blur(10px); }
 .badge-modal { position: relative; width: min(100%, 34rem); max-height: calc(100vh - 2rem); overflow-y: auto; border: 1px solid var(--profile-ink); background: var(--profile-bg); padding: clamp(1rem, 4vw, 2rem); box-shadow: 12px 12px 0 var(--profile-ink); }
+.background-modal { width: min(100%, 40rem); }
+.background-organization-mark { width: 6.5rem; height: 6.5rem; border: 1px solid var(--profile-200); background: #fff; }
+.background-organization-mark img { width: 100%; height: 100%; object-fit: contain; padding: 0.55rem; }
+.background-modal-organization { margin: 0.8rem 0 0; color: var(--profile-ink) !important; font-family: var(--font-serif); font-size: clamp(1.15rem, 3vw, 1.45rem); font-weight: 700; line-height: 1.35; }
+.background-modal-level, .background-modal-summary { color: var(--profile-700); font-family: var(--font-serif); font-size: 1rem; line-height: 1.7; }
+.background-detail-list { border-top: 1px solid var(--profile-200); margin-top: 1.4rem; padding-top: 1rem; }
+.background-detail-list ul { display: grid; gap: 0.55rem; margin: 0.8rem 0 0; padding-left: 1.25rem; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.5; }
 .design-modal { position: relative; display: grid; width: min(100%, 70rem); max-height: calc(100vh - 2rem); grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr); overflow: hidden; border: 1px solid var(--profile-ink); background: var(--profile-bg); box-shadow: 12px 12px 0 var(--profile-ink); }
 .project-modal { position: relative; display: grid; width: min(100%, 72rem); max-height: calc(100vh - 2rem); grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr); overflow: hidden; border: 1px solid var(--profile-ink); background: var(--profile-bg); box-shadow: 12px 12px 0 var(--profile-ink); }
 .project-modal-media { display: grid; min-height: 34rem; place-items: center; overflow: hidden; background: #fff; }

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\GuestbookEntrySubmitted;
 use App\Models\GuestbookEntry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class GuestbookController extends Controller
 {
@@ -23,12 +26,18 @@ class GuestbookController extends Controller
             'website' => ['nullable', 'string', 'max:0'],
         ]);
 
-        GuestbookEntry::query()->create([
+        $entry = GuestbookEntry::query()->create([
             ...$validated,
             'public_id' => (string) str()->uuid(),
             'status' => 'pending',
             'ip_hash' => hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')),
         ]);
+
+        try {
+            Mail::to(config('portfolio.review_notification_email'))->send(new GuestbookEntrySubmitted($entry));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return back()->with('success', 'Thanks for sharing your review.');
     }
