@@ -135,6 +135,7 @@ class ProfilePageTest extends TestCase
         Storage::disk('public')->put('portfolio/Images/Campaign Poster.jpg', 'image');
         Storage::disk('public')->put('portfolio/Images/Brochure Design.pdf', 'pdf');
         Storage::disk('public')->put('portfolio/Videos/Launch Reel.mp4', 'video');
+        Storage::disk('public')->put('portfolio/Videos/Profile Video.mp4', 'private profile motion asset');
         Storage::disk('public')->put('portfolio/design-thumbnails/Launch Reel.jpg', 'thumbnail');
         Storage::disk('public')->put('portfolio/Images/notes.txt', 'not media');
 
@@ -153,6 +154,7 @@ class ProfilePageTest extends TestCase
                 ->where('designMedia.2.media_type', 'video')
                 ->where('designMedia.2.media_url', '/storage/portfolio/Videos/Launch%20Reel.mp4')
                 ->where('designMedia.2.thumbnail_url', '/storage/portfolio/design-thumbnails/Launch%20Reel.jpg')
+                ->where('designMedia', fn ($items) => collect($items)->doesntContain('title', 'Profile Video'))
             );
 
         $this->get('/designs')

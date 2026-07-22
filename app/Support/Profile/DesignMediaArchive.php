@@ -55,6 +55,7 @@ class DesignMediaArchive
 
             return collect(Storage::disk('public')->files($folder))
                 ->filter(fn (string $path): bool => in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), $extensions, true))
+                ->reject(fn (string $path): bool => Str::lower(pathinfo($path, PATHINFO_FILENAME)) === 'profile video')
                 ->sortBy(fn (string $path): string => strtolower(basename($path)))
                 ->reject(fn (string $path): bool => in_array(rawurldecode(Storage::disk('public')->url($path)), $managedUrls, true))
                 ->map(function (string $path) use ($mediaType): array {
