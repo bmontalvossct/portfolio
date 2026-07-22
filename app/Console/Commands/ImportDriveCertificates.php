@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Certificate;
+use App\Models\CredentialBadge;
 use App\Support\Profile\CredentialCategory;
 use Carbon\CarbonImmutable;
 use Composer\CaBundle\CaBundle;
@@ -54,6 +55,12 @@ class ImportDriveCertificates extends Command
             $title = $this->titleFor($record['filename']);
 
             if (in_array($title, self::EXCLUDED_TITLES, true)) {
+                continue;
+            }
+
+            if (CredentialBadge::query()->whereRaw('LOWER(name) = ?', [mb_strtolower($title)])->exists()) {
+                Certificate::query()->whereRaw('LOWER(title) = ?', [mb_strtolower($title)])->delete();
+
                 continue;
             }
 

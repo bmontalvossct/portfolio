@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Certificate;
+use App\Models\CredentialBadge;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 
@@ -103,8 +104,8 @@ class CompleteCertificateSeeder extends Seeder
   4 => 
   array (
     'seed_key' => 'certificate-510070062dade1e474da',
-    'title' => 'Agile Project Methodologies',
-    'issuer' => NULL,
+    'title' => 'Agile Project Management',
+    'issuer' => 'Google',
     'category' => 'project_management',
     'description' => NULL,
     'issued_on' => NULL,
@@ -391,7 +392,7 @@ class CompleteCertificateSeeder extends Seeder
   18 => 
   array (
     'seed_key' => 'certificate-b32bf95e6f7b99118e6e',
-    'title' => 'Cyber Security and DPA Framework',
+    'title' => 'Data Privacy Competency Framework',
     'issuer' => 'Department of Information and Communications Technology',
     'category' => 'cybersecurity',
     'description' => NULL,
@@ -1052,10 +1053,61 @@ class CompleteCertificateSeeder extends Seeder
     'sort_order' => 49,
     'is_featured' => true,
   ),
+  50 =>
+  array (
+    'seed_key' => 'certificate-ccna-routing-switching-essentials',
+    'title' => 'CCNA Routing and Switching: Routing and Switching Essentials',
+    'issuer' => 'Cisco',
+    'category' => 'networking',
+    'description' => 'Cisco CCNA Routing and Switching coursework covering routing and switching essentials.',
+    'issued_on' => NULL,
+    'verification_code' => NULL,
+    'file_url' => '',
+    'thumbnail_url' => NULL,
+    'local_path' => NULL,
+    'tags' => array ('Cisco', 'CCNA', 'Routing', 'Switching', 'Networking'),
+    'sort_order' => 50,
+    'is_featured' => true,
+  ),
+  51 =>
+  array (
+    'seed_key' => 'certificate-aws-ai-practitioner-challenge',
+    'title' => 'AWS AI Practitioner Challenge',
+    'issuer' => 'Udacity',
+    'category' => 'ai_data',
+    'description' => 'Udacity challenge program focused on foundational AWS artificial intelligence concepts and practitioner skills.',
+    'issued_on' => NULL,
+    'verification_code' => NULL,
+    'file_url' => '',
+    'thumbnail_url' => NULL,
+    'local_path' => NULL,
+    'tags' => array ('Udacity', 'AWS', 'Artificial intelligence', 'AI practitioner'),
+    'sort_order' => 51,
+    'is_featured' => true,
+  ),
 );
 
+        $requestedBadgeDuplicates = ['Cyber Threat Management'];
+        $badgeNames = CredentialBadge::query()
+            ->whereIn('name', $requestedBadgeDuplicates)
+            ->pluck('name')
+            ->map(fn (string $name): string => mb_strtolower(trim($name)))
+            ->all();
+
+        Certificate::query()
+            ->whereIn('title', $requestedBadgeDuplicates)
+            ->whereIn('title', CredentialBadge::query()->pluck('name'))
+            ->delete();
+
         foreach ($certificates as $data) {
-            $certificate = Certificate::query()->where('title', $data['title'])->first();
+            if (in_array(mb_strtolower(trim($data['title'])), $badgeNames, true)) {
+                continue;
+            }
+            $certificate = Certificate::query()
+                ->where('source', 'portfolio_seed')
+                ->where('external_id', $data['seed_key'])
+                ->first()
+                ?? Certificate::query()->where('title', $data['title'])->first();
 
             if (! $certificate) {
                 $certificate = new Certificate([

@@ -13,6 +13,7 @@ class CertificateProvider
         $value = Str::upper(trim(implode(' ', array_filter([$certificate->issuer, $certificate->title]))));
 
         [$name, $logoUrl] = match (true) {
+            Str::contains($value, 'AGILE PROJECT MANAGEMENT') => ['Google', 'https://api.iconify.design/logos/google-icon.svg'],
             Str::contains($value, ['SANGFOR', 'ITDEPOT']) => ['ITDEPOT / Sangfor', '/storage/portfolio/organizations/sangfor.png'],
             Str::contains($value, ['OMADA', 'TP-LINK', 'OCNA']) => ['Omada by TP-Link', '/storage/portfolio/organizations/tp-link.svg'],
             Str::contains($value, 'HIKVISION') => ['Hikvision', '/storage/portfolio/organizations/hikvision.svg'],
