@@ -1060,9 +1060,16 @@ a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underlin
 .timeline-entry { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); gap: 0.9rem; align-items: start; min-width: 0; }
 .organization-mark { position: relative; display: grid; width: 3.25rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 4px; background: #fff; color: #17251e; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; }
 .organization-mark img { position: absolute; inset: 0; width: 100%; height: 100%; background: #fff; object-fit: contain; padding: 0.25rem; }
-.timeline-copy { min-width: 0; }
-.timeline-row h3 { font-size: 1rem; }
-.timeline-row p { margin-bottom: 0; }
+.timeline-copy { display: grid; min-width: 0; gap: 0.55rem; align-content: start; }
+.timeline-copy .meta-line { display: flex; width: 100%; margin: 0; }
+.timeline-heading { display: block; margin: 0.15rem 0 0; font-size: 1rem; line-height: 1.4; }
+.timeline-summary { display: block; margin: 0; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
+.school-name { color: var(--profile-ink); font-size: 0.82rem; font-weight: 700; line-height: 1.45; }
+.timeline-copy .tag-row { display: flex; margin-top: 0.25rem; }
+.timeline-trigger { cursor: pointer; transition: background-color 160ms ease, padding-left 160ms ease; }
+.timeline-trigger:hover, .timeline-trigger:focus-visible { background: var(--profile-50); padding-left: 0.65rem; outline: 1px solid var(--profile-300); outline-offset: -1px; }
+.timeline-expand { position: absolute; top: 1.4rem; right: 0.35rem; color: var(--profile-500); transition: color 160ms ease, transform 160ms ease; }
+.timeline-trigger:hover .timeline-expand, .timeline-trigger:focus-visible .timeline-expand { color: var(--profile-ink); transform: scale(1.08); }
 .skills-index { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 1rem; border-top: 1px solid var(--profile-ink); margin-top: 2.5rem; padding-top: 1rem; }
 .skills-index > div { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .skills-index > div span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.35rem 0.6rem; font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; }
