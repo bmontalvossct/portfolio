@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Seo\SeoMetadata;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +43,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'portfolioAdmin' => (bool) $request->session()->get('portfolio_admin_authenticated', false),
+            'seo' => app(SeoMetadata::class)->forRequest($request),
         ];
     }
 }

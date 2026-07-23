@@ -125,6 +125,37 @@ class ProfilePageTest extends TestCase
         $this->assertFileExists(public_path('images/brands/sap.svg'));
     }
 
+    public function test_services_page_presents_the_full_quote_only_catalog_separate_from_homepage(): void
+    {
+        $this->withoutVite();
+        $this->seed();
+
+        $this->get('/services')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Profile/Services')
+                ->where('profile.display_name', 'Britt Kristoff B. Montalvo, MSIT')
+                ->where('profile.email', 'inquiries@brittmontalvo.dev')
+                ->has('services', 9)
+                ->where('services.0.title', 'Digital Transformation & IT Consulting')
+                ->where('services.1.title', 'Custom Web & Information Systems')
+                ->where('services.2.title', 'Data Analytics, Dashboards & Decision Support')
+                ->where('services.5.title', 'Network & Infrastructure Consulting')
+                ->where('services.8.title', 'Speaking, Workshops & Technical Training')
+                ->missing('services.0.rate')
+                ->missing('services.0.rate_note')
+                ->missing('services.8.rate')
+                ->missing('services.8.rate_note')
+            );
+
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Profile/Show')
+                ->missing('services')
+            );
+    }
+
     public function test_profile_page_discovers_images_videos_and_pdf_media_from_portfolio_storage(): void
     {
         $this->withoutVite();
@@ -166,6 +197,7 @@ class ProfilePageTest extends TestCase
                 ->where('items.0.media_type', 'pdf')
             );
     }
+
     public function test_complete_portfolio_seeders_are_idempotent_and_exclude_private_certificate_files(): void
     {
         $this->seed();
@@ -205,7 +237,8 @@ class ProfilePageTest extends TestCase
         $this->assertSame(0, Certificate::query()->whereNotNull('local_path')->count());
         $this->assertDatabaseMissing('credential_badges', ['external_id' => 'credly-profile-brittm']);
     }
-    public function test_guestbook_entries_remain_private_until_the_admin_approves_them(): void
+
+    public function test_guestbook_entries_are_published_immediately_without_exposing_email_addresses(): void
     {
         $this->withoutVite();
         Mail::fake();
@@ -226,25 +259,55 @@ class ProfilePageTest extends TestCase
         Mail::assertSent(GuestbookEntrySubmitted::class, function (GuestbookEntrySubmitted $mail) use ($entry): bool {
             return $mail->hasTo('inquiries@brittmontalvo.dev') && $mail->entry->is($entry);
         });
-        $this->assertSame('pending', $entry->status);
-        $this->get('/')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->has('guestbookEntries', 0));
-
-        $this->withSession(['portfolio_admin_authenticated' => true])
-            ->put("/admin/guestbook/{$entry->id}", [
-                'status' => 'approved',
-                'admin_reply' => 'Thank you for taking the time to leave this note.',
-            ])
-            ->assertRedirect()
-            ->assertSessionHas('success');
+        $this->assertSame('approved', $entry->status);
+        $this->assertNotNull($entry->approved_at);
+        $this->assertSame('accepted', $entry->notification_status);
+        $this->assertNotNull($entry->notification_attempted_at);
+        $this->assertNotNull($entry->notification_accepted_at);
+        $this->assertNull($entry->notification_error);
 
         $this->get('/')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('guestbookEntries', 1)
                 ->where('guestbookEntries.0.name', 'Portfolio Reviewer')
-                ->where('guestbookEntries.0.admin_reply', 'Thank you for taking the time to leave this note.')
+                ->where('guestbookEntries.0.role_or_organization', 'Research partner')
+                ->where('guestbookEntries.0.body', 'The portfolio presents the research and systems work clearly.')
+                ->missing('guestbookEntries.0.email')
+            );
+    }
+
+    public function test_guestbook_review_is_preserved_when_the_mail_transport_fails(): void
+    {
+        $this->withoutVite();
+        $this->seed();
+        Mail::shouldReceive('to')
+            ->once()
+            ->andThrow(new \RuntimeException('Test transport unavailable.'));
+
+        $this->post('/guestbook', [
+            'name' => 'Offline Reviewer',
+            'email' => 'offline@example.test',
+            'body' => 'This review remains available for moderation if email delivery fails.',
+            'rating' => 4,
+            'website' => '',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $entry = GuestbookEntry::query()->where('email', 'offline@example.test')->firstOrFail();
+
+        $this->assertSame('approved', $entry->status);
+        $this->assertNotNull($entry->approved_at);
+        $this->assertSame('failed', $entry->notification_status);
+        $this->assertNotNull($entry->notification_attempted_at);
+        $this->assertNull($entry->notification_accepted_at);
+        $this->assertSame('Test transport unavailable.', $entry->notification_error);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('guestbookEntries', 1)
+                ->where('guestbookEntries.0.name', 'Offline Reviewer')
+                ->where('guestbookEntries.0.body', 'This review remains available for moderation if email delivery fails.')
                 ->missing('guestbookEntries.0.email')
             );
     }

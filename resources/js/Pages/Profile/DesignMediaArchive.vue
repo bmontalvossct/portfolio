@@ -1,9 +1,11 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { ArrowLeft, ArrowUpRight, Film, Image as ImageIcon, Moon, Palette, Search, Sun, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import SeoHead from '../../Components/SeoHead.vue';
 
 const props = defineProps({
+    seo: { type: Object, required: true },
     items: { type: Array, default: () => [] },
     profile: { type: Object, required: true },
 });
@@ -71,9 +73,7 @@ watch(selectedItem, (item) => {
 </script>
 
 <template>
-    <Head title="Design & media archive">
-        <link v-if="profile.avatar_url" rel="icon" :href="profile.avatar_url">
-    </Head>
+    <SeoHead :seo="seo" />
 
     <div class="media-archive-shell">
         <header class="archive-topbar">
@@ -87,6 +87,7 @@ watch(selectedItem, (item) => {
 
             <nav aria-label="Portfolio archives">
                 <Link href="/"><ArrowLeft :size="14" />Portfolio</Link>
+                <Link href="/services">Services</Link>
                 <Link href="/designs" class="active">Designs</Link>
                 <Link href="/badges">Badges</Link>
                 <Link href="/certifications">Certificates</Link>

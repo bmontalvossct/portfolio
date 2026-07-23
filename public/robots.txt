@@ -1,2 +1,14 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: GPTBot
+Disallow: /
+
+Sitemap: https://brittmontalvo.dev/sitemap.xml

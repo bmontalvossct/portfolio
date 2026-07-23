@@ -14,9 +14,13 @@ class GuestbookEntry extends Model
         'body',
         'rating',
         'status',
+        'notification_status',
         'admin_reply',
         'approved_at',
         'replied_at',
+        'notification_attempted_at',
+        'notification_accepted_at',
+        'notification_error',
         'ip_hash',
     ];
 
@@ -31,6 +35,8 @@ class GuestbookEntry extends Model
             'rating' => 'integer',
             'approved_at' => 'datetime',
             'replied_at' => 'datetime',
+            'notification_attempted_at' => 'datetime',
+            'notification_accepted_at' => 'datetime',
         ];
     }
 }
