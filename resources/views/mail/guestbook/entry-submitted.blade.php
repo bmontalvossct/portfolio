@@ -1,7 +1,7 @@
 <x-mail::message>
 # New portfolio review
 
-A new comment or review is waiting for moderation.
+A new comment or review was published automatically. You can edit, hide, or delete it from the portfolio admin.
 
 **Name:** {{ $entry->name }}  
 **Email:** {{ $entry->email }}  
@@ -17,7 +17,7 @@ A new comment or review is waiting for moderation.
 {{ $entry->body }}
 
 <x-mail::button :url="route('admin.index')">
-Review in portfolio admin
+Manage review in portfolio admin
 </x-mail::button>
 
 Submitted {{ $entry->created_at?->format('M j, Y g:i A') }}.

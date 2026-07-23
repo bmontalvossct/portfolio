@@ -3,13 +3,21 @@
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDataSyncController;
 use App\Http\Controllers\Admin\AdminPortfolioController;
+use App\Http\Controllers\AgentDiscoveryController;
 use App\Http\Controllers\CredentialArchiveController;
 use App\Http\Controllers\DesignMediaArchiveController;
 use App\Http\Controllers\GuestbookController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ServicesController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Middleware\AddNoIndexHeader;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/llms.txt', AgentDiscoveryController::class)->name('agent-discovery');
+
 Route::get('/', ProfileController::class)->name('profile.show');
+Route::get('/services', ServicesController::class)->name('services.index');
 Route::get('/badges', [CredentialArchiveController::class, 'badges'])->name('badges.index');
 Route::get('/certifications', [CredentialArchiveController::class, 'certificates'])->name('certifications.index');
 Route::get('/designs', DesignMediaArchiveController::class)->name('designs.index');
@@ -17,7 +25,7 @@ Route::post('/guestbook', [GuestbookController::class, 'store'])
     ->middleware('throttle:4,1')
     ->name('guestbook.store');
 
-Route::prefix('admin')->name('admin.')->group(function (): void {
+Route::prefix('admin')->name('admin.')->middleware(AddNoIndexHeader::class)->group(function (): void {
     Route::get('/login', [AdminAuthController::class, 'create'])->name('login');
     Route::post('/login', [AdminAuthController::class, 'store'])->middleware('throttle:6,1')->name('login.store');
 
@@ -67,6 +75,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::delete('/certificates/{certificate}', [AdminPortfolioController::class, 'destroyCertificate'])->name('certificates.destroy');
 
         Route::put('/guestbook/{guestbookEntry}', [AdminPortfolioController::class, 'updateGuestbookEntry'])->name('guestbook.update');
+        Route::post('/guestbook/{guestbookEntry}/notification', [AdminPortfolioController::class, 'retryGuestbookNotification'])->middleware('throttle:6,1')->name('guestbook.notification.retry');
         Route::delete('/guestbook/{guestbookEntry}', [AdminPortfolioController::class, 'destroyGuestbookEntry'])->name('guestbook.destroy');
     });
 });

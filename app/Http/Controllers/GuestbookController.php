@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\GuestbookEntrySubmitted;
 use App\Models\GuestbookEntry;
+use App\Support\Profile\GuestbookReviewNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Throwable;
 
 class GuestbookController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, GuestbookReviewNotifier $notifier): RedirectResponse
     {
         if ($request->filled('website')) {
             return back()->with('success', 'Thanks for sharing your review.');
@@ -29,16 +27,13 @@ class GuestbookController extends Controller
         $entry = GuestbookEntry::query()->create([
             ...$validated,
             'public_id' => (string) str()->uuid(),
-            'status' => 'pending',
+            'status' => 'approved',
+            'approved_at' => now(),
             'ip_hash' => hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')),
         ]);
 
-        try {
-            Mail::to(config('portfolio.review_notification_email'))->send(new GuestbookEntrySubmitted($entry));
-        } catch (Throwable $exception) {
-            report($exception);
-        }
+        $notifier->send($entry);
 
-        return back()->with('success', 'Thanks for sharing your review.');
+        return back()->with('success', 'Thanks for sharing your review. It is now visible on the portfolio.');
     }
 }

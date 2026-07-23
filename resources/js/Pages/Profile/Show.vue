@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import {
     ArrowUpRight,
     Award,
@@ -35,8 +35,11 @@ import {
     X,
 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import SeoHead from '../../Components/SeoHead.vue';
+import { gmailComposeUrl } from '../../Support/gmail.js';
 
 const props = defineProps({
+    seo: { type: Object, required: true },
     profile: { type: Object, required: true },
     achievements: { type: Array, default: () => [] },
     badges: { type: Array, default: () => [] },
@@ -144,8 +147,6 @@ const filteredWorks = computed(() => {
 const visibleBadges = computed(() => props.badges.slice(0, 6));
 const visibleCertificates = computed(() => props.certificates.slice(0, 6));
 const previewBadge = computed(() => hoveredBadge.value ?? selectedBadge.value ?? props.badges[0] ?? null);
-const gmailComposeUrl = (email) => `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
-
 function achievementLogoUrl(achievement) {
     if (achievement.image_url) return achievement.image_url;
 
@@ -418,10 +419,7 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
 </script>
 
 <template>
-    <Head :title="profile.display_name">
-        <link v-if="profile.avatar_url" rel="icon" :href="profile.avatar_url">
-
-    </Head>
+    <SeoHead :seo="seo" />
 
     <div ref="portfolioShell" class="portfolio-shell" @pointermove.passive="moveGradient" @pointerleave="resetGradient">
         <div class="gemini-wash" aria-hidden="true"></div>
@@ -436,6 +434,7 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
 
             <nav class="nav-links" aria-label="Portfolio sections">
                 <a href="#work">Work</a>
+                <Link href="/services">Services</Link>
                 <a href="#designs">Designs</a>
                 <a href="#published">Published</a>
                 <a href="#credentials">Credentials</a>
@@ -734,9 +733,26 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                 </div>
             </section>
 
+            <section class="collaboration-bridge section-wrap" aria-labelledby="collaboration-title">
+                <div>
+                    <span class="folio-label">10 / collaborate</span>
+                    <h2 id="collaboration-title">Let's work together.</h2>
+                    <p>Need a clearer system, better use of data, stronger digital operations, or a practical session for your team? Explore the services I can shape around your goals.</p>
+                </div>
+                <div class="collaboration-actions">
+                    <Link href="/services">See services<ArrowUpRight :size="15" /></Link>
+                    <a
+                        v-if="profile.email"
+                        :href="gmailComposeUrl(profile.email, { subject: 'Project inquiry' })"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >Request a quote<ArrowUpRight :size="15" /></a>
+                </div>
+            </section>
+
             <section id="guestbook" class="content-band section-wrap guestbook-band">
                 <div class="section-head">
-                    <div><span class="folio-label">10 / reviews</span><h2>Reviews</h2></div>
+                    <div><span class="folio-label">11 / reviews</span><h2>Reviews</h2></div>
                     <p>Share a thought about the work, a possible collaboration, or your experience.</p>
                 </div>
 
@@ -1073,6 +1089,15 @@ a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underlin
 .skills-index { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 1rem; border-top: 1px solid var(--profile-ink); margin-top: 2.5rem; padding-top: 1rem; }
 .skills-index > div { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .skills-index > div span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.35rem 0.6rem; font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; }
+.collaboration-bridge { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(2rem, 6vw, 6rem); align-items: end; margin-top: clamp(3rem, 7vw, 6rem); margin-bottom: clamp(3rem, 7vw, 6rem); border: 1px solid var(--profile-ink); background: linear-gradient(135deg, rgb(251 188 4 / 10%), transparent 52%), var(--profile-50); padding: clamp(1.4rem, 4vw, 2.6rem); color: var(--profile-ink); box-shadow: 10px 10px 0 var(--profile-red); transition: background-color 500ms ease, border-color 500ms ease, color 500ms ease, box-shadow 500ms ease; }
+:global(:root[data-theme='dark']) .collaboration-bridge { border-color: var(--profile-300); background: radial-gradient(circle at 92% 8%, rgb(66 133 244 / 18%), transparent 42%), radial-gradient(circle at 68% 110%, rgb(161 66 244 / 12%), transparent 45%), var(--profile-50); box-shadow: 10px 10px 0 color-mix(in srgb, var(--profile-red) 72%, #7c3aed); }
+.collaboration-bridge .folio-label { color: var(--profile-500); }
+.collaboration-bridge h2 { margin: 0.55rem 0 0; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 0.95; }
+.collaboration-bridge p { max-width: 47rem; margin: 1rem 0 0; color: var(--profile-700); font-size: 1.05rem; line-height: 1.65; }
+.collaboration-actions { display: grid; gap: 0.65rem; min-width: 10.5rem; }
+.collaboration-actions a { display: inline-flex; min-height: 2.8rem; align-items: center; justify-content: space-between; gap: 0.6rem; border: 1px solid var(--profile-ink); background: transparent; padding: 0.7rem 0.8rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.68rem; text-decoration: none; text-transform: uppercase; }
+.collaboration-actions a:first-child { background: var(--profile-ink); color: var(--profile-bg); }
+.collaboration-actions a:hover { box-shadow: 4px 4px 0 var(--profile-red); transform: translate(-2px, -2px); }
 .guestbook-layout { display: grid; grid-template-columns: minmax(20rem, 0.8fr) minmax(0, 1.2fr); gap: 1.2rem; align-items: start; }
 .guestbook-form { display: grid; gap: 0.9rem; border: 1px solid var(--profile-ink); background: var(--profile-bg); padding: clamp(1rem, 3vw, 1.4rem); }
 .form-heading { display: flex; align-items: center; gap: 0.55rem; border-bottom: 1px solid var(--profile-200); padding-bottom: 0.8rem; }
@@ -1172,6 +1197,8 @@ a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underlin
     .badge-preview { position: static; order: -1; }
     .skills-index { grid-template-columns: 1fr; }
     .footer-links { justify-items: start; }
+    .collaboration-bridge { grid-template-columns: 1fr; align-items: start; }
+    .collaboration-actions { width: min(100%, 20rem); }
     .guestbook-layout { grid-template-columns: 1fr; }
 }
 

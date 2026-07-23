@@ -4,7 +4,9 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { createApp, h } from 'vue';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} / Britt Montalvo` : 'Britt Kristoff Montalvo'),
+    title: (title) => (title
+        ? (title.includes('Britt Montalvo') ? title : `${title} / Britt Montalvo`)
+        : 'Britt Kristoff Montalvo'),
     resolve: (name) => {
         const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
 

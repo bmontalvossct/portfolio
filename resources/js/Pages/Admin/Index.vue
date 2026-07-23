@@ -28,7 +28,8 @@ import {
     Wrench,
     X,
 } from '@lucide/vue';
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
+import { gmailComposeUrl } from '../../Support/gmail.js';
 
 const props = defineProps({
     profile: { type: Object, required: true },
@@ -43,6 +44,7 @@ const props = defineProps({
     education: { type: Array, default: () => [] },
     workExperiences: { type: Array, default: () => [] },
     guestbookEntries: { type: Array, default: () => [] },
+    pendingReviewCount: { type: Number, default: 0 },
     credentialCount: { type: Number, default: 0 },
     flash: { type: Object, default: () => ({}) },
 });
@@ -75,9 +77,28 @@ const editingWorkExperience = ref(null);
 const editingEducation = ref(null);
 const editingCredentialBadge = ref(null);
 const editingCertificate = ref(null);
+function guestbookDraft(entry) {
+    return {
+        name: entry.name,
+        email: entry.email,
+        role_or_organization: entry.role_or_organization ?? '',
+        body: entry.body,
+        rating: entry.rating,
+        admin_reply: entry.admin_reply ?? '',
+    };
+}
+
 const guestbookDrafts = ref(Object.fromEntries(
-    props.guestbookEntries.map((entry) => [entry.id, entry.admin_reply ?? '']),
+    props.guestbookEntries.map((entry) => [entry.id, guestbookDraft(entry)]),
 ));
+
+watch(() => props.guestbookEntries, (entries) => {
+    for (const entry of entries) {
+        if (!guestbookDrafts.value[entry.id]) {
+            guestbookDrafts.value[entry.id] = guestbookDraft(entry);
+        }
+    }
+});
 
 const profileForm = useForm({
     _method: 'put',
@@ -429,10 +450,16 @@ function remove(url, label) {
 }
 
 function updateGuestbook(entry, status = entry.status) {
+    const draft = guestbookDrafts.value[entry.id] ?? entry;
+
     router.put(`/admin/guestbook/${entry.id}`, {
+        ...draft,
         status,
-        admin_reply: guestbookDrafts.value[entry.id] ?? '',
     }, { preserveScroll: true });
+}
+
+function retryGuestbookNotification(entry) {
+    router.post(`/admin/guestbook/${entry.id}/notification`, {}, { preserveScroll: true });
 }
 </script>
 
@@ -473,6 +500,11 @@ function updateGuestbook(entry, status = entry.status) {
             >
                 <component :is="tab.icon" :size="16" />
                 <span>{{ tab.label }}</span>
+                <span
+                    v-if="tab.key === 'guestbook' && pendingReviewCount > 0"
+                    class="tab-badge"
+                    :aria-label="`${pendingReviewCount} reviews pending approval`"
+                >{{ pendingReviewCount }}</span>
             </button>
         </nav>
 
@@ -785,30 +817,58 @@ function updateGuestbook(entry, status = entry.status) {
                 </div>
 
                 <div class="moderation-list">
-                    <article v-for="entry in guestbookEntries" :key="entry.id" class="moderation-entry">
+                    <form v-for="entry in guestbookEntries" :key="entry.id" class="moderation-entry" @submit.prevent="updateGuestbook(entry)">
                         <div class="moderation-head">
                             <div>
                                 <span class="status-chip" :class="entry.status">{{ entry.status }}</span>
                                 <h2>{{ entry.name }}</h2>
-                                <a :href="`mailto:${entry.email}`">{{ entry.email }}</a>
+                                <a
+                                    :href="gmailComposeUrl(entry.email, { subject: 'Regarding your portfolio review' })"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >{{ entry.email }}</a>
                                 <span>{{ entry.role_or_organization || entry.created_at }}</span>
                             </div>
                             <div v-if="entry.rating" class="moderation-stars" :aria-label="`${entry.rating} out of 5 stars`">
                                 <Star v-for="star in 5" :key="star" :size="14" :fill="star <= entry.rating ? 'currentColor' : 'none'" />
                             </div>
                         </div>
-                        <blockquote>{{ entry.body }}</blockquote>
+                        <div class="review-edit-grid">
+                            <label><span>Name</span><input v-model="guestbookDrafts[entry.id].name" required maxlength="120"></label>
+                            <label><span>Email</span><input v-model="guestbookDrafts[entry.id].email" type="email" required maxlength="255"></label>
+                            <label><span>Role or organization</span><input v-model="guestbookDrafts[entry.id].role_or_organization" maxlength="180"></label>
+                            <label><span>Rating</span><select v-model.number="guestbookDrafts[entry.id].rating"><option :value="null">No rating</option><option v-for="rating in 5" :key="rating" :value="rating">{{ rating }} star{{ rating === 1 ? '' : 's' }}</option></select></label>
+                        </div>
+                        <label class="review-body-field">
+                            <span>Public review</span>
+                            <textarea v-model="guestbookDrafts[entry.id].body" rows="5" minlength="12" maxlength="1500" required />
+                        </label>
+                        <div class="notification-state" :class="entry.notification_status">
+                            <div class="notification-state-head">
+                                <Check v-if="entry.notification_status === 'accepted'" :size="15" />
+                                <AlertCircle v-else-if="entry.notification_status === 'failed'" :size="15" />
+                                <Clock3 v-else :size="15" />
+                                <span>
+                                    <strong v-if="entry.notification_status === 'accepted'">Email transport accepted</strong>
+                                    <strong v-else-if="entry.notification_status === 'failed'">Email notification failed</strong>
+                                    <strong v-else>Email notification not attempted</strong>
+                                    <small>{{ entry.notification_accepted_at || entry.notification_attempted_at || 'No attempt recorded' }}</small>
+                                </span>
+                                <button type="button" @click="retryGuestbookNotification(entry)"><RefreshCw :size="14" />Retry email</button>
+                            </div>
+                            <p v-if="entry.notification_error">{{ entry.notification_error }}</p>
+                        </div>
                         <label class="reply-field">
                             <span>Your public reply</span>
-                            <textarea v-model="guestbookDrafts[entry.id]" rows="3" maxlength="2000" />
+                            <textarea v-model="guestbookDrafts[entry.id].admin_reply" rows="3" maxlength="2000" />
                         </label>
                         <div class="moderation-actions">
-                            <button type="button" class="approve" @click="updateGuestbook(entry, 'approved')"><Check :size="15" />Approve & save</button>
-                            <button type="button" @click="updateGuestbook(entry, 'pending')"><Clock3 :size="15" />Pending</button>
-                            <button type="button" @click="updateGuestbook(entry, 'hidden')"><X :size="15" />Hide</button>
+                            <button type="submit" class="approve"><Check :size="15" />Save changes</button>
+                            <button v-if="entry.status !== 'approved'" type="button" @click="updateGuestbook(entry, 'approved')"><Check :size="15" />Publish</button>
+                            <button v-if="entry.status !== 'hidden'" type="button" @click="updateGuestbook(entry, 'hidden')"><X :size="15" />Hide</button>
                             <button type="button" class="danger" @click="remove(`/admin/guestbook/${entry.id}`, entry.name)"><Trash2 :size="15" />Delete</button>
                         </div>
-                    </article>
+                    </form>
                     <div v-if="!guestbookEntries.length" class="moderation-empty"><MessageSquareQuote :size="24" /><p>No visitor notes yet.</p></div>
                 </div>
             </section>
@@ -856,6 +916,8 @@ function updateGuestbook(entry, status = entry.status) {
 .admin-tabs { position: sticky; top: 3.85rem; z-index: 20; display: flex; gap: 0.35rem; overflow-x: auto; border-bottom: 1px solid var(--profile-200); background: var(--profile-bg); padding: 0.6rem clamp(1rem, 4vw, 2.5rem); }
 .admin-tabs button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 0.45rem; border: 1px solid transparent; border-radius: 4px; background: transparent; padding: 0.55rem 0.7rem; color: var(--profile-500); font-size: 0.7rem; text-transform: uppercase; cursor: pointer; }
 .admin-tabs button.active { border-color: var(--profile-ink); background: var(--profile-ink); color: var(--profile-bg); }
+.tab-badge { display: inline-grid; min-width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 999px; background: #b42318; padding: 0 0.3rem; color: #fff; font-size: 0.65rem; font-weight: 700; line-height: 1; }
+.admin-tabs button.active .tab-badge { background: var(--profile-bg); color: var(--profile-ink); }
 .notice { position: fixed; right: 1rem; bottom: 1rem; z-index: 50; gap: 0.55rem; border: 1px solid #157347; border-radius: 4px; background: #ecfdf3; padding: 0.7rem 0.9rem; color: #11633d; box-shadow: var(--profile-shadow); }
 .notice.error { border-color: #b42318; background: #fff1f0; color: #9f1c13; }
 .admin-main { width: min(100%, 86rem); margin: 0 auto; padding: clamp(1rem, 4vw, 2.5rem); }
@@ -927,6 +989,23 @@ input:disabled { cursor: not-allowed; opacity: 0.55; }
 .status-chip.hidden { border-color: #b42318; color: #b42318; }
 .moderation-stars { display: flex; gap: 0.1rem; }
 .moderation-entry blockquote { margin: 0; color: var(--profile-700); font-family: var(--font-serif); font-size: 1rem; line-height: 1.6; }
+.review-edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.review-edit-grid label, .review-body-field { display: grid; gap: 0.35rem; }
+.review-edit-grid label > span, .review-body-field > span { color: var(--profile-500); font-size: 0.62rem; }
+.review-body-field textarea { min-height: 7rem; }
+.notification-state { display: grid; gap: 0.55rem; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-50); padding: 0.65rem; }
+.notification-state.accepted { border-color: #8bc7a5; }
+.notification-state.failed { border-color: #e6a09a; background: #fff8f7; }
+.notification-state-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.55rem; align-items: center; }
+.notification-state-head > svg { color: var(--profile-500); }
+.notification-state.accepted .notification-state-head > svg { color: #157347; }
+.notification-state.failed .notification-state-head > svg { color: #b42318; }
+.notification-state-head > span { display: grid; gap: 0.12rem; }
+.notification-state-head strong, .notification-state-head small, .notification-state-head button { font-family: var(--font-mono); }
+.notification-state-head strong { font-size: 0.66rem; text-transform: uppercase; }
+.notification-state-head small { color: var(--profile-500); font-size: 0.58rem; }
+.notification-state-head button { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--profile-300); border-radius: 4px; background: var(--profile-bg); padding: 0.42rem 0.5rem; color: var(--profile-ink); font-size: 0.6rem; text-transform: uppercase; cursor: pointer; }
+.notification-state > p { margin: 0; color: #9f1c13; font-family: var(--font-mono); font-size: 0.62rem; line-height: 1.5; overflow-wrap: anywhere; }
 .reply-field { display: grid; gap: 0.4rem; }
 .reply-field textarea { min-height: 5rem; }
 .moderation-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
@@ -944,6 +1023,7 @@ input:disabled { cursor: not-allowed; opacity: 0.55; }
 
 @media (max-width: 600px) {
     .form-grid.two { grid-template-columns: 1fr; }
+    .review-edit-grid { grid-template-columns: 1fr; }
     .admin-tabs { top: 3.75rem; }
     .avatar-row { align-items: flex-start; flex-direction: column; }
     .catalog-row { grid-template-columns: minmax(0, 1fr) auto; }

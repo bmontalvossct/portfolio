@@ -15,6 +15,7 @@ use App\Models\Project;
 use App\Models\PublishedWork;
 use App\Models\WorkExperience;
 use App\Support\Profile\CredentialCategory;
+use App\Support\Profile\GuestbookReviewNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -60,11 +61,16 @@ class AdminPortfolioController extends Controller
                     'body' => $entry->body,
                     'rating' => $entry->rating,
                     'status' => $entry->status,
+                    'notification_status' => $entry->notification_status,
+                    'notification_attempted_at' => $entry->notification_attempted_at?->format('M j, Y g:i A'),
+                    'notification_accepted_at' => $entry->notification_accepted_at?->format('M j, Y g:i A'),
+                    'notification_error' => $entry->notification_error,
                     'admin_reply' => $entry->admin_reply,
                     'approved_at' => $entry->approved_at?->toDateTimeString(),
                     'created_at' => $entry->created_at?->format('M j, Y g:i A'),
                 ]),
             'credentialCount' => CredentialBadge::query()->count(),
+            'pendingReviewCount' => GuestbookEntry::query()->where('status', 'pending')->count(),
         ]);
     }
 
@@ -475,12 +481,24 @@ class AdminPortfolioController extends Controller
     public function updateGuestbookEntry(Request $request, GuestbookEntry $guestbookEntry): RedirectResponse
     {
         $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:255'],
+            'role_or_organization' => ['nullable', 'string', 'max:180'],
+            'body' => ['required', 'string', 'min:12', 'max:1500'],
+            'rating' => ['nullable', 'integer', 'between:1,5'],
             'status' => ['required', 'in:pending,approved,hidden'],
             'admin_reply' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $guestbookEntry->status = $validated['status'];
-        $guestbookEntry->admin_reply = $validated['admin_reply'] ?? null;
+        $guestbookEntry->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role_or_organization' => $validated['role_or_organization'] ?? null,
+            'body' => $validated['body'],
+            'rating' => $validated['rating'] ?? null,
+            'status' => $validated['status'],
+            'admin_reply' => $validated['admin_reply'] ?? null,
+        ]);
         $guestbookEntry->approved_at = $validated['status'] === 'approved'
             ? ($guestbookEntry->approved_at ?? now())
             : null;
@@ -489,7 +507,18 @@ class AdminPortfolioController extends Controller
             : null;
         $guestbookEntry->save();
 
-        return back()->with('success', 'Guestbook entry updated.');
+        return back()->with('success', 'Review updated.');
+    }
+
+    public function retryGuestbookNotification(
+        GuestbookEntry $guestbookEntry,
+        GuestbookReviewNotifier $notifier,
+    ): RedirectResponse {
+        if (! $notifier->send($guestbookEntry)) {
+            return back()->with('error', 'Review notification failed. Check the delivery error on this review.');
+        }
+
+        return back()->with('success', 'Review notification was accepted by the configured mail transport.');
     }
 
     public function destroyGuestbookEntry(GuestbookEntry $guestbookEntry): RedirectResponse
