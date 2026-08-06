@@ -63,7 +63,7 @@ class AdminPortfolioTest extends TestCase
                 ->has('portfolioTools', 37)
                 ->has('achievements', 4)
                 ->has('credentialBadges', 29)
-                ->has('education', 3)
+                ->has('education', 2)
                 ->has('workExperiences', 5)
                 ->where('pendingReviewCount', 0)
             );

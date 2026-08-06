@@ -3,7 +3,11 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="color-scheme" content="light dark">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+        <link rel="preload" href="/fonts/saira-latin.woff2" as="font" type="font/woff2" crossorigin>
+        <link rel="preload" href="/fonts/saira-condensed-600-latin.woff2" as="font" type="font/woff2" crossorigin>
         @php($seo = data_get($page ?? [], 'props.seo'))
 
         @if ($seo)
@@ -46,7 +50,7 @@
             })();
         </script>
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite('resources/js/app.js')
         @inertiaHead
     </head>
     <body>

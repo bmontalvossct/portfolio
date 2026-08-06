@@ -146,17 +146,6 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        Education::query()->updateOrCreate(
-            ['institution' => 'San Nicolas Academy', 'program' => 'High School'],
-            [
-                'logo_url' => null,
-                'level' => 'Secondary education',
-                'start_date' => 'June 2011',
-                'end_date' => 'March 2015',
-                'sort_order' => 3,
-            ],
-        );
-
         WorkExperience::query()
             ->where('organization', 'TMB Tax Bureau')
             ->where('position', 'Virtual Assistant (Part-time)')

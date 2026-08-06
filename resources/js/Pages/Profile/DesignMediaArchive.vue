@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
-import { ArrowLeft, ArrowUpRight, Film, Image as ImageIcon, Moon, Palette, Search, Sun, X } from '@lucide/vue';
+import { ArrowLeft, ArrowUpRight, FileText, Film, Image as ImageIcon, Moon, Palette, Search, Sun, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import SeoHead from '../../Components/SeoHead.vue';
 
@@ -123,11 +123,12 @@ watch(selectedItem, (item) => {
             <section v-if="filteredItems.length" class="media-grid" aria-label="Design and media works">
                 <button v-for="(item, index) in filteredItems" :key="item.id" class="media-card" type="button" @click="selectedItem = item">
                     <span class="media-frame">
-                        <video v-if="item.media_type === 'video'" muted playsinline preload="metadata" :poster="item.thumbnail_url || undefined">
+                        <video v-if="item.media_type === 'video'" muted playsinline preload="none" :poster="item.thumbnail_url || undefined">
                             <source :src="item.media_url">
                         </video>
-                        <iframe v-else-if="item.media_type === 'pdf'" :src="`${item.media_url}#page=1&toolbar=0&navpanes=0&scrollbar=0`" :title="`${item.title} preview`" tabindex="-1"></iframe>
-                        <img v-else :src="item.media_url" :alt="item.title" loading="lazy">
+                        <img v-else-if="item.media_type === 'pdf' && item.thumbnail_url" :src="item.thumbnail_url" :alt="`${item.title} first-page preview`" loading="lazy" decoding="async" fetchpriority="low">
+                        <span v-else-if="item.media_type === 'pdf'" class="pdf-card-preview"><FileText :size="32" /><span>PDF preview</span></span>
+                        <img v-else :src="item.thumbnail_url || item.preview_url || item.media_url" :alt="item.title" loading="lazy" decoding="async" fetchpriority="low">
                         <span v-if="item.media_type === 'video'" class="video-mark"><Film :size="17" />Video</span>
                         <span class="work-number">{{ String(index + 1).padStart(2, '0') }}</span>
                     </span>
@@ -194,6 +195,7 @@ watch(selectedItem, (item) => {
 .media-frame { position: relative; display: grid; aspect-ratio: 4 / 3; place-items: center; overflow: hidden; background: #171b19; }
 .media-frame img, .media-frame video, .media-frame iframe { width: 100%; height: 100%; object-fit: contain; }
 .media-frame iframe { border: 0; pointer-events: none; }
+.pdf-card-preview { display: grid; place-content: center; justify-items: center; gap: 0.65rem; color: #f7f1e7; font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; }
 .work-number { position: absolute; top: 0.55rem; right: 0.55rem; border-radius: 999px; background: rgb(0 0 0 / 68%); padding: 0.3rem 0.45rem; color: #fff; font-family: var(--font-mono); font-size: 0.55rem; }
 .video-mark { position: absolute; bottom: 0.55rem; left: 0.55rem; display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 3px; background: rgb(0 0 0 / 72%); padding: 0.35rem 0.5rem; color: #fff; font-family: var(--font-mono); font-size: 0.56rem; text-transform: uppercase; }
 .media-copy { display: grid; min-height: 5.6rem; align-content: start; gap: 0.35rem; padding: 0.85rem; }

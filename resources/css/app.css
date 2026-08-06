@@ -1,19 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,300;0,400;0,600;0,700;1,300&family=Saira+Condensed:wght@400;600;700&display=swap');
-@import 'tailwindcss';
+@font-face {
+    font-family: 'Saira';
+    font-style: normal;
+    font-weight: 300 700;
+    font-display: swap;
+    src: url('/fonts/saira-latin.woff2') format('woff2');
+}
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../js/**/*.{js,vue}';
-@source '../views/**/*.blade.php';
+@font-face {
+    font-family: 'Saira';
+    font-style: italic;
+    font-weight: 300;
+    font-display: swap;
+    src: url('/fonts/saira-italic-300-latin.woff2') format('woff2');
+}
 
-@theme {
+@font-face {
+    font-family: 'Saira Condensed';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/saira-condensed-400-latin.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Saira Condensed';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/saira-condensed-600-latin.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Saira Condensed';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/saira-condensed-700-latin.woff2') format('woff2');
+}
+
+:root {
     --font-sans: 'Saira', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'Saira Condensed', 'Arial Narrow', ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Saira', ui-sans-serif, system-ui, sans-serif;
-}
-
-:root {
     color-scheme: light;
     --profile-bg: #f7f7f7;
     --profile-ink: #000000;

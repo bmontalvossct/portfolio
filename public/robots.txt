@@ -9,6 +9,53 @@ Disallow: /admin
 Disallow: /up
 
 User-agent: GPTBot
-Disallow: /
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: OAI-AdsBot
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: Claude-User
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin
+Disallow: /up
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin
+Disallow: /up
 
 Sitemap: https://brittmontalvo.dev/sitemap.xml

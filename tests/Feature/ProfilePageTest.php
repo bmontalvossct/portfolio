@@ -85,7 +85,7 @@ class ProfilePageTest extends TestCase
                 ->where('certificates.4.issuer', 'Google')
                 ->where('certificates.4.provider_name', 'Google')
                 ->where('certificates.4.thumbnail_url', 'https://api.iconify.design/logos/google-icon.svg')
-                ->has('education', 3)
+                ->has('education', 2)
                 ->where('education.0.institution', 'Caraga State University')
                 ->where('education.0.program', 'Master of Science in Information Technology')
                 ->where('education.0.end_date', 'June 2026')
@@ -109,6 +109,7 @@ class ProfilePageTest extends TestCase
                 ->where('publishedWorks.0.published_on', null)
                 ->where('publishedWorks.1.title', 'SURe-Health: PDOHO-SDN Official Publication')
                 ->where('publishedWorks.1.cover_url', '/storage/portfolio/publications/sure-health-cover.webp')
+                ->where('publishedWorks.1.cover_preview_url', '/media/thumbnail?src=%2Fstorage%2Fportfolio%2Fpublications%2Fsure-health-cover.webp&w=320')
                 ->where('publishedWorks.1.external_url', 'https://online.fliphtml5.com/utpit/pzyy/')
                 ->where('projects.0.title', 'Governed MCH Forecasting and Risk Prediction DSS')
                 ->where('projects.0.category', 'Health informatics DSS')
@@ -178,6 +179,7 @@ class ProfilePageTest extends TestCase
                 ->where('designMedia.0.media_type', 'pdf')
                 ->where('designMedia.0.type_label', 'Brochure PDF')
                 ->where('designMedia.0.media_url', '/storage/portfolio/Images/Brochure%20Design.pdf')
+                ->where('designMedia.0.thumbnail_url', '/images/design-previews/brochure-design.jpg')
                 ->where('designMedia.1.title', 'Campaign Poster')
                 ->where('designMedia.1.media_type', 'image')
                 ->where('designMedia.1.media_url', '/storage/portfolio/Images/Campaign%20Poster.jpg')
@@ -195,6 +197,7 @@ class ProfilePageTest extends TestCase
                 ->has('items', 3)
                 ->where('items.0.title', 'Brochure Design')
                 ->where('items.0.media_type', 'pdf')
+                ->where('items.0.thumbnail_url', '/images/design-previews/brochure-design.jpg')
             );
     }
 
@@ -207,7 +210,8 @@ class ProfilePageTest extends TestCase
         $this->assertDatabaseCount('achievements', 4);
         $this->assertDatabaseCount('certificates', 51);
         $this->assertDatabaseCount('credential_badges', 29);
-        $this->assertDatabaseCount('education', 3);
+        $this->assertDatabaseCount('education', 2);
+        $this->assertDatabaseMissing('education', ['institution' => 'San Nicolas Academy', 'program' => 'High School']);
         $this->assertDatabaseCount('work_experiences', 5);
         $this->assertDatabaseCount('published_works', 2);
         $this->assertDatabaseCount('projects', 5);
