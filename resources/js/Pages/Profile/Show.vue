@@ -357,17 +357,11 @@ function setTheme(value) {
 async function refreshViewerCount() {
     if (document.hidden) return;
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-
-    if (!csrfToken) return;
-
     try {
         const response = await fetch('/viewer-presence', {
-            method: 'POST',
             credentials: 'same-origin',
             headers: {
                 Accept: 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
             },
         });
 
@@ -376,7 +370,7 @@ async function refreshViewerCount() {
         const payload = await response.json();
 
         if (Number.isInteger(payload.count) && payload.count > 0) {
-            currentViewerCount.value = Math.max(25, payload.count);
+            currentViewerCount.value = payload.count;
         }
     } catch {
         // Presence is optional; browsing must remain unaffected if it is unavailable.

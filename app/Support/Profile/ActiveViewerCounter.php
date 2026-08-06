@@ -63,10 +63,16 @@ class ActiveViewerCounter
                     'next_update_at' => $now + self::BASELINE_UPDATE_SECONDS,
                 ];
             } elseif ($state['next_update_at'] <= $now) {
+                $direction = match (true) {
+                    $state['value'] <= self::BASELINE_FLOOR => 1,
+                    $state['value'] >= self::BASELINE_CEILING => -1,
+                    default => random_int(0, 1) === 1 ? 1 : -1,
+                };
+
                 $state = [
                     'value' => max(
                         self::BASELINE_FLOOR,
-                        min(self::BASELINE_CEILING, $state['value'] + random_int(-1, 1)),
+                        min(self::BASELINE_CEILING, $state['value'] + $direction),
                     ),
                     'next_update_at' => $now + self::BASELINE_UPDATE_SECONDS,
                 ];
