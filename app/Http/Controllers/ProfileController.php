@@ -67,6 +67,7 @@ class ProfileController extends Controller
                 'summary' => $work->summary,
                 'published_on' => $work->published_on?->format('M Y'),
                 'cover_url' => $work->cover_url,
+                'cover_preview_url' => $this->portfolioPreviewUrl($work->cover_url, 320),
                 'doi' => $work->doi,
                 'external_url' => $work->external_url,
                 'tags' => $work->tags ?? [],
@@ -241,4 +242,15 @@ class ProfileController extends Controller
         ]);
     }
 
+    private function portfolioPreviewUrl(?string $mediaUrl, int $width): ?string
+    {
+        if (! $mediaUrl || ! str_starts_with($mediaUrl, '/storage/portfolio/')) {
+            return null;
+        }
+
+        return route('portfolio-thumbnail', [
+            'src' => $mediaUrl,
+            'w' => $width,
+        ], false);
+    }
 }

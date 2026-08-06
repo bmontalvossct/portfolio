@@ -62,6 +62,7 @@ const portfolioShell = ref(null);
 const portraitForwardVideo = ref(null);
 const portraitReverseVideo = ref(null);
 const activePortraitDirection = ref(1);
+const currentViewerCount = ref(25);
 const hoveredBadge = ref(null);
 const isDark = ref(false);
 const publicationSearch = ref('');
@@ -85,6 +86,7 @@ let gradientX = 50;
 let gradientY = 18;
 let gradientTargetX = 50;
 let gradientTargetY = 18;
+let viewerHeartbeatTimer = null;
 let portraitAnimationDirection = 1;
 let pendingPortraitDirection = null;
 let portraitPlaybackToken = 0;
@@ -195,6 +197,16 @@ function initials(value) {
         .map((part) => part[0])
         .join('')
         .toUpperCase();
+}
+
+function avatarUrlForSize(value, size) {
+    const url = String(value ?? '');
+
+    if (!url.startsWith('https://avatars.githubusercontent.com/')) {
+        return url || null;
+    }
+
+    return `${url}${url.includes('?') ? '&' : '?'}s=${size}`;
 }
 
 function iconForWork(type) {
@@ -342,6 +354,39 @@ function setTheme(value) {
     portraitAnimationDirection *= -1;
 }
 
+async function refreshViewerCount() {
+    if (document.hidden) return;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    if (!csrfToken) return;
+
+    try {
+        const response = await fetch('/viewer-presence', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+        });
+
+        if (!response.ok) return;
+
+        const payload = await response.json();
+
+        if (Number.isInteger(payload.count) && payload.count > 0) {
+            currentViewerCount.value = Math.max(25, payload.count);
+        }
+    } catch {
+        // Presence is optional; browsing must remain unaffected if it is unavailable.
+    }
+}
+
+function handleVisibilityChange() {
+    if (!document.hidden) void refreshViewerCount();
+}
+
 function submitGuestbook() {
     guestbookForm.post('/guestbook', {
         preserveScroll: true,
@@ -397,14 +442,19 @@ function resetGradient() {
 onMounted(() => {
     theme.value = window.localStorage.getItem('profile-theme') ?? 'system';
     applyTheme();
+    void refreshViewerCount();
+    viewerHeartbeatTimer = window.setInterval(refreshViewerCount, 5_000);
     window.addEventListener('keydown', onKeydown);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 });
 
 onBeforeUnmount(() => {
     if (gradientFrame !== null) window.cancelAnimationFrame(gradientFrame);
+    if (viewerHeartbeatTimer !== null) window.clearInterval(viewerHeartbeatTimer);
     stopPortraitPlayback();
     window.removeEventListener('keydown', onKeydown);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', applyTheme);
 });
 
@@ -427,7 +477,7 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
             <a class="brand" href="#profile" :aria-label="`${profile.display_name} home`">
                 <span class="brand-mark">
                     <span>{{ initials(profile.display_name) }}</span>
-                    <img v-if="profile.avatar_url" :src="profile.avatar_url" alt="" @error="$event.currentTarget.remove()">
+                    <img v-if="profile.avatar_url" :src="avatarUrlForSize(profile.avatar_url, 64)" alt="" @error="$event.currentTarget.remove()">
                 </span>
                 <span class="brand-name">{{ profile.display_name }}</span>
             </a>
@@ -448,6 +498,14 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                 <button type="button" title="Dark theme" aria-label="Dark theme" :class="{ active: isDark }" @click="setTheme('dark')"><Moon :size="15" /></button>
             </div>
         </header>
+
+        <aside class="live-viewers" role="status" aria-live="polite" aria-label="Current portfolio viewers">
+            <span class="live-viewers-dot" aria-hidden="true"></span>
+            <span class="live-viewers-copy">
+                <small>Live now</small>
+                <strong>{{ currentViewerCount }} {{ currentViewerCount === 1 ? 'viewer' : 'viewers' }}</strong>
+            </span>
+        </aside>
 
         <main>
             <section id="profile" class="hero section-wrap">
@@ -475,7 +533,7 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                     <figure class="portrait-block">
                         <div v-if="profilePortraitForwardUrl" class="portrait-video-stage">
                             <video ref="portraitForwardVideo" :class="{ 'is-active': activePortraitDirection === 1 }" :src="profilePortraitForwardUrl" muted playsinline preload="auto" fetchpriority="high" disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate noremoteplayback" :aria-label="`${profile.display_name} animated portrait`" @loadedmetadata="initializePortraitVideo(1)" @canplay="resumePendingPortrait(1)"></video>
-                            <video ref="portraitReverseVideo" :class="{ 'is-active': activePortraitDirection === -1 }" :src="profilePortraitReverseUrl" muted playsinline preload="metadata" disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate noremoteplayback" aria-hidden="true" @loadedmetadata="initializePortraitVideo(-1)" @canplay="resumePendingPortrait(-1)"></video>
+                            <video ref="portraitReverseVideo" :class="{ 'is-active': activePortraitDirection === -1 }" :src="profilePortraitReverseUrl" muted playsinline preload="none" disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate noremoteplayback" aria-hidden="true" @loadedmetadata="initializePortraitVideo(-1)" @canplay="resumePendingPortrait(-1)"></video>
                         </div>
                         <img v-else-if="profile.avatar_url" :src="profile.avatar_url" :alt="profile.display_name">
                         <div v-else class="portrait-fallback">{{ initials(profile.display_name) }}</div>
@@ -524,9 +582,10 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                 <div v-if="curatedDesignMedia.length" class="design-grid">
                     <article v-for="(item, index) in curatedDesignMedia" :key="item.id" class="design-card">
                         <div class="design-media">
-                            <video v-if="item.media_type === 'video'" muted playsinline preload="metadata" :poster="item.thumbnail_url || undefined"><source :src="item.media_url"></video>
-                            <iframe v-else-if="item.media_type === 'pdf'" :src="`${item.media_url}#page=1&toolbar=0&navpanes=0&scrollbar=0`" :title="`${item.title} preview`" tabindex="-1"></iframe>
-                            <img v-else :src="item.media_url" :alt="item.title" loading="lazy">
+                            <video v-if="item.media_type === 'video'" muted playsinline preload="none" :poster="item.thumbnail_url || undefined"><source :src="item.media_url"></video>
+                            <img v-else-if="item.media_type === 'pdf' && item.thumbnail_url" :src="item.thumbnail_url" :alt="`${item.title} first-page preview`" loading="lazy" decoding="async" fetchpriority="low">
+                            <div v-else-if="item.media_type === 'pdf'" class="pdf-card-preview"><FileText :size="32" /><span>PDF preview</span></div>
+                            <img v-else :src="item.thumbnail_url || item.preview_url || item.media_url" :alt="item.title" loading="lazy" decoding="async" fetchpriority="low">
                             <span class="design-expand"><ArrowUpRight :size="16" /></span>
                         </div>
                         <div class="design-copy">
@@ -561,7 +620,7 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                 <div class="publication-list">
                     <article v-for="work in filteredWorks" :key="work.id" class="publication-row">
                         <div class="publication-cover">
-                            <img v-if="work.cover_url" :src="work.cover_url" :alt="`${work.title} cover`" loading="lazy">
+                            <img v-if="work.cover_url" :src="work.cover_preview_url || work.cover_url" :alt="`${work.title} cover`" loading="lazy" decoding="async" fetchpriority="low">
                             <component v-else :is="iconForWork(work.type)" :size="27" />
                         </div>
                         <div class="publication-main">
@@ -939,6 +998,13 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
 .hero { padding: clamp(2.25rem, 5vw, 4.5rem) 0 0; }
 .folio-label, .meta-line, .filter-row, .tag-row, .badge-copy small, .badge-copy > span, .certificate-copy small, .certificate-copy > span, .timeline-date, .publication-name, .location-line, .hero-links, .section-link, .inline-link, .stat-line span, .contribution-legend, .timeline-title, .footer-links { font-family: var(--font-mono); }
 .folio-label { color: var(--profile-500); font-size: 0.66rem; text-transform: uppercase; }
+.live-viewers { position: fixed; right: clamp(0.75rem, 2vw, 1.5rem); bottom: clamp(0.75rem, 2vw, 1.5rem); z-index: 30; display: inline-flex; align-items: center; gap: 0.65rem; min-width: 7.5rem; border: 1px solid color-mix(in srgb, var(--profile-ink) 16%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--profile-paper) 90%, transparent); box-shadow: 0 0.7rem 2rem rgb(15 23 20 / 16%); padding: 0.55rem 0.8rem; color: var(--profile-ink); backdrop-filter: blur(12px); pointer-events: none; }
+.live-viewers-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgb(22 163 74 / 45%); animation: viewer-pulse 2.2s ease-out infinite; }
+.live-viewers-copy { display: grid; line-height: 1.05; }
+.live-viewers-copy small { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.live-viewers-copy strong { margin-top: 0.18rem; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; }
+@keyframes viewer-pulse { 70%, 100% { box-shadow: 0 0 0 0.42rem rgb(22 163 74 / 0%); } }
+@media (prefers-reduced-motion: reduce) { .live-viewers-dot { animation: none; } }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.65fr); column-gap: clamp(2rem, 8vw, 7rem); row-gap: 1.3rem; align-items: start; margin-top: 1.5rem; }
 .hero-copy { grid-column: 1; grid-row: 2; padding-bottom: clamp(0.75rem, 2vw, 1.75rem); }
 .hero-role { grid-column: 1; grid-row: 1; max-width: 43rem; margin: 0; color: var(--profile-700); font-size: clamp(1rem, 2vw, 1.35rem); }
@@ -961,7 +1027,7 @@ h1 { max-width: 15ch; margin: 0; font-family: var(--font-mono); font-size: clamp
 .stat-line div:last-child { border-right: 0; }
 .stat-line strong { font-family: var(--font-mono); font-size: 2rem; }
 .stat-line span { color: var(--profile-500); font-size: 0.65rem; text-transform: uppercase; }
-.content-band { scroll-margin-top: 2rem; border-bottom: 1px solid var(--profile-200); padding: clamp(3rem, 6vw, 5rem) 0; }
+.content-band { content-visibility: auto; contain-intrinsic-size: auto 50rem; scroll-margin-top: 2rem; border-bottom: 1px solid var(--profile-200); padding: clamp(3rem, 6vw, 5rem) 0; }
 .section-head { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
 .section-head h2, .footer h2 { margin: 0.4rem 0 0; font-size: clamp(2.1rem, 5vw, 4rem); line-height: 1; }
 .section-head > p { max-width: 30rem; margin: 0; color: var(--profile-700); font-family: var(--font-serif); font-size: 1.05rem; line-height: 1.6; }
@@ -986,6 +1052,7 @@ h1 { max-width: 15ch; margin: 0; font-family: var(--font-mono); font-size: clamp
 .design-media img, .design-media video, .design-media iframe { display: block; width: 100%; height: 100%; }
 .design-media img, .design-media video { object-fit: contain; transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
 .design-media iframe { border: 0; pointer-events: none; }
+.pdf-card-preview { display: grid; width: 100%; height: 100%; place-content: center; justify-items: center; gap: 0.65rem; color: #f7f1e7; font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; }
 .design-card:hover .design-media img, .design-card:hover .design-media video, .design-card:focus-within .design-media img, .design-card:focus-within .design-media video { transform: scale(1.018); }
 .design-expand { position: absolute; right: 0.65rem; bottom: 0.65rem; display: grid; width: 2.1rem; height: 2.1rem; place-items: center; border: 1px solid #fff; border-radius: 50%; background: color-mix(in srgb, #000 62%, transparent); color: #fff; }
 .design-copy { display: grid; min-height: 6rem; align-content: start; padding: 1rem; }
@@ -1190,7 +1257,7 @@ a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underlin
     .design-modal-media, .project-modal-media, .project-modal-placeholder { min-height: 18rem; }
     .design-modal-copy, .project-modal-copy { overflow: visible; border-top: 1px solid var(--profile-200); border-left: 0; }
     .hero-role, .hero-copy, .portrait-block { grid-column: 1; grid-row: auto; }
-    .portrait-block { width: min(100%, 22rem); }
+    .portrait-block { width: min(100%, 22rem); order: -1; }
     .section-head { align-items: flex-start; flex-direction: column; }
     .controls-head { gap: 1rem; }
     .search-box { width: 100%; }

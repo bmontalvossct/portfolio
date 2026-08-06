@@ -7,20 +7,26 @@ use App\Http\Controllers\AgentDiscoveryController;
 use App\Http\Controllers\CredentialArchiveController;
 use App\Http\Controllers\DesignMediaArchiveController;
 use App\Http\Controllers\GuestbookController;
+use App\Http\Controllers\PortfolioThumbnailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\ViewerPresenceController;
 use App\Http\Middleware\AddNoIndexHeader;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/llms.txt', AgentDiscoveryController::class)->name('agent-discovery');
+Route::get('/media/thumbnail', PortfolioThumbnailController::class)->name('portfolio-thumbnail');
 
 Route::get('/', ProfileController::class)->name('profile.show');
 Route::get('/services', ServicesController::class)->name('services.index');
 Route::get('/badges', [CredentialArchiveController::class, 'badges'])->name('badges.index');
 Route::get('/certifications', [CredentialArchiveController::class, 'certificates'])->name('certifications.index');
 Route::get('/designs', DesignMediaArchiveController::class)->name('designs.index');
+Route::post('/viewer-presence', ViewerPresenceController::class)
+    ->middleware('throttle:20,1')
+    ->name('viewer-presence');
 Route::post('/guestbook', [GuestbookController::class, 'store'])
     ->middleware('throttle:4,1')
     ->name('guestbook.store');

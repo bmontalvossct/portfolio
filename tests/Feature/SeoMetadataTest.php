@@ -47,8 +47,22 @@ class SeoMetadataTest extends TestCase
         $this->assertStringNotContainsString('untrusted.example', $sitemap->getContent());
 
         $robots = str_replace("\r\n", "\n", (string) file_get_contents(public_path('robots.txt')));
-        $this->assertStringContainsString("User-agent: OAI-SearchBot\nAllow: /", $robots);
-        $this->assertStringContainsString("User-agent: GPTBot\nDisallow: /", $robots);
+        foreach ([
+            '*',
+            'OAI-SearchBot',
+            'GPTBot',
+            'ChatGPT-User',
+            'OAI-AdsBot',
+            'ClaudeBot',
+            'Claude-SearchBot',
+            'Claude-User',
+            'PerplexityBot',
+            'Perplexity-User',
+            'Google-Extended',
+            'Applebot-Extended',
+        ] as $agent) {
+            $this->assertStringContainsString("User-agent: {$agent}\nAllow: /", $robots);
+        }
         $this->assertStringContainsString('Disallow: /admin', $robots);
         $this->assertStringContainsString('Disallow: /up', $robots);
         $this->assertStringContainsString('Sitemap: https://brittmontalvo.dev/sitemap.xml', $robots);
@@ -122,6 +136,12 @@ class SeoMetadataTest extends TestCase
     {
         $response = $this->get('/')->assertOk();
         $xpath = $this->xpathFor($response->getContent());
+        $this->assertSame(
+            '/favicon.svg',
+            $this->attributeValue($xpath, '//head/link[@rel="icon"]', 'href'),
+        );
+        $this->assertFileExists(public_path('favicon.svg'));
+        $this->assertGreaterThan(0, filesize(public_path('favicon.svg')));
         $schema = json_decode(
             (string) $xpath->query('//head/script[@id="portfolio-structured-data"]')->item(0)?->textContent,
             true,

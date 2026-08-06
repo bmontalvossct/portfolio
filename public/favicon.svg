@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+    <title>Britt Montalvo</title>
+    <rect width="512" height="512" rx="112" fill="#173f35"/>
+    <path d="M112 112h129c70 0 111 31 111 84 0 30-15 54-42 68 39 13 59 40 59 80 0 57-43 88-122 88H112V112zm80 64v61h43c25 0 37-10 37-31 0-20-13-30-39-30h-41zm0 124v68h49c31 0 46-11 46-34 0-23-15-34-46-34h-49z" fill="#f7f1e7"/>
+    <path d="M330 112h70v320h-70V112z" fill="#d8a43b"/>
+</svg>
