@@ -39,7 +39,7 @@ class ProfilePageTest extends TestCase
                 ->where('badges.0.name', 'Networking Basics')
                 ->where('badges.0.issuer', 'Cisco')
                 ->has('publishedWorks', 2)
-                ->has('projects', 5)
+                ->has('projects', 6)
                 ->has('portfolioTools', 37)
                 ->where('portfolioTools.0.category', 'backend')
                 ->where('portfolioTools.0.name', 'PHP')
@@ -115,12 +115,14 @@ class ProfilePageTest extends TestCase
                 ->where('projects.0.category', 'Health informatics DSS')
                 ->where('projects.0.repo_url', 'https://github.com/bmontalvossct/Forecasting-and-Risk-Prediction')
                 ->where('projects.0.thumbnail_url', '/storage/portfolio/projects/mch-forecasting-risk-dss.png')
-                ->where('projects.1.title', 'SDN Electronic Medical Records Dashboard')
-                ->where('projects.1.url', 'https://app.powerbi.com/view?r=eyJrIjoiMDBmNTFkOTYtMGQ1ZC00MTUzLWIxMmEtMzgwMTUwMmE5ODUzIiwidCI6IjE5NWQzN2JlLTllMGEtNDIwNS1hZGY0LWEyNTk5ZTllMWNjYSIsImMiOjEwfQ%3D%3D&pageName=ReportSection')
-                ->where('projects.2.title', 'Surigao del Norte State University Public Website')
-                ->where('projects.2.url', 'https://gamma.snsu.edu.ph')
-                ->where('projects.2.thumbnail_url', '/storage/portfolio/projects/snsu-gamma-home.png')
-                ->where('projects.3.repo_url', 'https://github.com/kristoffmontalvo218/Amplifier-repo')
+                ->where('projects.1.title', 'ClassCheck')
+                ->where('projects.1.url', 'https://classcheck.brittmontalvo.dev')
+                ->where('projects.2.title', 'SDN Electronic Medical Records Dashboard')
+                ->where('projects.2.url', 'https://app.powerbi.com/view?r=eyJrIjoiMDBmNTFkOTYtMGQ1ZC00MTUzLWIxMmEtMzgwMTUwMmE5ODUzIiwidCI6IjE5NWQzN2JlLTllMGEtNDIwNS1hZGY0LWEyNTk5ZTllMWNjYSIsImMiOjEwfQ%3D%3D&pageName=ReportSection')
+                ->where('projects.3.title', 'Surigao del Norte State University Public Website')
+                ->where('projects.3.url', 'https://gamma.snsu.edu.ph')
+                ->where('projects.3.thumbnail_url', '/storage/portfolio/projects/snsu-gamma-home.png')
+                ->where('projects.4.repo_url', 'https://github.com/kristoffmontalvo218/Amplifier-repo')
             );
 
         $this->assertFileExists(public_path('images/brands/sap.svg'));
@@ -214,7 +216,7 @@ class ProfilePageTest extends TestCase
         $this->assertDatabaseMissing('education', ['institution' => 'San Nicolas Academy', 'program' => 'High School']);
         $this->assertDatabaseCount('work_experiences', 5);
         $this->assertDatabaseCount('published_works', 2);
-        $this->assertDatabaseCount('projects', 5);
+        $this->assertDatabaseCount('projects', 6);
         $this->assertDatabaseCount('portfolio_tools', 37);
         $this->assertDatabaseHas('certificates', [
             'title' => 'CCNA Routing and Switching: Routing and Switching Essentials',

@@ -264,6 +264,20 @@ class DatabaseSeeder extends Seeder
         );
 
         Project::query()->updateOrCreate(
+            ['title' => 'ClassCheck'],
+            [
+                'category' => 'Web system',
+                'summary' => 'A full-stack open-source classroom management, real-time attendance tracking, interactive seating layout designer, recitation scoring, and weighted gradebook reporting system.',
+                'year' => '2026',
+                'url' => 'https://classcheck.brittmontalvo.dev',
+                'repo_url' => 'https://github.com/bmontalvossct/classcheck',
+                'tags' => ['Laravel', 'Vue.js', 'Inertia.js', 'Tailwind CSS', 'Open Source', 'Classroom Management', 'Attendance'],
+                'sort_order' => 2,
+                'is_featured' => true,
+            ],
+        );
+
+        Project::query()->updateOrCreate(
             ['title' => 'SDN Electronic Medical Records Dashboard'],
             [
                 'category' => 'Power BI dashboard',
@@ -271,7 +285,7 @@ class DatabaseSeeder extends Seeder
                 'year' => '2026',
                 'url' => 'https://app.powerbi.com/view?r=eyJrIjoiMDBmNTFkOTYtMGQ1ZC00MTUzLWIxMmEtMzgwMTUwMmE5ODUzIiwidCI6IjE5NWQzN2JlLTllMGEtNDIwNS1hZGY0LWEyNTk5ZTllMWNjYSIsImMiOjEwfQ%3D%3D&pageName=ReportSection',
                 'tags' => ['Power BI', 'Health informatics', 'Data visualization', 'Electronic medical records'],
-                'sort_order' => 2,
+                'sort_order' => 3,
                 'is_featured' => true,
             ],
         );
@@ -285,7 +299,7 @@ class DatabaseSeeder extends Seeder
                 'url' => 'https://gamma.snsu.edu.ph',
                 'thumbnail_url' => '/storage/portfolio/projects/snsu-gamma-home.png',
                 'tags' => ['University website', 'Public information', 'Responsive design', 'Content management'],
-                'sort_order' => 3,
+                'sort_order' => 4,
                 'is_featured' => true,
             ],
         );
@@ -298,7 +312,7 @@ class DatabaseSeeder extends Seeder
                 'year' => '2019',
                 'repo_url' => 'https://github.com/kristoffmontalvo218/Amplifier-repo',
                 'tags' => ['PHP', 'HTML', 'CSS', 'Thesis'],
-                'sort_order' => 4,
+                'sort_order' => 5,
                 'is_featured' => true,
             ],
         );
@@ -310,7 +324,7 @@ class DatabaseSeeder extends Seeder
                 'summary' => 'Implementation, training, monitoring, and technical support for electronic medical record systems used by health facilities.',
                 'year' => '2021-2024',
                 'tags' => ['EMR', 'Health technology', 'Training', 'Data'],
-                'sort_order' => 5,
+                'sort_order' => 6,
                 'is_featured' => true,
             ],
         );

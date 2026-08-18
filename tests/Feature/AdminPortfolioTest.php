@@ -55,7 +55,7 @@ class AdminPortfolioTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Index')
-                ->has('projects', 5)
+                ->has('projects', 6)
                 ->where('projects.0.title', 'Governed MCH Forecasting and Risk Prediction DSS')
                 ->has('publishedWorks', 2)
                 ->where('publishedWorks.0.publication', 'Approved for Scopus publication')

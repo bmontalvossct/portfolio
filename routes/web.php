@@ -24,7 +24,7 @@ Route::get('/services', ServicesController::class)->name('services.index');
 Route::get('/badges', [CredentialArchiveController::class, 'badges'])->name('badges.index');
 Route::get('/certifications', [CredentialArchiveController::class, 'certificates'])->name('certifications.index');
 Route::get('/designs', DesignMediaArchiveController::class)->name('designs.index');
-Route::post('/viewer-presence', ViewerPresenceController::class)
+Route::get('/viewer-presence', ViewerPresenceController::class)
     ->middleware('throttle:20,1')
     ->name('viewer-presence');
 Route::post('/guestbook', [GuestbookController::class, 'store'])

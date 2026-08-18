@@ -48,6 +48,9 @@ class ViewerPresenceTest extends TestCase
 
         $this->assertSame(28, $counter->displayCount(3));
 
+        Carbon::setTestNow(now()->addSeconds(ActiveViewerCounter::BASELINE_UPDATE_SECONDS + 1));
+        $this->assertSame(27, $counter->displayCount(3));
+
         foreach (range(1, 20) as $step) {
             Carbon::setTestNow(now()->addSeconds(ActiveViewerCounter::BASELINE_UPDATE_SECONDS + 1));
             $displayCount = $counter->displayCount(3);
@@ -59,7 +62,7 @@ class ViewerPresenceTest extends TestCase
 
     public function test_presence_heartbeat_returns_the_current_count_without_caching(): void
     {
-        $this->postJson('/viewer-presence')
+        $this->getJson('/viewer-presence')
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertJson([
