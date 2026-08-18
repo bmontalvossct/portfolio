@@ -199,6 +199,10 @@ class CredlyBadgeSyncer
             data_get($raw, 'image.url'),
             data_get($template, 'image_url'),
             data_get($template, 'image.url'),
+            data_get($template, 'image_urls.mobile'),
+            data_get($template, 'image_urls.desktop'),
+            data_get($raw, 'badge.image_url'),
+            data_get($raw, 'badge.image.url'),
         ]);
         $assertionUrl = is_scalar($id) ? "https://www.credly.com/badges/{$id}" : null;
 
@@ -265,7 +269,7 @@ class CredlyBadgeSyncer
         }
 
         return str_replace(
-            ['â€œ', 'â€�', 'â€', 'â€˜', 'â€™', 'â€“', 'â€”', 'â€¢', 'Â'],
+            ['â€œ', 'â€', 'â€ ', 'â€˜', 'â€™', 'â€“', 'â€”', 'â€¢', 'Â'],
             ['"', '"', '"', "'", "'", '-', '-', '*', ''],
             $value
         );
@@ -280,7 +284,7 @@ class CredlyBadgeSyncer
         $baseName = Str::of($externalId)->replaceMatches('/[^A-Za-z0-9_-]/', '-')->lower()->toString();
         $directory = public_path('imports/credly');
 
-        foreach (['svg', 'png'] as $existingExtension) {
+        foreach (['svg', 'png', 'webp', 'jpg'] as $existingExtension) {
             if (File::exists($directory.DIRECTORY_SEPARATOR.$baseName.'.'.$existingExtension)) {
                 return '/imports/credly/'.$baseName.'.'.$existingExtension;
             }
@@ -297,9 +301,13 @@ class CredlyBadgeSyncer
                 return null;
             }
 
-            $extension = str_contains((string) $response->header('Content-Type'), 'svg')
-                ? 'svg'
-                : 'png';
+            $contentType = (string) $response->header('Content-Type');
+            $extension = match (true) {
+                str_contains($contentType, 'svg') => 'svg',
+                str_contains($contentType, 'webp') => 'webp',
+                str_contains($contentType, 'jpeg') || str_contains($contentType, 'jpg') => 'jpg',
+                default => 'png',
+            };
             $fileName = $baseName.'.'.$extension;
 
             File::ensureDirectoryExists($directory);

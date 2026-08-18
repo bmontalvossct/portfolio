@@ -795,6 +795,29 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
+            29 => [
+                'provider' => 'credly',
+                'external_id' => '5e0f592b-57d1-4853-848f-efea5a559d27',
+                'name' => 'SAP Certified - Integration Developer',
+                'issuer' => 'SAP',
+                'category' => 'software',
+                'description' => 'This certification exam verifies that the candidate possesses the fundamental and core knowledge required of the SAP Integration Suite profile. It proves that the candidate has an overall understanding and in-depth technical skills to participate as a member of a project team in a mentored role.',
+                'issued_at' => '2026-07-20',
+                'expires_at' => '2027-07-21',
+                'image_url' => '/imports/credly/5e0f592b-57d1-4853-848f-efea5a559d27.png',
+                'certificate_url' => 'https://www.credly.com/badges/5e0f592b-57d1-4853-848f-efea5a559d27',
+                'criteria_url' => null,
+                'evidence_url' => null,
+                'skills' => [
+                    0 => 'Cloud Integration',
+                    1 => 'Integration Suite',
+                    2 => 'SAP Integration Suite',
+                    3 => 'Software Development',
+                ],
+                'sort_order' => 29,
+                'is_featured' => false,
+                'synced_at' => null,
+            ],
         ];
 
         foreach ($badges as $badge) {
