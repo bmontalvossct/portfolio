@@ -85,6 +85,7 @@ class DriveCertificateSyncTest extends TestCase
 
         $this->assertDatabaseCount('certificates', $certificateCountBeforeSync);
     }
+
     public function test_sync_excludes_private_files_and_normalizes_requested_titles(): void
     {
         config()->set('services.google_drive.certificate_folder_id', 'folder12345678901234567890');
