@@ -35,7 +35,7 @@ class ProfilePageTest extends TestCase
                 ->where('profile.bio', 'I work across information systems, health technology implementation, data operations, research, and visual publishing. I also provide MikroTik network consulting and serve as a GPTZero Ambassador, promoting responsible and transparent AI use.')
                 ->where('profile.external_links.2.label', 'LinkedIn')
                 ->where('profile.external_links.2.url', 'https://www.linkedin.com/in/britt-kristoff-montalvo/')
-                ->has('badges', 29)
+                ->has('badges', 30)
                 ->where('badges.0.name', 'Networking Basics')
                 ->where('badges.0.issuer', 'Cisco')
                 ->has('publishedWorks', 2)
@@ -211,7 +211,7 @@ class ProfilePageTest extends TestCase
         $this->assertDatabaseCount('profiles', 1);
         $this->assertDatabaseCount('achievements', 4);
         $this->assertDatabaseCount('certificates', 51);
-        $this->assertDatabaseCount('credential_badges', 29);
+        $this->assertDatabaseCount('credential_badges', 30);
         $this->assertDatabaseCount('education', 2);
         $this->assertDatabaseMissing('education', ['institution' => 'San Nicolas Academy', 'program' => 'High School']);
         $this->assertDatabaseCount('work_experiences', 5);
@@ -342,7 +342,7 @@ class ProfilePageTest extends TestCase
                 ->where('archiveType', 'badges')
                 ->where('alternate.url', '/certifications')
                 ->has('categories', 8)
-                ->has('items', 29)
+                ->has('items', 30)
                 ->where('items.0.title', 'Networking Basics')
                 ->where('items.0.category', 'networking')
             );

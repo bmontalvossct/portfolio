@@ -1,5 +1,5 @@
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import {
     ArrowUpRight,
     Award,
@@ -11,7 +11,6 @@ import {
     Code2,
     Database,
     ExternalLink,
-
     FileHeart,
     FileText,
     GraduationCap,
@@ -21,14 +20,11 @@ import {
     Mail,
     MapPin,
     Maximize2,
-    MessageSquareQuote,
     Moon,
     Network,
     Newspaper,
     Palette,
     Search,
-    Send,
-    Star,
     Store,
     Sun,
     Wrench,
@@ -72,14 +68,6 @@ const selectedBackground = ref(null);
 const selectedDesign = ref(null);
 const selectedProject = ref(null);
 const theme = ref('system');
-const guestbookForm = useForm({
-    name: '',
-    email: '',
-    role_or_organization: '',
-    body: '',
-    rating: 5,
-    website: '',
-});
 
 let gradientFrame = null;
 let gradientX = 50;
@@ -103,20 +91,13 @@ const filteredProjects = computed(() => props.projects.filter((item) => (
 
 const designTypes = computed(() => [
     { key: 'all', label: 'All media' },
-    ...[...new Set(props.designMedia.map((item) => item.media_type).filter(Boolean))]
-        .map((type) => ({ key: type, label: labelFor(type) })),
+    ...[...new Set(props.designMedia.map((item) => item.media_type))]
+        .map((type) => ({ key: type, label: designTypeLabel(type) })),
 ]);
 
-const filteredDesignMedia = computed(() => props.designMedia.filter((item) => (
-    activeDesignType.value === 'all' || item.media_type === activeDesignType.value
-)));
-
-const curatedDesignMedia = computed(() => {
+const featuredDesignMedia = computed(() => {
     const selections = [
-        (item) => item.media_type === 'video' && item.title === 'University Intramurials Team Indtroductions',
-        (item) => item.title === 'Instagram Post for Spa',
-        (item) => item.title === 'Business Card',
-        (item) => item.title === 'Business Logo',
+        (item) => item.title === 'Campaign Poster',
         (item) => item.title === 'Coffeee Sip Poster',
         (item) => item.title === 'Brochure Design',
     ];
@@ -149,6 +130,7 @@ const filteredWorks = computed(() => {
 const visibleBadges = computed(() => props.badges.slice(0, 6));
 const visibleCertificates = computed(() => props.certificates.slice(0, 6));
 const previewBadge = computed(() => hoveredBadge.value ?? selectedBadge.value ?? props.badges[0] ?? null);
+
 function achievementLogoUrl(achievement) {
     if (achievement.image_url) return achievement.image_url;
 
@@ -179,14 +161,43 @@ const groupedPortfolioTools = computed(() => toolCategoryDefinitions
 function toolFallbackIcon(tool) {
     const name = String(tool.name ?? '').toLowerCase();
 
-    if (name.includes('sql')) return Database;
-    if (name.includes('medical record')) return FileHeart;
+    if (name.includes('ai') || name.includes('gpt') || name.includes('notebook')) return Bot;
+    if (name.includes('power bi') || name.includes('data')) return BarChart3;
+    if (name.includes('git')) return GitBranch;
+    if (name.includes('adobe') || name.includes('canva') || name.includes('figma')) return Palette;
+    if (name.includes('laravel') || name.includes('php') || name.includes('python')) return Database;
 
-    return null;
+    return Wrench;
 }
 
-function labelFor(value) {
-    return String(value ?? '').replaceAll('_', ' ').replace(/\b\w/g, (match) => match.toUpperCase());
+function designTypeLabel(type) {
+    if (type === 'image') return 'Images';
+    if (type === 'video') return 'Motion';
+    if (type === 'pdf') return 'Brochure PDF';
+
+    return type;
+}
+
+function labelFor(type) {
+    return String(type ?? 'work').replace('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function projectIcon(category) {
+    const clean = String(category ?? '').toLowerCase();
+
+    if (clean.includes('dashboard') || clean.includes('power bi')) return BarChart3;
+    if (clean.includes('dss') || clean.includes('forecasting')) return Bot;
+
+    return Layout;
+}
+
+function isPowerBiProject(project) {
+    try {
+        const url = new URL(project?.url ?? '');
+        return url.hostname.includes('powerbi.com');
+    } catch {
+        return false;
+    }
 }
 
 function initials(value) {
@@ -199,44 +210,30 @@ function initials(value) {
         .toUpperCase();
 }
 
-function avatarUrlForSize(value, size) {
-    const url = String(value ?? '');
+function avatarUrlForSize(url, size) {
+    if (!url) return null;
 
-    if (!url.startsWith('https://avatars.githubusercontent.com/')) {
-        return url || null;
-    }
-
-    return `${url}${url.includes('?') ? '&' : '?'}s=${size}`;
-}
-
-function iconForWork(type) {
-    if (type === 'digital_magazine') return BookOpen;
-    if (type === 'newspaper' || type === 'article') return Newspaper;
-    return FileText;
-}
-
-function projectIcon(category) {
-    const value = String(category ?? '').toLowerCase();
-    if (value.includes('design') || value.includes('graphic')) return Palette;
-    if (value.includes('web') || value.includes('system')) return Code2;
-    return BriefcaseBusiness;
-}
-
-function isPowerBiProject(project) {
     try {
-        const url = new URL(project?.url ?? '');
-
-        return url.protocol === 'https:'
-            && url.hostname.toLowerCase() === 'app.powerbi.com'
-            && url.pathname.startsWith('/view');
+        const parsed = new URL(url, window.location.origin);
+        if (parsed.hostname.includes('githubusercontent.com')) {
+            parsed.searchParams.set('s', String(size));
+            return parsed.toString();
+        }
     } catch {
-        return false;
+        return url;
     }
+
+    return url;
 }
 
-function contributionTitle(day) {
-    const levels = ['No', 'Low', 'Moderate', 'High', 'Very high'];
-    return `${levels[day.level]} contribution activity on ${day.date}`;
+function applyTheme() {
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    isDark.value = theme.value === 'dark' || (theme.value === 'system' && systemDark);
+    document.documentElement.dataset.theme = isDark.value ? 'dark' : 'light';
+}
+
+function setTheme(value) {
+    theme.value = value;
 }
 
 function openBadge(badge) {
@@ -247,12 +244,12 @@ function closeBadge() {
     selectedBadge.value = null;
 }
 
-function openBackground(type, item) {
-    selectedBackground.value = { type, item };
+function openProject(project) {
+    selectedProject.value = project;
 }
 
-function closeBackground() {
-    selectedBackground.value = null;
+function closeProject() {
+    selectedProject.value = null;
 }
 
 function openCertificate(certificate) {
@@ -263,6 +260,14 @@ function closeCertificate() {
     selectedCertificate.value = null;
 }
 
+function openBackground(type, item) {
+    selectedBackground.value = { type, item };
+}
+
+function closeBackground() {
+    selectedBackground.value = null;
+}
+
 function openDesign(item) {
     selectedDesign.value = item;
 }
@@ -271,87 +276,80 @@ function closeDesign() {
     selectedDesign.value = null;
 }
 
-function openProject(project) {
-    selectedProject.value = project;
+function onBadgeImageError(event) {
+    const target = event.currentTarget;
+    if (target) {
+        target.style.display = 'none';
+        const fallback = target.nextElementSibling;
+        if (fallback) {
+            fallback.classList.add('is-active');
+            fallback.style.display = 'grid';
+        }
+    }
 }
 
-function closeProject() {
-    selectedProject.value = null;
-}
-
-function applyTheme() {
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    isDark.value = theme.value === 'dark' || (theme.value === 'system' && systemDark);
-    document.documentElement.dataset.theme = isDark.value ? 'dark' : 'light';
-}
-
-function portraitVideoFor(direction) {
+function videoElementForDirection(direction) {
     return direction === 1 ? portraitForwardVideo.value : portraitReverseVideo.value;
 }
 
 function stopPortraitPlayback() {
     portraitPlaybackToken += 1;
-    portraitForwardVideo.value?.pause();
-    portraitReverseVideo.value?.pause();
+    pendingPortraitDirection = null;
+
+    if (portraitForwardVideo.value) {
+        portraitForwardVideo.value.pause();
+        portraitForwardVideo.value.currentTime = 0;
+    }
+
+    if (portraitReverseVideo.value) {
+        portraitReverseVideo.value.pause();
+        portraitReverseVideo.value.currentTime = 0;
+    }
 }
 
-function playPortrait(direction) {
-    const target = portraitVideoFor(direction);
-    const sourceVideo = portraitVideoFor(direction * -1);
+function playDirection(direction) {
+    const video = videoElementForDirection(direction);
+    if (!video) return;
 
-    if (!target) return;
-
-    if (target.readyState < 3) {
+    if (video.readyState < 2) {
         pendingPortraitDirection = direction;
         return;
     }
 
-    stopPortraitPlayback();
-    pendingPortraitDirection = null;
-    const playbackToken = portraitPlaybackToken;
-    const switchingDirection = activePortraitDirection.value !== direction;
-    const mirroredTime = switchingDirection && sourceVideo?.readyState >= 1
-        ? Math.max(0, Math.min(target.duration, target.duration - sourceVideo.currentTime))
-        : (target.ended || target.currentTime >= target.duration - 0.05 ? 0 : target.currentTime);
+    const currentToken = ++portraitPlaybackToken;
+    activePortraitDirection.value = direction;
+    video.currentTime = 0;
 
-    const beginPlayback = () => {
-        if (playbackToken !== portraitPlaybackToken) return;
+    const promise = video.play();
+    if (promise && typeof promise.then === 'function') {
+        promise
+            .then(() => {
+                if (currentToken !== portraitPlaybackToken) return;
 
-        activePortraitDirection.value = direction;
-        void target.play().catch(() => target.pause());
-    };
-
-    if (Math.abs(target.currentTime - mirroredTime) < 0.04) {
-        beginPlayback();
-        return;
+                video.onended = () => {
+                    if (currentToken !== portraitPlaybackToken) return;
+                    video.onended = null;
+                    portraitAnimationDirection = direction === 1 ? -1 : 1;
+                    playDirection(portraitAnimationDirection);
+                };
+            })
+            .catch(() => {
+                // Autoplay policy fallback
+            });
     }
-
-    target.addEventListener('seeked', beginPlayback, { once: true });
-    target.currentTime = mirroredTime;
 }
 
 function initializePortraitVideo(direction) {
-    const video = portraitVideoFor(direction);
-
-    if (!video) return;
-
-    video.pause();
-    video.currentTime = 0;
+    if (direction === 1 && pendingPortraitDirection === null) {
+        playDirection(1);
+    }
 }
 
 function resumePendingPortrait(direction) {
-    if (pendingPortraitDirection === direction) playPortrait(direction);
-}
-function setTheme(value) {
-    theme.value = value;
-
-    if (portraitAnimationDirection === 1 && portraitReverseVideo.value?.preload !== 'auto') {
-        portraitReverseVideo.value.preload = 'auto';
-        portraitReverseVideo.value.load();
+    if (pendingPortraitDirection === direction) {
+        pendingPortraitDirection = null;
+        playDirection(direction);
     }
-
-    playPortrait(portraitAnimationDirection);
-    portraitAnimationDirection *= -1;
 }
 
 async function refreshViewerCount() {
@@ -359,33 +357,23 @@ async function refreshViewerCount() {
 
     try {
         const response = await fetch('/viewer-presence', {
-            credentials: 'same-origin',
-            headers: {
-                Accept: 'application/json',
-            },
+            headers: { Accept: 'application/json' },
+            cache: 'no-store',
         });
 
         if (!response.ok) return;
 
         const payload = await response.json();
-
-        if (Number.isInteger(payload.count) && payload.count > 0) {
-            currentViewerCount.value = payload.count;
+        if (typeof payload?.viewers === 'number') {
+            currentViewerCount.value = payload.viewers;
         }
     } catch {
-        // Presence is optional; browsing must remain unaffected if it is unavailable.
+        // Soft fail
     }
 }
 
 function handleVisibilityChange() {
     if (!document.hidden) void refreshViewerCount();
-}
-
-function submitGuestbook() {
-    guestbookForm.post('/guestbook', {
-        preserveScroll: true,
-        onSuccess: () => guestbookForm.reset('body', 'website'),
-    });
 }
 
 function onKeydown(event) {
@@ -394,6 +382,7 @@ function onKeydown(event) {
         closeCertificate();
         closeDesign();
         closeProject();
+        closeBackground();
     }
 }
 
@@ -450,6 +439,7 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKeydown);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', applyTheme);
+    document.body.style.overflow = '';
 });
 
 watch(theme, (value) => {
@@ -457,8 +447,8 @@ watch(theme, (value) => {
     applyTheme();
 });
 
-watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([badge, certificate, design, project]) => {
-    document.body.style.overflow = badge || certificate || design || project ? 'hidden' : '';
+watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject, selectedBackground], ([badge, certificate, design, project, bg]) => {
+    document.body.style.overflow = badge || certificate || design || project || bg ? 'hidden' : '';
 });
 </script>
 
@@ -484,7 +474,6 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                 <a href="#credentials">Credentials</a>
                 <a href="#tools">Tools</a>
                 <a href="#background">Background</a>
-                <a href="#guestbook">Reviews</a>
             </nav>
 
             <div class="theme-switch" aria-label="Color theme">
@@ -538,15 +527,18 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                     </figure>
                 </div>
 
-                <div class="stat-line" aria-label="Portfolio summary">
-                    <div v-for="stat in profile.stats" :key="stat.label"><strong>{{ stat.value }}</strong><span>{{ stat.label }}</span></div>
+                <div class="stat-line" aria-label="Portfolio highlights">
+                    <div v-for="stat in profile.stats" :key="stat.label">
+                        <strong>{{ stat.value }}</strong>
+                        <span>{{ stat.label }}</span>
+                    </div>
                 </div>
             </section>
 
             <section id="work" class="content-band section-wrap">
                 <div class="section-head">
-                    <div><span class="folio-label">01 / practice</span><h2>Systems Development</h2></div>
-                    <p>Websites, information systems, implementation work, and visual design.</p>
+                    <div><span class="folio-label">01 / featured</span><h2>Selected work</h2></div>
+                    <p>Production systems, research applications, responsive portals, and data analytics.</p>
                 </div>
 
                 <div class="filter-row" aria-label="Project categories">
@@ -561,7 +553,7 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                             <h3>{{ project.title }}</h3>
                             <p>{{ project.summary }}</p>
                             <div class="tag-row"><span v-for="tag in project.tags" :key="tag">{{ tag }}</span></div>
-                            <button class="project-more" type="button" aria-haspopup="dialog" @click="openProject(project)">View more<ArrowUpRight :size="14" /></button>
+                            <button class="project-more" type="button" aria-haspopup="dialog" @click="openProject(project)">View details<ArrowUpRight :size="14" /></button>
                         </div>
                     </article>
                 </div>
@@ -569,53 +561,59 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
 
             <section id="designs" class="content-band section-wrap design-band">
                 <div class="section-head">
-                    <div><span class="folio-label">02 / visual archive</span><h2>Design & media</h2></div>
-                    <div class="section-actions"><Link class="section-link" href="/designs">Design archive<ArrowUpRight :size="14" /></Link><a v-if="profile.canva_url" class="section-link" :href="profile.canva_url" target="_blank" rel="noreferrer"><Palette :size="15" />Canva showcase<ArrowUpRight :size="14" /></a></div>
+                    <div><span class="folio-label">02 / design</span><h2>Selected media</h2></div>
+                    <div class="section-actions">
+                        <Link class="section-link" href="/designs">Design archive<ArrowUpRight :size="14" /></Link>
+                        <a v-if="profile.canva_url" class="section-link" :href="profile.canva_url" target="_blank" rel="noreferrer">Canva public profile<ArrowUpRight :size="14" /></a>
+                    </div>
                 </div>
 
-                <div v-if="curatedDesignMedia.length" class="design-grid">
-                    <article v-for="(item, index) in curatedDesignMedia" :key="item.id" class="design-card">
+                <div class="filter-row" aria-label="Design formats">
+                    <button v-for="type in designTypes" :key="type.key" type="button" :class="{ active: activeDesignType === type.key }" @click="activeDesignType = type.key">{{ type.label }}</button>
+                </div>
+
+                <div v-if="featuredDesignMedia.length" class="design-grid">
+                    <article v-for="item in featuredDesignMedia" :key="item.id" class="design-card">
                         <div class="design-media">
-                            <video v-if="item.media_type === 'video'" muted playsinline preload="none" :poster="item.thumbnail_url || undefined"><source :src="item.media_url"></video>
-                            <img v-else-if="item.media_type === 'pdf' && item.thumbnail_url" :src="item.thumbnail_url" :alt="`${item.title} first-page preview`" loading="lazy" decoding="async" fetchpriority="low">
-                            <div v-else-if="item.media_type === 'pdf'" class="pdf-card-preview"><FileText :size="32" /><span>PDF preview</span></div>
-                            <img v-else :src="item.thumbnail_url || item.preview_url || item.media_url" :alt="item.title" loading="lazy" decoding="async" fetchpriority="low">
-                            <span class="design-expand"><ArrowUpRight :size="16" /></span>
+                            <video v-if="item.media_type === 'video'" :src="item.media_url" :poster="item.thumbnail_url || undefined" muted playsinline preload="metadata"></video>
+                            <div v-else-if="item.media_type === 'pdf'" class="pdf-card-preview">
+                                <FileText :size="30" />
+                                <span>{{ item.type_label }}</span>
+                            </div>
+                            <img v-else :src="item.media_url" :alt="item.title" loading="lazy">
+                            <span class="design-expand" aria-hidden="true"><Maximize2 :size="15" /></span>
                         </div>
                         <div class="design-copy">
-                            <div class="meta-line"><span>{{ String(index + 1).padStart(2, '0') }} / {{ item.type_label }}</span><span>{{ item.year }}</span></div>
+                            <div class="meta-line"><span>{{ item.type_label }}</span><span>{{ item.year || 'Portfolio' }}</span></div>
                             <h3>{{ item.title }}</h3>
                         </div>
-                        <button class="design-card-trigger" type="button" :aria-label="`Open full view of ${item.title}`" @click="openDesign(item)"></button>
+                        <button class="design-card-trigger" type="button" :aria-label="`Open ${item.title}`" @click="openDesign(item)"></button>
                     </article>
                 </div>
-
-                <Link v-if="designMedia.length" class="archive-route" href="/designs">Explore more designs — {{ designMedia.length }} works<ArrowUpRight :size="14" /></Link>
-
-                <div v-if="!curatedDesignMedia.length" class="design-empty">
-                    <Images :size="28" />
-                    <div><strong>Visual archive in progress</strong><p>Selected image, infographic, and motion work will appear here.</p></div>
+                <div v-else class="design-empty">
+                    <Images :size="24" />
+                    <div><strong>No featured media configured</strong><p>Explore all available design assets in the media archive.</p></div>
                 </div>
             </section>
 
             <section id="published" class="content-band section-wrap">
-                <div class="section-head controls-head">
-                    <div><span class="folio-label">03 / authored</span><h2>Published works</h2></div>
-                    <label class="search-box">
+                <div class="section-head">
+                    <div><span class="folio-label">03 / research</span><h2>Published works</h2></div>
+                    <div class="search-box">
                         <Search :size="15" />
-                        <input v-model="publicationSearch" type="search" placeholder="Search archive" aria-label="Search published works">
-                    </label>
+                        <input v-model="publicationSearch" type="search" placeholder="Filter research and publications" aria-label="Filter publications">
+                    </div>
                 </div>
 
-                <div class="filter-row" aria-label="Publication types">
+                <div class="filter-row" aria-label="Publication formats">
                     <button v-for="type in workTypes" :key="type.key" type="button" :class="{ active: activeWorkType === type.key }" @click="activeWorkType = type.key">{{ type.label }}</button>
                 </div>
 
                 <div class="publication-list">
                     <article v-for="work in filteredWorks" :key="work.id" class="publication-row">
                         <div class="publication-cover">
-                            <img v-if="work.cover_url" :src="work.cover_preview_url || work.cover_url" :alt="`${work.title} cover`" loading="lazy" decoding="async" fetchpriority="low">
-                            <component v-else :is="iconForWork(work.type)" :size="27" />
+                            <img v-if="work.cover_preview_url || work.cover_url" :src="work.cover_preview_url || work.cover_url" :alt="`${work.title} cover`" loading="lazy">
+                            <BookOpen v-else :size="24" />
                         </div>
                         <div class="publication-main">
                             <div class="meta-line"><span>{{ work.type_label }}</span><span>{{ work.published_on }}</span></div>
@@ -625,8 +623,7 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                             <div class="tag-row"><span v-for="tag in work.tags" :key="tag">{{ tag }}</span></div>
                         </div>
                         <div class="publication-action">
-                            <a v-if="work.external_url" :href="work.external_url" target="_blank" rel="noreferrer" title="Open publication" aria-label="Open publication"><ArrowUpRight :size="18" /></a>
-                            <a v-else-if="work.doi" :href="`https://doi.org/${work.doi}`" target="_blank" rel="noreferrer" title="Open DOI" aria-label="Open DOI"><ArrowUpRight :size="18" /></a>
+                            <a v-if="work.external_url" :href="work.external_url" target="_blank" rel="noreferrer" :title="`Open ${work.title}`" :aria-label="`Open ${work.title}`"><ArrowUpRight :size="18" /></a>
                         </div>
                     </article>
                 </div>
@@ -634,28 +631,35 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
 
             <section v-if="githubActivity" id="github" class="content-band section-wrap github-band">
                 <div class="section-head">
-                    <div><span class="folio-label">04 / open source</span><h2>GitHub activity</h2></div>
-                    <a class="section-link" :href="githubActivity.profile_url" target="_blank" rel="noreferrer"><Code2 :size="15" />@{{ githubActivity.username }}<ArrowUpRight :size="14" /></a>
+                    <div><span class="folio-label">04 / code</span><h2>GitHub contributions</h2></div>
+                    <a class="section-link" :href="`https://github.com/${profile.github_username}`" target="_blank" rel="noreferrer">@{{ profile.github_username }}<ArrowUpRight :size="14" /></a>
                 </div>
+
                 <div class="contribution-panel">
-                    <div class="contribution-summary"><strong>{{ githubActivity.total ?? 0 }}</strong><span>public contributions in the last year</span></div>
+                    <div class="contribution-summary">
+                        <strong>{{ githubActivity.total }}</strong>
+                        <span>contributions in the last year</span>
+                    </div>
                     <div class="contribution-scroll">
-                        <div class="contribution-grid" role="img" :aria-label="`${githubActivity.total ?? 0} GitHub contributions from ${githubActivity.from} to ${githubActivity.to}`">
-                            <div v-for="week in githubActivity.weeks" :key="week.start_date" class="contribution-week">
-                                <span v-for="day in week.days" :key="day.date" class="contribution-day" :class="`level-${day.level}`" :title="contributionTitle(day)" />
+                        <div class="contribution-grid" aria-hidden="true">
+                            <div v-for="(week, weekIndex) in githubActivity.weeks" :key="weekIndex" class="contribution-week">
+                                <span v-for="(day, dayIndex) in week" :key="dayIndex" class="contribution-day" :class="`level-${day.level}`" :title="`${day.count} contributions on ${day.date}`"></span>
                             </div>
                         </div>
                     </div>
-                    <div class="contribution-legend"><span>{{ githubActivity.from }}</span><div><span>Less</span><i v-for="level in 5" :key="level" :class="`level-${level - 1}`" /><span>More</span></div><span>{{ githubActivity.to }}</span></div>
+                    <div class="contribution-legend"><small>Less</small><div><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><i class="level-4"></i></div><small>More</small></div>
                 </div>
             </section>
 
             <section v-if="achievements.length" id="achievements" class="content-band section-wrap">
-                <div class="section-head"><div><span class="folio-label">05 / milestones</span><h2>Achievements</h2></div></div>
+                <div class="section-head">
+                    <div><span class="folio-label">05 / milestones</span><h2>Achievements</h2></div>
+                </div>
+
                 <div class="achievement-grid">
                     <article v-for="achievement in achievements" :key="achievement.id" class="achievement-item">
                         <div class="achievement-mark">
-                            <img v-if="achievementLogoUrl(achievement)" :src="achievementLogoUrl(achievement)" :alt="achievement.title" loading="lazy">
+                            <img v-if="achievementLogoUrl(achievement)" :src="achievementLogoUrl(achievement)" :alt="achievement.issuer || achievement.title" loading="lazy">
                             <Award v-else :size="24" />
                         </div>
                         <div class="meta-line"><span>{{ achievement.issuer || 'Milestone' }}</span><span>{{ achievement.achieved_on }}</span></div>
@@ -669,27 +673,61 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
             <section id="credentials" class="content-band section-wrap">
                 <div class="section-head">
                     <div><span class="folio-label">06 / verified</span><h2>Credential badges</h2></div>
-                    <div class="section-actions"><Link class="section-link" href="/badges">Badge archive<ArrowUpRight :size="14" /></Link><a class="section-link" :href="`https://www.credly.com/users/${profile.credly_username}`" target="_blank" rel="noreferrer">Credly profile<ArrowUpRight :size="14" /></a></div>
+                    <div class="section-actions">
+                        <Link class="section-link" href="/badges">Badge archive<ArrowUpRight :size="14" /></Link>
+                        <a class="section-link" :href="`https://www.credly.com/users/${profile.credly_username}`" target="_blank" rel="noreferrer">Credly profile<ArrowUpRight :size="14" /></a>
+                    </div>
                 </div>
 
                 <div class="badge-layout">
                     <div class="badge-grid">
-                        <button v-for="badge in visibleBadges" :key="badge.id" class="badge-card" type="button" @mouseenter="hoveredBadge = badge" @mouseleave="hoveredBadge = null" @focus="hoveredBadge = badge" @click="openBadge(badge)">
+                        <button
+                            v-for="badge in visibleBadges"
+                            :key="badge.id"
+                            class="badge-card"
+                            type="button"
+                            @mouseenter="hoveredBadge = badge"
+                            @mouseleave="hoveredBadge = null"
+                            @focus="hoveredBadge = badge"
+                            @click="openBadge(badge)"
+                        >
                             <span class="badge-image">
-                                <img v-if="badge.image_url" :src="badge.image_url" :alt="badge.name" loading="lazy">
-                                <span v-else>{{ initials(badge.name) }}</span>
+                                <img
+                                    v-if="badge.image_url"
+                                    :src="badge.image_url"
+                                    :alt="badge.name"
+                                    loading="lazy"
+                                    decoding="async"
+                                    @error="onBadgeImageError($event)"
+                                >
+                                <span class="badge-fallback" :class="{ 'is-active': !badge.image_url }">{{ initials(badge.name) }}</span>
                             </span>
-                            <span class="badge-copy"><small>{{ badge.issuer || 'Credential' }}</small><strong>{{ badge.name }}</strong><span>{{ badge.issued_at }}</span></span>
+                            <span class="badge-copy">
+                                <small>{{ badge.issuer || 'Credential' }}</small>
+                                <strong>{{ badge.name }}</strong>
+                                <span>{{ badge.issued_at }}</span>
+                            </span>
                         </button>
                     </div>
 
                     <aside v-if="previewBadge" class="badge-preview">
-                        <span class="folio-label">Certificate preview</span>
-                        <img v-if="previewBadge.image_url" :src="previewBadge.image_url" :alt="previewBadge.name">
-                        <div v-else class="preview-fallback">{{ initials(previewBadge.name) }}</div>
-                        <p>{{ previewBadge.issuer }}</p>
+                        <div class="preview-badge-header">
+                            <span class="folio-label">Credential preview</span>
+                            <span class="badge-verified-pill"><CheckCircle2 :size="12" />Verified</span>
+                        </div>
+                        <div class="badge-preview-art">
+                            <img
+                                v-if="previewBadge.image_url"
+                                :src="previewBadge.image_url"
+                                :alt="previewBadge.name"
+                                decoding="async"
+                                @error="onBadgeImageError($event)"
+                            >
+                            <div class="preview-fallback" :class="{ 'is-active': !previewBadge.image_url }">{{ initials(previewBadge.name) }}</div>
+                        </div>
+                        <p class="preview-issuer">{{ previewBadge.issuer }}</p>
                         <h3>{{ previewBadge.name }}</h3>
-                        <button type="button" @click="openBadge(previewBadge)">View details<ArrowUpRight :size="14" /></button>
+                        <button class="preview-action" type="button" @click="openBadge(previewBadge)">View details<ArrowUpRight :size="14" /></button>
                     </aside>
                 </div>
                 <Link v-if="badges.length" class="archive-route" href="/badges">Explore all {{ badges.length }} verified badges<ArrowUpRight :size="14" /></Link>
@@ -738,29 +776,32 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                     <div class="timeline-group">
                         <div class="timeline-title"><GraduationCap :size="18" /><span>Education</span></div>
                         <button v-for="item in education" :key="item.id" class="timeline-row timeline-trigger education-row" type="button" :aria-label="`View details for ${item.program} at ${item.institution}`" @click="openBackground('education', item)">
-                            <span class="timeline-date">{{ item.start_date }}<br>{{ item.end_date }}</span>
+                            <span class="timeline-date">{{ item.start_date ? item.start_date + ' – ' : '' }}{{ item.end_date }}</span>
                             <span class="timeline-entry">
                                 <span class="organization-mark" aria-hidden="true"><span>{{ initials(item.institution) }}</span><img v-if="item.logo_url" :src="item.logo_url" alt="" loading="lazy" @error="$event.currentTarget.remove()"></span>
-                                <span class="timeline-copy"><span class="meta-line school-name"><span>{{ item.institution }}</span></span><strong class="timeline-heading">{{ item.program }}</strong><span class="timeline-summary">{{ item.level }}</span><span class="tag-row"><span v-for="activity in item.activities" :key="activity">{{ activity }}</span></span></span>
+                                <span class="timeline-copy"><span class="meta-line"><span>{{ item.level }}</span></span><strong class="timeline-heading">{{ item.program }}</strong><span class="school-name">{{ item.institution }}</span><span v-if="item.description" class="timeline-summary">{{ item.description }}</span></span>
                             </span>
                             <Maximize2 class="timeline-expand" :size="15" aria-hidden="true" />
                         </button>
                     </div>
                 </div>
-                <div class="skills-index"><span class="folio-label">Core capabilities</span><div><span v-for="skill in profile.skills" :key="skill">{{ skill }}</span></div></div>
+
+                <div v-if="profile.skills?.length" class="skills-index">
+                    <span class="folio-label">Core competencies</span>
+                    <div><span v-for="skill in profile.skills" :key="skill">{{ skill }}</span></div>
+                </div>
             </section>
 
             <section v-if="portfolioTools.length" id="tools" class="content-band section-wrap tools-band">
                 <div class="section-head">
                     <div><span class="folio-label">09 / toolkit</span><h2>Tools & technologies</h2></div>
-                    <p>The platforms used to build systems, shape interfaces, analyze information, and produce visual work.</p>
+                    <p>Frameworks, cloud environments, data platforms, and productivity suites.</p>
                 </div>
 
                 <div class="tool-groups">
-                    <section v-for="(category, categoryIndex) in groupedPortfolioTools" :key="category.key" class="tool-category">
+                    <section v-for="category in groupedPortfolioTools" :key="category.key" class="tool-category">
                         <header class="tool-category-head">
-                            <span>{{ String(categoryIndex + 1).padStart(2, '0') }}</span>
-                            <component :is="category.icon" :size="18" />
+                            <component :is="category.icon" :size="17" />
                             <h3>{{ category.label }}</h3>
                         </header>
                         <div class="tool-list">
@@ -774,12 +815,14 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
                                 :rel="tool.external_url ? 'noreferrer' : undefined"
                             >
                                 <span class="tool-mark">
-                                    <component v-if="toolFallbackIcon(tool)" :is="toolFallbackIcon(tool)" :size="23" />
-                                    <span v-else>{{ initials(tool.name) }}</span>
-                                    <img v-if="tool.icon_url" :src="tool.icon_url" :alt="tool.name" loading="lazy" @error="$event.currentTarget.remove()">
+                                    <img v-if="tool.icon_url" :src="tool.icon_url" :alt="tool.name" loading="lazy">
+                                    <component :is="toolFallbackIcon(tool)" v-else :size="17" />
                                 </span>
-                                <span class="tool-copy"><strong>{{ tool.name }}</strong><span>{{ tool.description }}</span></span>
-                                <ArrowUpRight v-if="tool.external_url" :size="15" />
+                                <div class="tool-copy">
+                                    <strong>{{ tool.name }}</strong>
+                                    <span v-if="tool.description">{{ tool.description }}</span>
+                                </div>
+                                <ArrowUpRight v-if="tool.external_url" :size="13" />
                             </component>
                         </div>
                     </section>
@@ -788,58 +831,17 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
 
             <section class="collaboration-bridge section-wrap" aria-labelledby="collaboration-title">
                 <div>
-                    <span class="folio-label">10 / collaborate</span>
-                    <h2 id="collaboration-title">Let's work together.</h2>
-                    <p>Need a clearer system, better use of data, stronger digital operations, or a practical session for your team? Explore the services I can shape around your goals.</p>
+                    <span class="folio-label">10 / collaboration</span>
+                    <h2 id="collaboration-title">Open to innovative projects & research.</h2>
+                    <p>Available for technical systems development, data solutions, IT consulting, and academic collaborations.</p>
                 </div>
                 <div class="collaboration-actions">
-                    <Link href="/services">See services<ArrowUpRight :size="15" /></Link>
+                    <Link href="/services">View services catalog<ArrowUpRight :size="15" /></Link>
                     <a
-                        v-if="profile.email"
                         :href="gmailComposeUrl(profile.email, { subject: 'Project inquiry' })"
                         target="_blank"
                         rel="noopener noreferrer"
                     >Request a quote<ArrowUpRight :size="15" /></a>
-                </div>
-            </section>
-
-            <section id="guestbook" class="content-band section-wrap guestbook-band">
-                <div class="section-head">
-                    <div><span class="folio-label">11 / reviews</span><h2>Reviews</h2></div>
-                    <p>Share a thought about the work, a possible collaboration, or your experience.</p>
-                </div>
-
-                <div class="guestbook-layout">
-                    <form class="guestbook-form" @submit.prevent="submitGuestbook">
-                        <div class="form-heading"><MessageSquareQuote :size="20" /><h3>Leave a review</h3></div>
-                        <div class="guestbook-fields two">
-                            <label><span>Name</span><input v-model="guestbookForm.name" required maxlength="120"></label>
-                            <label><span>Email <small>private</small></span><input v-model="guestbookForm.email" type="email" required maxlength="255"></label>
-                        </div>
-                        <label><span>Role or organization</span><input v-model="guestbookForm.role_or_organization" maxlength="180"></label>
-                        <label><span>Review</span><textarea v-model="guestbookForm.body" rows="6" minlength="12" maxlength="1500" required /></label>
-                        <div class="rating-field">
-                            <span>Rating</span>
-                            <div>
-                                <button v-for="rating in 5" :key="rating" type="button" :aria-label="`${rating} star rating`" :aria-pressed="guestbookForm.rating === rating" @click="guestbookForm.rating = rating">
-                                    <Star :size="18" :fill="rating <= guestbookForm.rating ? 'currentColor' : 'none'" />
-                                </button>
-                            </div>
-                        </div>
-                        <label class="honeypot" aria-hidden="true">Website<input v-model="guestbookForm.website" tabindex="-1" autocomplete="off"></label>
-                        <p v-if="guestbookForm.hasErrors" class="form-error">Please review the highlighted information and try again.</p>
-                        <p v-if="flash?.success" class="form-success">{{ flash.success }}</p>
-                        <button class="submit-note" type="submit" :disabled="guestbookForm.processing"><Send :size="15" />{{ guestbookForm.processing ? 'Submitting' : 'Submit review' }}</button>
-                    </form>
-
-                    <div class="review-list">
-                        <article v-for="entry in guestbookEntries" :key="entry.public_id" class="review-card">
-                            <div class="review-head"><div><strong>{{ entry.name }}</strong><span>{{ entry.role_or_organization || entry.approved_at }}</span></div><div v-if="entry.rating" class="review-stars" :aria-label="`${entry.rating} out of 5 stars`"><Star v-for="star in 5" :key="star" :size="13" :fill="star <= entry.rating ? 'currentColor' : 'none'" /></div></div>
-                            <blockquote>{{ entry.body }}</blockquote>
-                            <div v-if="entry.admin_reply" class="owner-reply"><span>Reply / Britt</span><p>{{ entry.admin_reply }}</p></div>
-                        </article>
-                        <div v-if="!guestbookEntries.length" class="guestbook-empty"><MessageSquareQuote :size="24" /><p>No reviews yet. Be the first to share one.</p></div>
-                    </div>
                 </div>
             </section>
 
@@ -856,7 +858,15 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
             <div v-if="selectedBadge" class="modal-backdrop" role="presentation" @click.self="closeBadge">
                 <article class="badge-modal" role="dialog" aria-modal="true" :aria-labelledby="`badge-title-${selectedBadge.id}`">
                     <button class="icon-button modal-close" type="button" title="Close" aria-label="Close" @click="closeBadge"><X :size="17" /></button>
-                    <div class="modal-badge"><img v-if="selectedBadge.image_url" :src="selectedBadge.image_url" :alt="selectedBadge.name"><span v-else>{{ initials(selectedBadge.name) }}</span></div>
+                    <div class="modal-badge">
+                        <img
+                            v-if="selectedBadge.image_url"
+                            :src="selectedBadge.image_url"
+                            :alt="selectedBadge.name"
+                            @error="onBadgeImageError($event)"
+                        >
+                        <span class="badge-fallback" :class="{ 'is-active': !selectedBadge.image_url }">{{ initials(selectedBadge.name) }}</span>
+                    </div>
                     <span class="folio-label">{{ selectedBadge.issuer || 'Verified credential' }}</span>
                     <h2 :id="`badge-title-${selectedBadge.id}`">{{ selectedBadge.name }}</h2>
                     <p>{{ selectedBadge.description }}</p>
@@ -969,316 +979,260 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject], ([b
 </template>
 
 <style scoped>
-.portfolio-shell { --gradient-x: 50%; --gradient-y: 18%; --gradient-counter-x: 50%; --gradient-counter-y: 45%; position: relative; min-height: 100vh; isolation: isolate; background: transparent; color: var(--profile-ink); }
-.gemini-wash { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 92% 78% at var(--gradient-x) var(--gradient-y), rgb(251 188 4 / 10%) 0%, rgb(255 227 128 / 5%) 40%, transparent 72%), radial-gradient(ellipse 86% 76% at var(--gradient-counter-x) var(--gradient-counter-y), rgb(255 214 102 / 4%) 0%, transparent 68%), var(--profile-bg); filter: none; }
-.portfolio-shell > main { position: relative; z-index: 1; }
-:global(:root[data-theme='dark']) .gemini-wash { background: radial-gradient(ellipse 88% 74% at var(--gradient-x) var(--gradient-y), rgb(66 133 244 / 27%) 0%, rgb(161 66 244 / 17%) 34%, transparent 70%), radial-gradient(ellipse 82% 72% at var(--gradient-counter-x) var(--gradient-counter-y), rgb(242 139 130 / 16%) 0%, rgb(77 208 225 / 10%) 38%, transparent 72%), var(--profile-bg); filter: saturate(118%); }
-.topbar { position: sticky; top: 0; z-index: 30; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 1.2rem; border-bottom: 1px solid var(--profile-200); background: color-mix(in srgb, var(--profile-bg) 94%, transparent); padding: 0.75rem clamp(1rem, 3vw, 2rem); backdrop-filter: blur(16px); }
-.brand, .nav-links, .hero-links, .location-line, .link-row, .section-link, .inline-link, .filter-row, .tag-row, .meta-line, .contribution-legend, .contribution-legend div, .modal-actions, .timeline-title, .footer-links a { display: flex; align-items: center; }
-.brand { min-width: 0; gap: 0.65rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.72rem; text-decoration: none; text-transform: uppercase; }
-.brand-mark { position: relative; display: inline-grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; overflow: hidden; border-radius: 50%; background: var(--profile-ink); color: var(--profile-bg); font-size: 0.62rem; }
-.brand-mark img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-.brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-links { gap: 1rem; font-family: var(--font-mono); font-size: 0.67rem; text-transform: uppercase; }
-.nav-links a { color: var(--profile-500); text-decoration: none; }
-.nav-links a:hover { color: var(--profile-ink); }
-.icon-button { display: inline-grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-bg); color: var(--profile-ink); cursor: pointer; }
-.icon-button:hover { border-color: var(--profile-ink); }
-.theme-switch { display: grid; grid-template-columns: repeat(2, 2rem); border: 1px solid var(--profile-200); border-radius: 4px; overflow: hidden; }
-.theme-switch button { display: inline-grid; width: 2rem; height: 2rem; place-items: center; border: 0; border-right: 1px solid var(--profile-200); background: var(--profile-bg); color: var(--profile-500); cursor: pointer; }
-.theme-switch button:last-child { border-right: 0; }
-.theme-switch button.active { background: var(--profile-ink); color: var(--profile-bg); }
-.section-wrap { width: min(100% - 2rem, 78rem); margin: 0 auto; }
-.hero { padding: clamp(2.25rem, 5vw, 4.5rem) 0 0; }
-.folio-label, .meta-line, .filter-row, .tag-row, .badge-copy small, .badge-copy > span, .certificate-copy small, .certificate-copy > span, .timeline-date, .publication-name, .location-line, .hero-links, .section-link, .inline-link, .stat-line span, .contribution-legend, .timeline-title, .footer-links { font-family: var(--font-mono); }
-.folio-label { color: var(--profile-500); font-size: 0.66rem; text-transform: uppercase; }
-.live-viewers { position: fixed; right: clamp(0.75rem, 2vw, 1.5rem); bottom: clamp(0.75rem, 2vw, 1.5rem); z-index: 30; display: inline-flex; align-items: center; gap: 0.65rem; min-width: 7.5rem; border: 1px solid color-mix(in srgb, var(--profile-ink) 16%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--profile-paper) 90%, transparent); box-shadow: 0 0.7rem 2rem rgb(15 23 20 / 16%); padding: 0.55rem 0.8rem; color: var(--profile-ink); backdrop-filter: blur(12px); pointer-events: none; }
-.live-viewers-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgb(22 163 74 / 45%); animation: viewer-pulse 2.2s ease-out infinite; }
-.live-viewers-copy { display: grid; line-height: 1.05; }
-.live-viewers-copy small { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.live-viewers-copy strong { margin-top: 0.18rem; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; }
+.portfolio-shell { position: relative; min-height: 100vh; overflow-x: hidden; background: var(--profile-bg); color: var(--profile-ink); --gradient-x: 50%; --gradient-y: 18%; --gradient-counter-x: 50%; --gradient-counter-y: 54%; }
+.gemini-wash { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.85; background: radial-gradient(circle at var(--gradient-x) var(--gradient-y), color-mix(in srgb, var(--profile-blue-light) 12%, transparent), transparent 38%), radial-gradient(circle at var(--gradient-counter-x) var(--gradient-counter-y), color-mix(in srgb, var(--profile-blue) 9%, transparent), transparent 42%); transition: opacity 500ms ease; }
+:global(:root[data-theme='dark']) .gemini-wash { opacity: 0.95; background: radial-gradient(circle at var(--gradient-x) var(--gradient-y), color-mix(in srgb, #3b82f6 18%, transparent), transparent 40%), radial-gradient(circle at var(--gradient-counter-x) var(--gradient-counter-y), color-mix(in srgb, #8b5cf6 14%, transparent), transparent 46%); }
+.section-wrap { width: min(100% - clamp(2rem, 6vw, 6rem), 82rem); margin-inline: auto; position: relative; z-index: 1; }
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; border-bottom: 1px solid color-mix(in srgb, var(--profile-ink) 12%, transparent); background: color-mix(in srgb, var(--profile-bg) 84%, transparent); padding: 0.9rem clamp(1rem, 3.5vw, 2.5rem); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: border-color 300ms ease, background-color 300ms ease; }
+.brand { display: inline-flex; align-items: center; gap: 0.75rem; color: var(--profile-ink); font-weight: 700; text-decoration: none; }
+.brand-mark { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); border-radius: 6px; overflow: hidden; background: var(--profile-50); font-family: var(--font-mono); font-size: 0.75rem; box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.08); }
+.brand-mark img { width: 100%; height: 100%; object-fit: cover; }
+.brand-name { font-family: var(--font-mono); font-size: 0.92rem; letter-spacing: 0.02em; text-transform: uppercase; }
+.nav-links { display: flex; flex-wrap: wrap; gap: clamp(0.6rem, 1.8vw, 1.5rem); }
+.nav-links a { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-decoration: none; text-transform: uppercase; transition: color 180ms ease; }
+.nav-links a:hover, .nav-links a:focus-visible { color: var(--profile-ink); }
+.theme-switch { display: inline-flex; border: 1px solid color-mix(in srgb, var(--profile-ink) 18%, transparent); border-radius: 999px; background: var(--profile-50); padding: 2px; }
+.theme-switch button { display: grid; width: 1.85rem; height: 1.85rem; place-items: center; border: 0; border-radius: 999px; background: transparent; color: var(--profile-400); cursor: pointer; transition: color 180ms ease, background-color 180ms ease; }
+.theme-switch button.active { background: var(--profile-ink); color: var(--profile-bg); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
+.live-viewers { position: fixed; right: clamp(1rem, 2.5vw, 1.8rem); bottom: clamp(1rem, 2.5vw, 1.8rem); z-index: 25; display: inline-flex; align-items: center; gap: 0.65rem; border: 1px solid color-mix(in srgb, var(--profile-ink) 16%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--profile-bg) 88%, transparent); padding: 0.45rem 0.95rem; box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.18); backdrop-filter: blur(16px); }
+.live-viewers-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgb(22 163 74 / 65%); animation: viewer-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.live-viewers-copy { display: grid; line-height: 1.15; font-family: var(--font-mono); }
+.live-viewers-copy small { color: var(--profile-500); font-size: 0.55rem; text-transform: uppercase; }
+.live-viewers-copy strong { font-size: 0.72rem; }
 @keyframes viewer-pulse { 70%, 100% { box-shadow: 0 0 0 0.42rem rgb(22 163 74 / 0%); } }
 @media (prefers-reduced-motion: reduce) { .live-viewers-dot { animation: none; } }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.65fr); column-gap: clamp(2rem, 8vw, 7rem); row-gap: 1.3rem; align-items: start; margin-top: 1.5rem; }
 .hero-copy { grid-column: 1; grid-row: 2; padding-bottom: clamp(0.75rem, 2vw, 1.75rem); }
-.hero-role { grid-column: 1; grid-row: 1; max-width: 43rem; margin: 0; color: var(--profile-700); font-size: clamp(1rem, 2vw, 1.35rem); }
-h1 { max-width: 15ch; margin: 0; font-family: var(--font-mono); font-size: clamp(3.1rem, 8vw, 7.2rem); font-weight: 650; line-height: 0.91; overflow-wrap: anywhere; }
+.hero-role { grid-column: 1; grid-row: 1; max-width: 43rem; margin: 0; color: var(--profile-700); font-size: clamp(1rem, 2vw, 1.35rem); font-weight: 500; }
+h1 { max-width: 15ch; margin: 0; font-family: var(--font-mono); font-size: clamp(3.1rem, 8vw, 7.2rem); font-weight: 700; line-height: 0.91; overflow-wrap: anywhere; letter-spacing: -0.02em; }
 .hero-bio { max-width: 43rem; margin: 1.8rem 0 0; color: var(--profile-700); font-family: var(--font-serif); font-size: clamp(1.05rem, 2vw, 1.28rem); line-height: 1.7; }
-.location-line { flex-wrap: wrap; gap: 0.7rem 1.1rem; margin-top: 1.25rem; color: var(--profile-500); font-size: 0.7rem; text-transform: uppercase; }
+.location-line { display: flex; flex-wrap: wrap; gap: 0.7rem 1.2rem; margin-top: 1.25rem; color: var(--profile-500); font-size: 0.7rem; text-transform: uppercase; font-family: var(--font-mono); }
 .location-line span { display: inline-flex; align-items: center; gap: 0.35rem; }
-.hero-links { flex-wrap: wrap; gap: 0.65rem; margin-top: 1.7rem; }
-.hero-links a, .link-row a, .section-link, .inline-link, .modal-actions a, .badge-preview button { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; }
+.hero-links { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.7rem; }
+.hero-links a, .link-row a, .section-link, .inline-link, .modal-actions a, .badge-preview button, .preview-action { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; text-decoration: none; transition: transform 180ms ease, color 180ms ease; }
+.hero-links a { border: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); border-radius: 4px; padding: 0.4rem 0.75rem; background: var(--profile-50); }
+.hero-links a:hover { border-color: var(--profile-ink); transform: translateY(-1px); }
 .portrait-block { grid-column: 2; grid-row: 2; margin: 0; }
-.portrait-block > img, .portrait-video-stage, .portrait-fallback { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.portrait-block > img, .portrait-video-stage, .portrait-fallback { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 6px 6px 0 0; }
 .portrait-block > img, .portrait-fallback { border: 1px solid var(--profile-ink); }
-.portrait-video-stage { position: relative; overflow: hidden; background: var(--profile-ink); pointer-events: none; }
+.portrait-video-stage { position: relative; overflow: hidden; background: var(--profile-ink); pointer-events: none; border: 1px solid color-mix(in srgb, var(--profile-ink) 30%, transparent); }
 .portrait-video-stage video { position: absolute; inset: 1px; display: block; width: calc(100% - 2px); height: calc(100% - 2px); object-fit: cover; object-position: center 12%; opacity: 0; visibility: hidden; pointer-events: none; }
 .portrait-video-stage video.is-active { opacity: 1; visibility: visible; }
 .portrait-fallback { display: grid; place-items: center; background: var(--profile-ink); color: var(--profile-bg); font-family: var(--font-mono); font-size: 4rem; }
-.portrait-block figcaption { display: flex; justify-content: space-between; gap: 0.75rem; border: 1px solid var(--profile-ink); border-top: 0; padding: 0.55rem; font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; }
-.stat-line { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--profile-ink); border-bottom: 1px solid var(--profile-ink); margin-top: clamp(2rem, 4vw, 3.5rem); }
-.stat-line div { display: flex; align-items: baseline; gap: 0.7rem; border-right: 1px solid var(--profile-ink); padding: 1.15rem; }
+.portrait-block figcaption { display: flex; justify-content: space-between; gap: 0.75rem; border: 1px solid var(--profile-ink); border-top: 0; border-radius: 0 0 6px 6px; padding: 0.6rem 0.75rem; background: var(--profile-50); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; color: var(--profile-500); }
+.stat-line { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); margin-top: clamp(2rem, 4vw, 3.5rem); background: var(--profile-50); border-radius: 6px; overflow: hidden; }
+.stat-line div { display: flex; align-items: baseline; gap: 0.75rem; border-right: 1px solid color-mix(in srgb, var(--profile-ink) 12%, transparent); padding: 1.25rem; }
 .stat-line div:last-child { border-right: 0; }
-.stat-line strong { font-family: var(--font-mono); font-size: 2rem; }
-.stat-line span { color: var(--profile-500); font-size: 0.65rem; text-transform: uppercase; }
+.stat-line strong { font-family: var(--font-mono); font-size: 2.1rem; font-weight: 700; }
+.stat-line span { color: var(--profile-500); font-size: 0.68rem; text-transform: uppercase; font-family: var(--font-mono); }
 .content-band { content-visibility: auto; contain-intrinsic-size: auto 50rem; scroll-margin-top: 2rem; border-bottom: 1px solid var(--profile-200); padding: clamp(3rem, 6vw, 5rem) 0; }
-.section-head { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
-.section-head h2, .footer h2 { margin: 0.4rem 0 0; font-size: clamp(2.1rem, 5vw, 4rem); line-height: 1; }
-.section-head > p { max-width: 30rem; margin: 0; color: var(--profile-700); font-family: var(--font-serif); font-size: 1.05rem; line-height: 1.6; }
+.section-head { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.75rem; }
+.folio-label { display: inline-block; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.section-head h2, .footer h2 { margin: 0.4rem 0 0; font-size: clamp(2.1rem, 5vw, 4rem); line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+.section-head > p { max-width: 32rem; margin: 0; color: var(--profile-700); font-family: var(--font-serif); font-size: 1.05rem; line-height: 1.6; }
 .section-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.8rem; }
-.filter-row { flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.25rem; }
-.filter-row button { border: 1px solid var(--profile-300); border-radius: 999px; background: transparent; padding: 0.38rem 0.68rem; color: var(--profile-500); font-size: 0.65rem; text-transform: uppercase; cursor: pointer; }
-.filter-row button.active, .filter-row button:hover { border-color: var(--profile-ink); background: var(--profile-ink); color: var(--profile-bg); }
-.project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
-.project-card { display: grid; min-width: 0; min-height: 19rem; grid-template-columns: 3.5rem minmax(0, 1fr); border: 1px solid var(--profile-200); background: var(--profile-50); }
-.project-card:last-child:nth-child(odd) { width: calc((100% - 0.8rem) / 2); grid-column: 1 / -1; justify-self: center; }
-.project-index { border-right: 1px solid var(--profile-200); padding: 1.25rem 0; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.66rem; text-align: center; }
-.project-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; padding: 1.25rem; }
-.project-copy h3 { line-height: 1.25; }
-.project-copy > p { margin-bottom: 0; }
-.project-copy .tag-row { margin-bottom: 1.4rem; }
-.project-more { display: inline-flex; align-items: center; gap: 0.35rem; border: 0; border-bottom: 1px solid var(--profile-ink); margin-top: auto; background: transparent; padding: 0 0 0.2rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; cursor: pointer; }
-.project-more:hover, .project-more:focus-visible { border-color: var(--profile-500); color: var(--profile-500); }
-.design-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; align-items: stretch; }
-.design-card { position: relative; display: grid; height: 100%; min-width: 0; grid-template-rows: auto 1fr; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-50); transition: border-color 180ms ease, transform 180ms ease; }
-.design-card:hover, .design-card:focus-within { border-color: var(--profile-ink); transform: translateY(-3px); }
+.section-link { padding: 0.35rem 0.65rem; border: 1px solid color-mix(in srgb, var(--profile-ink) 18%, transparent); border-radius: 4px; background: var(--profile-50); }
+.section-link:hover { border-color: var(--profile-ink); transform: translateY(-1px); }
+.filter-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.35rem; }
+.filter-row button { border: 1px solid var(--profile-300); border-radius: 999px; background: var(--profile-50); padding: 0.4rem 0.75rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; cursor: pointer; transition: all 180ms ease; }
+.filter-row button.active, .filter-row button:hover { border-color: var(--profile-ink); background: var(--profile-ink); color: var(--profile-bg); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
+.project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
+.project-card { position: relative; display: grid; min-width: 0; min-height: 19rem; grid-template-columns: 3.5rem minmax(0, 1fr); border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease; overflow: hidden; }
+.project-card:hover { border-color: var(--profile-ink); transform: translateY(-3px); box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.15); }
+.project-card:last-child:nth-child(odd) { width: 100%; grid-column: 1 / -1; }
+.project-index { border-right: 1px solid var(--profile-200); padding: 1.25rem 0; color: var(--profile-400); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-align: center; background: color-mix(in srgb, var(--profile-bg) 50%, var(--profile-50)); }
+.project-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; padding: 1.35rem; }
+.project-copy h3 { line-height: 1.25; margin: 0.5rem 0 0.6rem; font-size: 1.25rem; font-weight: 700; }
+.project-copy > p { margin: 0; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.6; }
+.project-copy .tag-row { margin: 0.9rem 0 1.2rem; }
+.project-more { display: inline-flex; align-items: center; gap: 0.35rem; border: 0; border-bottom: 1.5px solid var(--profile-ink); margin-top: auto; background: transparent; padding: 0 0 0.2rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: color 180ms ease, border-color 180ms ease; }
+.project-more:hover, .project-more:focus-visible { color: var(--profile-blue); border-color: var(--profile-blue); }
+.design-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; align-items: stretch; }
+.design-card { position: relative; display: grid; height: 100%; min-width: 0; grid-template-rows: auto 1fr; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease; }
+.design-card:hover, .design-card:focus-within { border-color: var(--profile-ink); transform: translateY(-3px); box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.15); }
 .design-media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-bottom: 1px solid var(--profile-200); background: #111513; }
 .design-media img, .design-media video, .design-media iframe { display: block; width: 100%; height: 100%; }
 .design-media img, .design-media video { object-fit: contain; transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
 .design-media iframe { border: 0; pointer-events: none; }
 .pdf-card-preview { display: grid; width: 100%; height: 100%; place-content: center; justify-items: center; gap: 0.65rem; color: #f7f1e7; font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; }
-.design-card:hover .design-media img, .design-card:hover .design-media video, .design-card:focus-within .design-media img, .design-card:focus-within .design-media video { transform: scale(1.018); }
-.design-expand { position: absolute; right: 0.65rem; bottom: 0.65rem; display: grid; width: 2.1rem; height: 2.1rem; place-items: center; border: 1px solid #fff; border-radius: 50%; background: color-mix(in srgb, #000 62%, transparent); color: #fff; }
-.design-copy { display: grid; min-height: 6rem; align-content: start; padding: 1rem; }
-.design-copy h3 { display: -webkit-box; overflow: hidden; margin: 0.8rem 0 0; font-size: 1rem; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.design-card:hover .design-media img, .design-card:hover .design-media video, .design-card:focus-within .design-media img, .design-card:focus-within .design-media video { transform: scale(1.03); }
+.design-expand { position: absolute; right: 0.65rem; bottom: 0.65rem; display: grid; width: 2.1rem; height: 2.1rem; place-items: center; border: 1px solid #fff; border-radius: 50%; background: color-mix(in srgb, #000 65%, transparent); color: #fff; backdrop-filter: blur(6px); }
+.design-copy { display: grid; min-height: 5.5rem; align-content: start; padding: 1rem; }
+.design-copy h3 { display: -webkit-box; overflow: hidden; margin: 0.6rem 0 0; font-size: 1.05rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .design-card-trigger { position: absolute; inset: 0; z-index: 2; border: 0; border-radius: inherit; outline-offset: -3px; background: transparent; cursor: zoom-in; }
 .design-card-trigger:focus-visible { outline: 2px solid var(--profile-ink); }
-.design-empty { display: flex; min-height: 15rem; align-items: center; justify-content: center; gap: 0.9rem; border-top: 1px solid var(--profile-ink); border-bottom: 1px solid var(--profile-200); color: var(--profile-500); }
+.design-empty { display: flex; min-height: 15rem; align-items: center; justify-content: center; gap: 0.9rem; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); color: var(--profile-500); }
 .design-empty div { display: grid; gap: 0.25rem; }
 .design-empty strong { color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; }
 .design-empty p { margin: 0; font-family: var(--font-serif); }
-.meta-line { justify-content: space-between; gap: 1rem; color: var(--profile-500); font-size: 0.63rem; text-transform: uppercase; }
-.project-copy h3, .publication-main h3, .achievement-item h3, .badge-preview h3, .timeline-row h3 { margin: 0.8rem 0 0; font-size: 1.2rem; }
-.project-copy p, .publication-main > p, .achievement-item p, .timeline-row p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
-.tag-row { flex-wrap: wrap; gap: 0.35rem; margin-top: 0.9rem; }
-.tag-row span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.25rem 0.55rem; color: var(--profile-500); font-size: 0.61rem; }
-.link-row { flex-wrap: wrap; gap: 0.8rem; margin-top: 1.15rem; }
-.search-box { display: flex; min-width: min(100%, 17rem); align-items: center; gap: 0.5rem; border: 1px solid var(--profile-300); border-radius: 4px; padding: 0 0.65rem; }
-.search-box input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; padding: 0.65rem 0; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; }
-.publication-list { border-top: 1px solid var(--profile-ink); }
-.publication-row { display: grid; grid-template-columns: 6rem minmax(0, 1fr) auto; gap: 1.2rem; align-items: start; border-bottom: 1px solid var(--profile-200); padding: 1.2rem 0; }
-.publication-cover { display: grid; width: 6rem; aspect-ratio: 4 / 5; place-items: center; border: 1px solid var(--profile-200); background: var(--profile-100); overflow: hidden; }
+.meta-line { display: flex; justify-content: space-between; gap: 1rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.tag-row span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.22rem 0.55rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; background: color-mix(in srgb, var(--profile-bg) 60%, transparent); }
+.search-box { display: flex; min-width: min(100%, 18rem); align-items: center; gap: 0.55rem; border: 1px solid var(--profile-300); border-radius: 6px; padding: 0 0.75rem; background: var(--profile-50); }
+.search-box input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; padding: 0.65rem 0; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; }
+.publication-list { border-top: 1px solid var(--profile-200); }
+.publication-row { display: grid; grid-template-columns: 6rem minmax(0, 1fr) auto; gap: 1.35rem; align-items: start; border-bottom: 1px solid var(--profile-200); padding: 1.35rem 0; transition: background-color 180ms ease; }
+.publication-cover { display: grid; width: 6rem; aspect-ratio: 4 / 5; place-items: center; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-100); overflow: hidden; }
 .publication-cover img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-.publication-main > p { max-width: 54rem; margin-bottom: 0; }
-.publication-name { margin: 0.4rem 0 0 !important; color: var(--profile-ink) !important; font-size: 0.7rem; text-transform: uppercase; }
-.publication-action a { display: inline-grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; }
-.contribution-panel { border: 1px solid var(--profile-200); background: var(--profile-50); padding: clamp(1rem, 3vw, 1.5rem); }
-.contribution-summary { display: flex; align-items: baseline; gap: 0.7rem; margin-bottom: 1rem; }
-.contribution-summary strong { font-family: var(--font-mono); font-size: 2.5rem; }
-.contribution-summary span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; }
+.publication-main h3 { margin: 0.4rem 0 0.3rem; font-size: 1.15rem; font-weight: 700; line-height: 1.35; }
+.publication-main > p { max-width: 54rem; margin: 0 0 0.6rem; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.6; }
+.publication-name { margin: 0.2rem 0 0.5rem !important; color: var(--profile-ink) !important; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; font-weight: 600; }
+.publication-action a { display: inline-grid; width: 2.6rem; height: 2.6rem; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; background: var(--profile-50); color: var(--profile-ink); transition: all 180ms ease; }
+.publication-action a:hover { border-color: var(--profile-ink); background: var(--profile-ink); color: var(--profile-bg); transform: scale(1.08); }
+.contribution-panel { border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: clamp(1rem, 3vw, 1.6rem); }
+.contribution-summary { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1rem; }
+.contribution-summary strong { font-family: var(--font-mono); font-size: 2.6rem; font-weight: 700; }
+.contribution-summary span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; }
 .contribution-scroll { overflow-x: auto; padding-bottom: 0.5rem; }
 .contribution-grid { display: flex; width: max-content; gap: 3px; margin-inline: auto; }
 .contribution-week { display: grid; grid-template-rows: repeat(7, 10px); gap: 3px; }
-.contribution-day, .contribution-legend i { display: block; width: 10px; height: 10px; border: 1px solid color-mix(in srgb, var(--profile-ink) 7%, transparent); border-radius: 2px; background: var(--profile-100); }
+.contribution-day, .contribution-legend i { display: block; width: 10px; height: 10px; border: 1px solid color-mix(in srgb, var(--profile-ink) 8%, transparent); border-radius: 2px; background: var(--profile-100); }
 .level-1 { background: #9be9a8 !important; }
 .level-2 { background: #40c463 !important; }
 .level-3 { background: #30a14e !important; }
 .level-4 { background: #216e39 !important; }
-.contribution-legend { justify-content: space-between; gap: 1rem; margin-top: 0.7rem; color: var(--profile-500); font-size: 0.6rem; text-transform: uppercase; }
-.contribution-legend div { gap: 0.3rem; }
-.achievement-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--profile-ink); }
-.achievement-item { position: relative; min-height: 17rem; border-right: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); padding: 1.2rem; }
+.contribution-legend { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 0.75rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
+.contribution-legend div { display: flex; gap: 0.3rem; }
+.achievement-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--profile-200); border-radius: 6px; overflow: hidden; background: var(--profile-50); }
+.achievement-item { position: relative; min-height: 16rem; border-right: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); padding: 1.4rem; transition: background-color 180ms ease; }
 .achievement-item:nth-child(2n) { border-right: 0; }
-.achievement-mark { display: grid; width: 7rem; height: 3rem; place-items: center; border: 1px solid var(--profile-ink); margin-bottom: 2rem; overflow: hidden; background: #fff; }
-.achievement-mark img { display: block; width: auto; height: auto; max-width: 6.25rem; max-height: 2.25rem; object-fit: contain; }
-.badge-layout { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1rem; align-items: start; }
-.badge-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
-.badge-card { display: grid; min-height: 14rem; grid-template-rows: 7rem 1fr; gap: 0.8rem; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-50); padding: 0.8rem; color: var(--profile-ink); text-align: left; cursor: pointer; }
-.badge-card:hover, .badge-card:focus-visible { border-color: var(--profile-ink); transform: translateY(-2px); }
-.badge-image { display: grid; width: 7rem; height: 7rem; place-items: center; justify-self: center; font-family: var(--font-mono); }
-.badge-image img { width: 100%; height: 100%; object-fit: contain; }
+.achievement-item:hover { background: color-mix(in srgb, var(--profile-ink) 2%, var(--profile-50)); }
+.achievement-mark { display: grid; width: 7.5rem; height: 3.2rem; place-items: center; border: 1px solid var(--profile-200); border-radius: 4px; margin-bottom: 1.5rem; overflow: hidden; background: #ffffff; padding: 0.35rem; }
+.achievement-mark img { display: block; width: auto; height: auto; max-width: 6.5rem; max-height: 2.4rem; object-fit: contain; }
+.achievement-item h3 { margin: 0.5rem 0 0.4rem; font-size: 1.2rem; font-weight: 700; line-height: 1.3; }
+.achievement-item p { margin: 0 0 1rem; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.6; }
+.badge-layout { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 1.25rem; align-items: start; }
+.badge-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.badge-card { display: grid; min-height: 14.5rem; grid-template-rows: 7rem 1fr; gap: 0.8rem; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: 0.9rem; color: var(--profile-ink); text-align: left; cursor: pointer; transition: all 200ms ease; }
+.badge-card:hover, .badge-card:focus-visible { border-color: var(--profile-ink); transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.14); }
+.badge-image { position: relative; display: grid; width: 7rem; height: 7rem; place-items: center; justify-self: center; font-family: var(--font-mono); }
+.badge-image img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1)); }
+.badge-fallback { display: none; width: 100%; height: 100%; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; background: var(--profile-100); font-size: 1.5rem; font-weight: 700; color: var(--profile-700); }
+.badge-fallback.is-active { display: grid; }
 .badge-copy { display: grid; align-content: end; gap: 0.25rem; }
-.badge-copy small, .badge-copy > span { color: var(--profile-500); font-size: 0.59rem; text-transform: uppercase; }
-.badge-copy strong { font-size: 0.82rem; line-height: 1.35; }
-.badge-preview { position: sticky; top: 5rem; border: 1px solid var(--profile-ink); padding: 1rem; }
-.badge-preview > img, .preview-fallback { display: grid; width: 9rem; height: 9rem; place-items: center; margin: 1.8rem auto; object-fit: contain; font-family: var(--font-mono); font-size: 2rem; }
-.badge-preview > p { margin: 0; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; }
-.badge-preview h3 { line-height: 1.35; }
-.badge-preview button { border: 0; border-bottom: 1px solid var(--profile-ink); margin-top: 1rem; background: transparent; padding: 0 0 0.2rem; cursor: pointer; }
-.archive-route { display: flex; width: fit-content; align-items: center; gap: 0.35rem; border-bottom: 1px solid var(--profile-ink); margin: 1.5rem auto 0; padding-bottom: 0.2rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.66rem; text-decoration: none; text-transform: uppercase; }
-.certificate-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.65rem; }
-.certificate-card { position: relative; display: grid; width: 100%; grid-template-columns: 5rem minmax(0, 1fr) auto; gap: 0.8rem; align-items: center; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-50); padding: 0.65rem; color: var(--profile-ink); font: inherit; text-align: left; cursor: pointer; }
-.certificate-card:hover { border-color: var(--profile-ink); }
-
-.certificate-art { display: grid; width: 5rem; aspect-ratio: 4 / 5; place-items: center; border: 1px solid var(--profile-200); background: var(--profile-bg); overflow: hidden; }
+.badge-copy small, .badge-copy > span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
+.badge-copy strong { font-size: 0.85rem; line-height: 1.35; font-weight: 600; }
+.badge-preview { position: sticky; top: 5.5rem; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: 1.25rem; box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.08); }
+.preview-badge-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
+.badge-verified-pill { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid #16a34a; border-radius: 999px; padding: 0.2rem 0.5rem; font-family: var(--font-mono); font-size: 0.6rem; color: #16a34a; text-transform: uppercase; }
+.badge-preview-art { position: relative; display: grid; width: 9.5rem; height: 9.5rem; place-items: center; margin: 1.2rem auto; }
+.badge-preview-art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15)); }
+.preview-fallback { display: none; width: 100%; height: 100%; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; background: var(--profile-100); font-family: var(--font-mono); font-size: 2.2rem; font-weight: 700; color: var(--profile-700); }
+.preview-fallback.is-active { display: grid; }
+.preview-issuer { margin: 0; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; }
+.badge-preview h3 { margin: 0.4rem 0 0.9rem; font-size: 1.05rem; line-height: 1.35; font-weight: 700; }
+.preview-action { border: 0; border-bottom: 1.5px solid var(--profile-ink); background: transparent; padding: 0 0 0.2rem; cursor: pointer; font-weight: 600; }
+.preview-action:hover { color: var(--profile-blue); border-color: var(--profile-blue); }
+.archive-route { display: flex; width: fit-content; align-items: center; gap: 0.35rem; border-bottom: 1.5px solid var(--profile-ink); margin: 1.8rem auto 0; padding-bottom: 0.25rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; text-decoration: none; text-transform: uppercase; }
+.archive-route:hover { color: var(--profile-blue); border-color: var(--profile-blue); }
+.certificate-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.certificate-card { position: relative; display: grid; width: 100%; grid-template-columns: 5rem minmax(0, 1fr) auto; gap: 0.85rem; align-items: center; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: 0.75rem; color: var(--profile-ink); font: inherit; text-align: left; cursor: pointer; transition: all 180ms ease; }
+.certificate-card:hover { border-color: var(--profile-ink); transform: translateY(-2px); box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.12); }
+.certificate-art { display: grid; width: 5rem; aspect-ratio: 4 / 5; place-items: center; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-bg); overflow: hidden; }
 .certificate-art img { width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.65rem; }
-.provider-initials { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; }
+.provider-initials { font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.08em; }
 .certificate-copy { min-width: 0; display: grid; gap: 0.25rem; }
-.certificate-copy small, .certificate-copy > span { color: var(--profile-500); font-size: 0.58rem; text-transform: uppercase; }
-.certificate-copy strong { display: -webkit-box; overflow: hidden; font-size: 0.75rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
-.tool-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--profile-ink); border-left: 1px solid var(--profile-200); }
-.tool-category { min-width: 0; border-right: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); padding: clamp(1rem, 3vw, 1.35rem); }
-.tool-category-head { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 0.55rem; align-items: center; padding-bottom: 1rem; }
-.tool-category-head > span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.6rem; }
-.tool-category-head h3 { margin: 0; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; }
+.certificate-copy small, .certificate-copy > span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; }
+.certificate-copy strong { display: -webkit-box; overflow: hidden; font-size: 0.8rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 3; font-weight: 600; }
+.tool-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--profile-200); border-radius: 6px; overflow: hidden; background: var(--profile-50); }
+.tool-category { min-width: 0; border-right: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); padding: clamp(1rem, 3vw, 1.4rem); }
+.tool-category:nth-child(2n) { border-right: 0; }
+.tool-category-head { display: flex; gap: 0.65rem; align-items: center; padding-bottom: 0.9rem; border-bottom: 1px solid var(--profile-200); }
+.tool-category-head h3 { margin: 0; font-family: var(--font-mono); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .tool-list { display: grid; }
-.tool-entry { display: grid; min-width: 0; grid-template-columns: 2.75rem minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; border-top: 1px solid var(--profile-200); padding: 0.8rem 0; color: var(--profile-ink); text-decoration: none; }
-a.tool-entry:hover .tool-copy strong { text-decoration: underline; text-underline-offset: 0.2rem; }
-.tool-mark { position: relative; display: grid; width: 2.75rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); background: var(--profile-50); font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; }
-.tool-mark img { position: absolute; inset: 0; width: 100%; height: 100%; background: #fff; object-fit: contain; padding: 0.3rem; }
+.tool-entry { display: grid; min-width: 0; grid-template-columns: 2.75rem minmax(0, 1fr) auto; gap: 0.85rem; align-items: center; border-top: 1px solid var(--profile-100); padding: 0.8rem 0; color: var(--profile-ink); text-decoration: none; transition: background-color 160ms ease; }
+.tool-entry:first-child { border-top: 0; }
+a.tool-entry:hover .tool-copy strong { color: var(--profile-blue); }
+.tool-mark { position: relative; display: grid; width: 2.75rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 6px; background: #ffffff; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; color: #1e293b; }
+.tool-mark img { position: absolute; inset: 0; width: 100%; height: 100%; background: #ffffff; object-fit: contain; padding: 0.35rem; }
 .tool-copy { min-width: 0; display: grid; gap: 0.2rem; }
-.tool-copy strong { font-size: 0.82rem; line-height: 1.35; }
+.tool-copy strong { font-size: 0.85rem; line-height: 1.35; font-weight: 600; }
 .tool-copy > span { color: var(--profile-500); font-family: var(--font-serif); font-size: 0.82rem; line-height: 1.45; }
-.tool-entry > svg { color: var(--profile-500); }
 .background-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
-.timeline-title { gap: 0.5rem; border-bottom: 1px solid var(--profile-ink); padding-bottom: 0.7rem; font-size: 0.7rem; text-transform: uppercase; }
+.timeline-title { display: flex; align-items: center; gap: 0.55rem; border-bottom: 1px solid var(--profile-ink); padding-bottom: 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; }
 .timeline-row { position: relative; display: grid; width: 100%; grid-template-columns: 8rem minmax(0, 1fr); gap: 1rem; border: 0; border-bottom: 1px solid var(--profile-200); background: transparent; padding: 1.4rem 2rem 1.4rem 0; color: var(--profile-ink); font: inherit; text-align: left; }
-.timeline-date { color: var(--profile-500); font-size: 0.6rem; line-height: 1.6; text-transform: uppercase; }
+.timeline-date { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; line-height: 1.6; text-transform: uppercase; }
 .timeline-entry { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); gap: 0.9rem; align-items: start; min-width: 0; }
-.organization-mark { position: relative; display: grid; width: 3.25rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 4px; background: #fff; color: #17251e; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; }
+.organization-mark { position: relative; display: grid; width: 3.25rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 6px; background: #fff; color: #17251e; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; }
 .organization-mark img { position: absolute; inset: 0; width: 100%; height: 100%; background: #fff; object-fit: contain; padding: 0.25rem; }
 .timeline-copy { display: grid; min-width: 0; gap: 0.55rem; align-content: start; }
-.timeline-copy .meta-line { display: flex; width: 100%; margin: 0; }
-.timeline-heading { display: block; margin: 0.15rem 0 0; font-size: 1rem; line-height: 1.4; }
+.timeline-heading { display: block; margin: 0.15rem 0 0; font-size: 1.05rem; line-height: 1.4; font-weight: 700; }
 .timeline-summary { display: block; margin: 0; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
-.school-name { color: var(--profile-ink); font-size: 0.82rem; font-weight: 700; line-height: 1.45; }
-.timeline-copy .tag-row { display: flex; margin-top: 0.25rem; }
+.school-name { color: var(--profile-ink); font-size: 0.85rem; font-weight: 700; line-height: 1.45; }
 .timeline-trigger { cursor: pointer; transition: background-color 160ms ease, padding-left 160ms ease; }
-.timeline-trigger:hover, .timeline-trigger:focus-visible { background: var(--profile-50); padding-left: 0.65rem; outline: 1px solid var(--profile-300); outline-offset: -1px; }
+.timeline-trigger:hover, .timeline-trigger:focus-visible { background: var(--profile-50); padding-left: 0.65rem; border-radius: 4px; }
 .timeline-expand { position: absolute; top: 1.4rem; right: 0.35rem; color: var(--profile-500); transition: color 160ms ease, transform 160ms ease; }
-.timeline-trigger:hover .timeline-expand, .timeline-trigger:focus-visible .timeline-expand { color: var(--profile-ink); transform: scale(1.08); }
-.skills-index { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 1rem; border-top: 1px solid var(--profile-ink); margin-top: 2.5rem; padding-top: 1rem; }
-.skills-index > div { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.skills-index > div span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.35rem 0.6rem; font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; }
-.collaboration-bridge { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(2rem, 6vw, 6rem); align-items: end; margin-top: clamp(3rem, 7vw, 6rem); margin-bottom: clamp(3rem, 7vw, 6rem); border: 1px solid var(--profile-ink); background: linear-gradient(135deg, rgb(251 188 4 / 10%), transparent 52%), var(--profile-50); padding: clamp(1.4rem, 4vw, 2.6rem); color: var(--profile-ink); box-shadow: 10px 10px 0 var(--profile-red); transition: background-color 500ms ease, border-color 500ms ease, color 500ms ease, box-shadow 500ms ease; }
-:global(:root[data-theme='dark']) .collaboration-bridge { border-color: var(--profile-300); background: radial-gradient(circle at 92% 8%, rgb(66 133 244 / 18%), transparent 42%), radial-gradient(circle at 68% 110%, rgb(161 66 244 / 12%), transparent 45%), var(--profile-50); box-shadow: 10px 10px 0 color-mix(in srgb, var(--profile-red) 72%, #7c3aed); }
-.collaboration-bridge .folio-label { color: var(--profile-500); }
-.collaboration-bridge h2 { margin: 0.55rem 0 0; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 0.95; }
-.collaboration-bridge p { max-width: 47rem; margin: 1rem 0 0; color: var(--profile-700); font-size: 1.05rem; line-height: 1.65; }
-.collaboration-actions { display: grid; gap: 0.65rem; min-width: 10.5rem; }
-.collaboration-actions a { display: inline-flex; min-height: 2.8rem; align-items: center; justify-content: space-between; gap: 0.6rem; border: 1px solid var(--profile-ink); background: transparent; padding: 0.7rem 0.8rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.68rem; text-decoration: none; text-transform: uppercase; }
+.timeline-trigger:hover .timeline-expand, .timeline-trigger:focus-visible .timeline-expand { color: var(--profile-ink); transform: scale(1.12); }
+.skills-index { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 1rem; border-top: 1px solid var(--profile-200); margin-top: 2.5rem; padding-top: 1.25rem; }
+.skills-index > div { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.skills-index > div span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.35rem 0.7rem; font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; background: var(--profile-50); }
+.collaboration-bridge { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(2rem, 6vw, 6rem); align-items: end; margin-top: clamp(3rem, 7vw, 6rem); margin-bottom: clamp(3rem, 7vw, 6rem); border: 1px solid var(--profile-ink); border-radius: 8px; background: linear-gradient(135deg, rgb(37 99 235 / 8%), transparent 52%), var(--profile-50); padding: clamp(1.6rem, 4vw, 2.8rem); color: var(--profile-ink); box-shadow: 10px 10px 0 var(--profile-blue); transition: all 300ms ease; }
+:global(:root[data-theme='dark']) .collaboration-bridge { border-color: var(--profile-300); background: radial-gradient(circle at 92% 8%, rgb(59 130 246 / 20%), transparent 42%), radial-gradient(circle at 68% 110%, rgb(139 92 246 / 14%), transparent 45%), var(--profile-50); box-shadow: 10px 10px 0 color-mix(in srgb, var(--profile-blue) 75%, #7c3aed); }
+.collaboration-bridge h2 { margin: 0.55rem 0 0; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 0.95; font-weight: 700; letter-spacing: -0.02em; }
+.collaboration-bridge p { max-width: 47rem; margin: 1rem 0 0; color: var(--profile-700); font-size: 1.08rem; line-height: 1.65; }
+.collaboration-actions { display: grid; gap: 0.75rem; min-width: 11.5rem; }
+.collaboration-actions a { display: inline-flex; min-height: 2.9rem; align-items: center; justify-content: space-between; gap: 0.65rem; border: 1px solid var(--profile-ink); border-radius: 4px; background: transparent; padding: 0.75rem 0.95rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-decoration: none; text-transform: uppercase; transition: all 180ms ease; }
 .collaboration-actions a:first-child { background: var(--profile-ink); color: var(--profile-bg); }
-.collaboration-actions a:hover { box-shadow: 4px 4px 0 var(--profile-red); transform: translate(-2px, -2px); }
-.guestbook-layout { display: grid; grid-template-columns: minmax(20rem, 0.8fr) minmax(0, 1.2fr); gap: 1.2rem; align-items: start; }
-.guestbook-form { display: grid; gap: 0.9rem; border: 1px solid var(--profile-ink); background: var(--profile-bg); padding: clamp(1rem, 3vw, 1.4rem); }
-.form-heading { display: flex; align-items: center; gap: 0.55rem; border-bottom: 1px solid var(--profile-200); padding-bottom: 0.8rem; }
-.form-heading h3 { margin: 0; font-size: 1rem; }
-.guestbook-fields { display: grid; gap: 0.8rem; }
-.guestbook-fields.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.guestbook-form label { display: grid; gap: 0.4rem; color: var(--profile-700); font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; }
-.guestbook-form label small { color: var(--profile-400); font-size: inherit; }
-.guestbook-form input, .guestbook-form textarea { width: 100%; min-width: 0; border: 1px solid var(--profile-300); border-radius: 4px; outline: 0; background: var(--profile-bg); padding: 0.7rem; color: var(--profile-ink); }
-.guestbook-form textarea { resize: vertical; line-height: 1.55; }
-.guestbook-form input:focus, .guestbook-form textarea:focus { border-color: var(--profile-ink); }
-.rating-field { display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--profile-700); font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; }
-.rating-field > div { display: flex; gap: 0.2rem; }
-.rating-field button { display: inline-grid; width: 2rem; height: 2rem; place-items: center; border: 0; background: transparent; color: var(--profile-ink); cursor: pointer; }
-.honeypot { position: absolute !important; left: -10000px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
-.form-error, .form-success { margin: 0; font-size: 0.76rem; }
-.form-error { color: #b42318; }
-.form-success { color: #157347; }
-.submit-note { display: inline-flex; width: fit-content; align-items: center; gap: 0.45rem; border: 1px solid var(--profile-ink); border-radius: 4px; background: var(--profile-ink); padding: 0.7rem 0.85rem; color: var(--profile-bg); font-family: var(--font-mono); font-size: 0.67rem; text-transform: uppercase; cursor: pointer; }
-.submit-note:disabled { cursor: wait; opacity: 0.55; }
-.review-list { display: grid; gap: 0.65rem; }
-.review-card, .guestbook-empty { border: 1px solid var(--profile-200); background: var(--profile-50); padding: 1rem; }
-.review-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.review-head > div:first-child { display: grid; gap: 0.2rem; }
-.review-head strong { font-size: 0.85rem; }
-.review-head span, .owner-reply > span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.59rem; text-transform: uppercase; }
-.review-stars { display: flex; gap: 0.1rem; color: var(--profile-ink); }
-.review-card blockquote { margin: 1rem 0 0; color: var(--profile-700); font-family: var(--font-serif); font-size: 1.02rem; line-height: 1.65; }
-.owner-reply { border-left: 2px solid var(--profile-ink); margin-top: 1rem; padding-left: 0.8rem; }
-.owner-reply p { margin: 0.35rem 0 0; color: var(--profile-700); line-height: 1.55; }
-.guestbook-empty { display: flex; min-height: 12rem; align-items: center; justify-content: center; gap: 0.7rem; color: var(--profile-500); }
-.footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: end; padding: clamp(3rem, 6vw, 5rem) 0 2rem; }
-.footer-links { display: grid; gap: 0.55rem; justify-items: end; font-size: 0.68rem; text-transform: uppercase; }
+.collaboration-actions a:hover { box-shadow: 4px 4px 0 var(--profile-blue); transform: translate(-2px, -2px); }
+.footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: end; padding: clamp(3rem, 6vw, 5rem) 0 2.5rem; border-top: 1px solid var(--profile-200); }
+.footer-links { display: grid; gap: 0.6rem; justify-items: end; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; }
 .footer-links a { gap: 0.35rem; }
-.modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, #000 55%, transparent); padding: 1rem; backdrop-filter: blur(10px); }
-.badge-modal { position: relative; width: min(100%, 34rem); max-height: calc(100vh - 2rem); overflow-y: auto; border: 1px solid var(--profile-ink); background: var(--profile-bg); padding: clamp(1rem, 4vw, 2rem); box-shadow: 12px 12px 0 var(--profile-ink); }
+.modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, #000 60%, transparent); padding: 1rem; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.badge-modal { position: relative; width: min(100%, 34rem); max-height: calc(100vh - 2rem); overflow-y: auto; border: 1px solid var(--profile-ink); border-radius: 8px; background: var(--profile-bg); padding: clamp(1.2rem, 4vw, 2.2rem); box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.4); }
 .background-modal { width: min(100%, 40rem); }
-.background-organization-mark { width: 6.5rem; height: 6.5rem; border: 1px solid var(--profile-200); background: #fff; }
+.background-organization-mark { width: 6.5rem; height: 6.5rem; border: 1px solid var(--profile-200); border-radius: 6px; background: #fff; }
 .background-organization-mark img { width: 100%; height: 100%; object-fit: contain; padding: 0.55rem; }
-.background-modal-organization { margin: 0.8rem 0 0; color: var(--profile-ink) !important; font-family: var(--font-serif); font-size: clamp(1.15rem, 3vw, 1.45rem); font-weight: 700; line-height: 1.35; }
-.background-modal-level, .background-modal-summary { color: var(--profile-700); font-family: var(--font-serif); font-size: 1rem; line-height: 1.7; }
-.background-detail-list { border-top: 1px solid var(--profile-200); margin-top: 1.4rem; padding-top: 1rem; }
-.background-detail-list ul { display: grid; gap: 0.55rem; margin: 0.8rem 0 0; padding-left: 1.25rem; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.5; }
-.design-modal { position: relative; display: grid; width: min(100%, 70rem); max-height: calc(100vh - 2rem); grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr); overflow: hidden; border: 1px solid var(--profile-ink); background: var(--profile-bg); box-shadow: 12px 12px 0 var(--profile-ink); }
-.project-modal { position: relative; display: grid; width: min(100%, 72rem); max-height: calc(100vh - 2rem); grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr); overflow: hidden; border: 1px solid var(--profile-ink); background: var(--profile-bg); box-shadow: 12px 12px 0 var(--profile-ink); }
-.project-modal-media { display: grid; min-height: 34rem; place-items: center; overflow: hidden; background: #fff; }
-.project-modal-media img, .project-modal-media iframe { display: block; width: 100%; height: 100%; min-height: 34rem; border: 0; object-fit: contain; }
-.project-modal-media img { object-position: center top; }
-.project-modal-placeholder { display: grid; width: 100%; height: 100%; min-height: 34rem; place-items: center; background: var(--profile-100); color: var(--profile-500); }
-.project-modal-copy { overflow-y: auto; border-left: 1px solid var(--profile-200); padding: clamp(1.5rem, 4vw, 2.5rem); }
-.project-modal-copy h2 { margin: 0.7rem 0 0; font-size: clamp(1.7rem, 3vw, 2.35rem); line-height: 1.08; }
-.project-modal-copy > p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.7; }
-.project-modal-copy dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; margin: 1.5rem 0; }
-.project-modal-copy dl div { border-top: 1px solid var(--profile-200); padding-top: 0.65rem; }
-.project-modal-copy dt { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
-.project-modal-copy dd { margin: 0.3rem 0 0; }
-.design-modal-media { display: grid; min-height: 34rem; place-items: center; overflow: hidden; background: #111513; }
-.design-modal-media img, .design-modal-media video, .design-modal-media iframe { display: block; width: 100%; max-height: calc(100vh - 2.1rem); object-fit: contain; }
-.design-modal-media iframe { height: min(80vh, 54rem); border: 0; }
-.design-modal-copy { overflow-y: auto; border-left: 1px solid var(--profile-200); padding: clamp(1.25rem, 4vw, 2rem); }
-.design-modal-copy h2 { margin: 0.7rem 0 0; font-size: clamp(1.6rem, 4vw, 2.7rem); line-height: 1.05; }
-.design-modal-copy p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.7; }
-.modal-close { position: absolute; top: 1rem; right: 1rem; }
-.modal-badge { display: grid; width: 9rem; height: 9rem; place-items: center; margin: 0 0 1.4rem; font-family: var(--font-mono); font-size: 2rem; }
+.modal-badge { position: relative; display: grid; width: 6.5rem; height: 6.5rem; place-items: center; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); margin-bottom: 1.25rem; font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; }
 .modal-badge img { width: 100%; height: 100%; object-fit: contain; }
-.badge-modal h2 { max-width: 25rem; margin: 0.55rem 0 0; font-size: clamp(1.6rem, 5vw, 2.6rem); line-height: 1.05; }
-.badge-modal > p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.7; }
-.badge-modal dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; margin: 1.2rem 0; }
-.badge-modal dl div { border-top: 1px solid var(--profile-200); padding-top: 0.6rem; }
-.badge-modal dt { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
-.badge-modal dd { margin: 0.25rem 0 0; }
-.modal-actions { flex-wrap: wrap; gap: 0.8rem; margin-top: 1.3rem; }
-.certificate-privacy-note { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
-.modal-enter-active, .modal-leave-active { transition: opacity 180ms ease; }
-.modal-enter-from, .modal-leave-to { opacity: 0; }
+.modal-badge .badge-fallback { font-size: 1.8rem; }
+.certificate-provider-mark { width: 5.5rem; height: 5.5rem; padding: 0.45rem; }
+.modal-close { position: absolute; top: 1rem; right: 1rem; display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 1px solid var(--profile-200); border-radius: 50%; background: var(--profile-50); color: var(--profile-ink); cursor: pointer; transition: all 180ms ease; }
+.modal-close:hover { border-color: var(--profile-ink); transform: scale(1.08); }
+.badge-modal h2 { margin: 0.4rem 0 0.6rem; font-size: 1.5rem; line-height: 1.25; font-weight: 700; }
+.badge-modal p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
+.badge-modal dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); margin: 1.2rem 0; padding: 0.9rem 0; font-family: var(--font-mono); font-size: 0.72rem; }
+.badge-modal dt { color: var(--profile-500); text-transform: uppercase; font-size: 0.64rem; }
+.badge-modal dd { margin: 0.2rem 0 0; font-weight: 600; }
+.modal-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.4rem; }
+.modal-actions a { border: 1px solid var(--profile-ink); border-radius: 4px; padding: 0.55rem 0.85rem; background: var(--profile-50); font-weight: 600; }
+.modal-actions a:hover { background: var(--profile-ink); color: var(--profile-bg); }
+.design-modal, .project-modal { position: relative; width: min(100%, 54rem); max-height: calc(100vh - 2rem); overflow-y: auto; border: 1px solid var(--profile-ink); border-radius: 8px; background: var(--profile-bg); box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.4); }
+.design-modal-media, .project-modal-media { position: relative; aspect-ratio: 16 / 10; border-bottom: 1px solid var(--profile-200); background: #0c0f0d; overflow: hidden; }
+.design-modal-media img, .design-modal-media video, .design-modal-media iframe, .project-modal-media img, .project-modal-media iframe { width: 100%; height: 100%; object-fit: contain; }
+.project-modal-placeholder { display: grid; width: 100%; height: 100%; place-items: center; color: var(--profile-400); }
+.design-modal-copy, .project-modal-copy { padding: clamp(1.2rem, 3.5vw, 2rem); }
+.design-modal-copy h2, .project-modal-copy h2 { margin: 0.4rem 0 0.6rem; font-size: 1.6rem; font-weight: 700; }
+.design-modal-copy p, .project-modal-copy p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
+.project-modal dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); margin: 1.2rem 0; padding: 0.85rem 0; font-family: var(--font-mono); font-size: 0.72rem; }
+.project-modal dt { color: var(--profile-500); font-size: 0.64rem; text-transform: uppercase; }
+.project-modal dd { margin: 0.2rem 0 0; font-weight: 600; }
 
-@media (max-width: 980px) {
-    .badge-grid, .certificate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .design-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1024px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .portrait-block { grid-column: 1; grid-row: 3; max-width: 22rem; }
+    .badge-layout { grid-template-columns: 1fr; }
+    .badge-preview { display: none; }
+    .design-grid, .certificate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .background-grid { grid-template-columns: 1fr; }
+    .tool-groups { grid-template-columns: 1fr; }
+    .tool-category { border-right: 0; }
 }
 
-@media (max-width: 760px) {
-    .topbar { grid-template-columns: minmax(0, 1fr) auto; }
-    .nav-links { grid-column: 1 / -1; grid-row: 2; overflow-x: auto; padding-top: 0.25rem; }
-    .hero-grid, .project-card, .badge-layout, .tool-groups, .footer { grid-template-columns: 1fr; }
-    .section-actions { justify-content: flex-start; }
-    .design-modal, .project-modal { grid-template-columns: 1fr; overflow-y: auto; }
-    .design-modal-media img, .design-modal-media video, .design-modal-media iframe, .project-modal-media img, .project-modal-media iframe { height: auto; min-height: 0; max-height: 62vh; }
-    .design-modal-media, .project-modal-media, .project-modal-placeholder { min-height: 18rem; }
-    .design-modal-copy, .project-modal-copy { overflow: visible; border-top: 1px solid var(--profile-200); border-left: 0; }
-    .hero-role, .hero-copy, .portrait-block { grid-column: 1; grid-row: auto; }
-    .portrait-block { width: min(100%, 22rem); order: -1; }
-    .section-head { align-items: flex-start; flex-direction: column; }
-    .controls-head { gap: 1rem; }
-    .search-box { width: 100%; }
-    .badge-preview { position: static; order: -1; }
-    .skills-index { grid-template-columns: 1fr; }
-    .footer-links { justify-items: start; }
-    .collaboration-bridge { grid-template-columns: 1fr; align-items: start; }
-    .collaboration-actions { width: min(100%, 20rem); }
-    .guestbook-layout { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 560px) {
-    .section-wrap { width: min(100% - 1.25rem, 78rem); }
-    .stat-line { grid-template-columns: 1fr; }
-    .stat-line div { border-right: 0; border-bottom: 1px solid var(--profile-ink); }
-    .stat-line div:last-child { border-bottom: 0; }
-    .project-grid, .achievement-grid, .badge-grid, .certificate-grid { grid-template-columns: 1fr; }
-    .project-card:last-child:nth-child(odd) { width: 100%; grid-column: auto; }
-    .design-grid { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+    .nav-links { display: none; }
+    .topbar { padding: 0.75rem 1rem; }
+    .project-grid { grid-template-columns: 1fr; }
+    .project-card:last-child:nth-child(odd) { width: 100%; }
+    .design-grid, .certificate-grid, .badge-grid { grid-template-columns: 1fr; }
+    .achievement-grid { grid-template-columns: 1fr; }
     .achievement-item { border-right: 0; }
-    .publication-row { grid-template-columns: 4.5rem minmax(0, 1fr); }
-    .publication-cover { width: 4.5rem; }
-    .publication-action { display: none; }
-    .timeline-row { grid-template-columns: 1fr; gap: 0.5rem; }
-    .certificate-card { grid-template-columns: 4rem minmax(0, 1fr) auto; }
-    .certificate-art { width: 4rem; }
-    .badge-modal { box-shadow: 6px 6px 0 var(--profile-ink); }
-    .guestbook-fields.two { grid-template-columns: 1fr; }
+    .publication-row { grid-template-columns: 1fr; }
+    .publication-cover { width: 100%; max-width: 10rem; }
+    .stat-line { grid-template-columns: 1fr; }
+    .stat-line div { border-right: 0; border-bottom: 1px solid var(--profile-200); }
+    .stat-line div:last-child { border-bottom: 0; }
+    .collaboration-bridge { grid-template-columns: 1fr; }
+    .footer { grid-template-columns: 1fr; justify-items: start; }
+    .footer-links { justify-items: start; }
 }
 </style>
