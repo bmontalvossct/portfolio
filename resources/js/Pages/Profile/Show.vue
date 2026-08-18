@@ -210,22 +210,6 @@ function initials(value) {
         .toUpperCase();
 }
 
-function avatarUrlForSize(url, size) {
-    if (!url) return null;
-
-    try {
-        const parsed = new URL(url, window.location.origin);
-        if (parsed.hostname.includes('githubusercontent.com')) {
-            parsed.searchParams.set('s', String(size));
-            return parsed.toString();
-        }
-    } catch {
-        return url;
-    }
-
-    return url;
-}
-
 function applyTheme() {
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     isDark.value = theme.value === 'dark' || (theme.value === 'system' && systemDark);
@@ -461,9 +445,9 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject, sele
             <a class="brand" href="#profile" :aria-label="`${profile.display_name} home`">
                 <span class="brand-mark">
                     <span>{{ initials(profile.display_name) }}</span>
-                    <img v-if="profile.avatar_url" :src="avatarUrlForSize(profile.avatar_url, 64)" alt="" @error="$event.currentTarget.remove()">
+                    <img v-if="profile.avatar_url" :src="profile.avatar_url" alt="" @error="$event.currentTarget.remove()">
                 </span>
-                <span class="brand-name">{{ profile.display_name }}</span>
+                <strong>{{ profile.display_name }}</strong>
             </a>
 
             <nav class="nav-links" aria-label="Portfolio sections">
@@ -985,9 +969,9 @@ watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject, sele
 .section-wrap { width: min(100% - clamp(2rem, 6vw, 6rem), 82rem); margin-inline: auto; position: relative; z-index: 1; }
 .topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; border-bottom: 1px solid color-mix(in srgb, var(--profile-ink) 12%, transparent); background: color-mix(in srgb, var(--profile-bg) 84%, transparent); padding: 0.9rem clamp(1rem, 3.5vw, 2.5rem); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: border-color 300ms ease, background-color 300ms ease; }
 .brand { display: inline-flex; align-items: center; gap: 0.75rem; color: var(--profile-ink); font-weight: 700; text-decoration: none; }
-.brand-mark { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); border-radius: 6px; overflow: hidden; background: var(--profile-50); font-family: var(--font-mono); font-size: 0.75rem; box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.08); }
-.brand-mark img { width: 100%; height: 100%; object-fit: cover; }
-.brand-name { font-family: var(--font-mono); font-size: 0.92rem; letter-spacing: 0.02em; text-transform: uppercase; }
+.brand-mark { position: relative; display: grid; width: 2.25rem; aspect-ratio: 1; flex: 0 0 auto; place-items: center; overflow: hidden; border-radius: 50%; background: var(--profile-ink); color: var(--profile-bg); font-family: var(--font-mono); font-size: 0.62rem; }
+.brand-mark img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.brand strong { font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 0.02em; text-transform: uppercase; }
 .nav-links { display: flex; flex-wrap: wrap; gap: clamp(0.6rem, 1.8vw, 1.5rem); }
 .nav-links a { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-decoration: none; text-transform: uppercase; transition: color 180ms ease; }
 .nav-links a:hover, .nav-links a:focus-visible { color: var(--profile-ink); }
