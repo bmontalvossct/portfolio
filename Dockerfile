@@ -24,7 +24,6 @@ RUN php -r 'printf("Verified PHP runtime: %s\n", PHP_VERSION); exit(PHP_VERSION_
         libxml2-dev \
         libzip-dev \
     && docker-php-ext-install -j"$(nproc)" \
-        dom \
         intl \
         pdo_mysql \
         pdo_sqlite \
@@ -35,6 +34,7 @@ RUN php -r 'printf("Verified PHP runtime: %s\n", PHP_VERSION); exit(PHP_VERSION_
         libxml2-dev \
         libzip-dev \
     && rm -rf /var/lib/apt/lists/* \
+    && php -r 'foreach (["dom", "intl", "pdo_mysql", "pdo_sqlite", "zip"] as $extension) { if (!extension_loaded($extension)) { fwrite(STDERR, "Missing extension: $extension\n"); exit(1); } }' \
     && a2enmod expires headers rewrite
 
 
