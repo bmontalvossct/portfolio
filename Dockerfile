@@ -14,9 +14,10 @@ COPY vite.config.js ./
 RUN npm run build
 
 
-FROM php:8.3-apache-bookworm AS php-base
+FROM php:8.5.12-apache-bookworm@sha256:5e4418695f9b13b75edefaff547125bf6be267e865931731bdd5946461505736 AS php-base
 
-RUN apt-get update \
+RUN php -r 'printf("Verified PHP runtime: %s\n", PHP_VERSION); exit(PHP_VERSION_ID >= 80512 ? 0 : 1);' \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         libicu-dev \
         libsqlite3-dev \
@@ -25,7 +26,6 @@ RUN apt-get update \
     && docker-php-ext-install -j"$(nproc)" \
         dom \
         intl \
-        opcache \
         pdo_mysql \
         pdo_sqlite \
         zip \
