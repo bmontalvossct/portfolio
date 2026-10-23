@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+php -r 'printf("Portfolio PHP runtime: %s\n", PHP_VERSION);'
+
 cd /var/www/html
 
 mkdir -p \

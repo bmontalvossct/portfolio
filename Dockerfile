@@ -14,18 +14,17 @@ COPY vite.config.js ./
 RUN npm run build
 
 
-FROM php:8.3-apache-bookworm AS php-base
+FROM php:8.5.12-apache-bookworm@sha256:5e4418695f9b13b75edefaff547125bf6be267e865931731bdd5946461505736 AS php-base
 
-RUN apt-get update \
+RUN php -r 'printf("Verified PHP runtime: %s\n", PHP_VERSION); exit(PHP_VERSION_ID >= 80512 ? 0 : 1);' \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         libicu-dev \
         libsqlite3-dev \
         libxml2-dev \
         libzip-dev \
     && docker-php-ext-install -j"$(nproc)" \
-        dom \
         intl \
-        opcache \
         pdo_mysql \
         pdo_sqlite \
         zip \
@@ -35,6 +34,7 @@ RUN apt-get update \
         libxml2-dev \
         libzip-dev \
     && rm -rf /var/lib/apt/lists/* \
+    && php -r 'foreach (["dom", "intl", "pdo_mysql", "pdo_sqlite", "zip"] as $extension) { if (!extension_loaded($extension)) { fwrite(STDERR, "Missing extension: $extension\n"); exit(1); } }' \
     && a2enmod expires headers rewrite
 
 
