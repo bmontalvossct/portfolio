@@ -7,6 +7,26 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Runtime and dependency maintenance
+
+Use PHP 8.5.12 or a newer 8.5 patch release (`~8.5.12` in Composer), and Node.js 22.12 or newer. The production Docker image pins PHP 8.5.12 by digest. PHP 8.5 includes DOM and OPcache; the image checks required extensions after installing the remaining extensions.
+
+Install dependencies with `composer install` and `npm ci`. npm lifecycle scripts are disabled in `.npmrc`; explicit commands such as `npm run build` still work.
+
+Check dependencies before a release:
+
+```bash
+composer validate --strict
+composer check-platform-reqs
+composer audit --locked
+npm audit
+npm audit --omit=dev
+npm run build
+php vendor/phpunit/phpunit/phpunit
+```
+
+Prefer patched compatible versions. If a vulnerable package has no compatible fix, remove it and its integration together, then document the affected feature and verify the remaining application. Disabling install scripts alone does not disable vulnerable package code.
+
 ## Docker
 
 Build the production image:
