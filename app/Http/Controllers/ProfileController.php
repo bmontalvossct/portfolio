@@ -16,13 +16,16 @@ use App\Support\Profile\CertificateProvider;
 use App\Support\Profile\CredentialCategory;
 use App\Support\Profile\DesignMediaArchive;
 use App\Support\Profile\GitHubContributionService;
+use App\Support\Profile\HomepagePageViews;
 use App\Support\Profile\PublicCertificateExposure;
+use App\Support\Profile\RecognitionCertificate;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    public function __invoke(GitHubContributionService $github, DesignMediaArchive $mediaArchive): Response
+    public function __invoke(Request $request, GitHubContributionService $github, DesignMediaArchive $mediaArchive, HomepagePageViews $pageViews): Response
     {
         $profile = Profile::query()->first();
 
@@ -87,6 +90,7 @@ class ProfileController extends Controller
                 'url' => $project->url,
                 'repo_url' => $project->repo_url,
                 'thumbnail_url' => $project->thumbnail_url,
+                'gallery_urls' => $project->gallery_urls ?? [],
                 'tags' => $project->tags ?? [],
                 'is_featured' => $project->is_featured,
             ]);
@@ -105,6 +109,7 @@ class ProfileController extends Controller
                 'summary' => $achievement->summary,
                 'achieved_on' => $achievement->achieved_on?->format('M Y'),
                 'image_url' => $achievement->image_url,
+                'certificate_preview_url' => RecognitionCertificate::previewUrl($achievement),
                 'external_url' => $achievement->external_url,
                 'tags' => $achievement->tags ?? [],
                 'is_featured' => $achievement->is_featured,
@@ -239,6 +244,7 @@ class ProfileController extends Controller
             'portfolioTools' => $portfolioTools,
             'publishedWorks' => $publishedWorks,
             'workExperiences' => $workExperiences,
+            'visitStats' => $pageViews->recordAndStats($request),
         ]);
     }
 

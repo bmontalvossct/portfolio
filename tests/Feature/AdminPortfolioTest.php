@@ -41,7 +41,7 @@ class AdminPortfolioTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Login')
-                ->where('profile.avatar_url', 'https://avatars.githubusercontent.com/u/52160082?v=4'));
+                ->where('profile.avatar_url', '/images/profile-avatar.jpg'));
 
         $this->post('/admin/login', ['token' => 'incorrect'])
             ->assertSessionHasErrors('token');
@@ -57,12 +57,13 @@ class AdminPortfolioTest extends TestCase
                 ->component('Admin/Index')
                 ->has('projects', 6)
                 ->where('projects.0.title', 'Governed MCH Forecasting and Risk Prediction DSS')
-                ->has('publishedWorks', 2)
-                ->where('publishedWorks.0.publication', 'Approved for Scopus publication')
-                ->where('publishedWorks.1.title', 'SURe-Health: PDOHO-SDN Official Publication')
+                ->has('publishedWorks', 3)
+                ->where('publishedWorks.0.publication', 'Accepted by IDAP (International Data & Analytics Proceedings)')
+                ->where('publishedWorks.1.title', 'A Hybrid Time-Series Forecasting and Underperformance Risk Prediction System for Child Immunization Coverage in Surigao del Norte, Philippines: Evidence from FHSIS Quarterly Data')
+                ->where('publishedWorks.2.title', 'SURe-Health: PDOHO-SDN Official Publication')
                 ->has('portfolioTools', 37)
-                ->has('achievements', 4)
-                ->has('credentialBadges', 30)
+                ->has('achievements', 6)
+                ->has('credentialBadges', 38)
                 ->has('education', 2)
                 ->has('workExperiences', 5)
                 ->where('pendingReviewCount', 0)

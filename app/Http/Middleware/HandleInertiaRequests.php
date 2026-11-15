@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'inquiry_success' => fn () => $request->session()->get('inquiry_success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
             'portfolioAdmin' => (bool) $request->session()->get('portfolio_admin_authenticated', false),

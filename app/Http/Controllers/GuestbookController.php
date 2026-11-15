@@ -12,7 +12,7 @@ class GuestbookController extends Controller
     public function store(Request $request, GuestbookReviewNotifier $notifier): RedirectResponse
     {
         if ($request->filled('website')) {
-            return back()->with('success', 'Thanks for sharing your review.');
+            return back()->with('success', 'Thank you for your note. It will appear after review.');
         }
 
         $validated = $request->validate([
@@ -27,13 +27,13 @@ class GuestbookController extends Controller
         $entry = GuestbookEntry::query()->create([
             ...$validated,
             'public_id' => (string) str()->uuid(),
-            'status' => 'approved',
-            'approved_at' => now(),
+            'status' => 'pending',
+            'approved_at' => null,
             'ip_hash' => hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')),
         ]);
 
         $notifier->send($entry);
 
-        return back()->with('success', 'Thanks for sharing your review. It is now visible on the portfolio.');
+        return back()->with('success', 'Thank you for your note. It will appear after review.');
     }
 }

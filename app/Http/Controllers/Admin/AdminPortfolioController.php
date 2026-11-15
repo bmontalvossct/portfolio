@@ -561,12 +561,29 @@ class AdminPortfolioController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_featured' => ['nullable', 'boolean'],
             'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'gallery_urls_text' => ['nullable', 'string', 'max:20000', function (string $attribute, mixed $value, \Closure $fail): void {
+                foreach ($this->lines($value ?? '') as $url) {
+                    $local = preg_match('~^/(?:storage/portfolio/projects|images)/[A-Za-z0-9_./-]+$~D', $url)
+                        && ! str_contains($url, '..');
+                    $https = filter_var($url, FILTER_VALIDATE_URL) !== false
+                        && strtolower((string) parse_url($url, PHP_URL_SCHEME)) === 'https';
+
+                    if (strlen($url) > 2048 || (! $local && ! $https)) {
+                        $fail('Each gallery image must be an HTTPS URL or a public project image path.');
+                        return;
+                    }
+                }
+            }],
         ]);
 
         $data['tags'] = $this->commaList($data['tags_text'] ?? '');
         $data['is_featured'] = (bool) ($data['is_featured'] ?? false);
 
-        return Arr::except($data, ['tags_text', 'thumbnail']);
+        if ($request->exists('gallery_urls_text')) {
+            $data['gallery_urls'] = $this->lines($data['gallery_urls_text'] ?? '');
+        }
+
+        return Arr::except($data, ['tags_text', 'thumbnail', 'gallery_urls_text']);
     }
 
     private function portfolioToolData(Request $request): array

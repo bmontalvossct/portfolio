@@ -16,7 +16,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
 
         // Public Credly metadata snapshot. Badge verification URLs and mirrored public images are safe to publish.
         $badges = [
-            0 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '157eef37-dceb-4c49-a252-3a327601f36c',
                 'name' => 'Networking Basics',
@@ -41,7 +41,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => true,
                 'synced_at' => null,
             ],
-            1 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '5fb8dbbb-3d12-43dd-ad85-f301b32e63ae',
                 'name' => 'SAP Certified - Implementation Consultant - End-to-End Business Processes for SAP Business Suite',
@@ -66,7 +66,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => true,
                 'synced_at' => null,
             ],
-            2 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '860f8dd9-aafb-44c0-9331-8a935df96a54',
                 'name' => 'English for IT: Advice and Time',
@@ -90,7 +90,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => true,
                 'synced_at' => null,
             ],
-            3 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '32cdedc3-fb04-422b-8806-1e2fb7076d23',
                 'name' => 'English for IT: Describing and Comparing',
@@ -117,7 +117,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            4 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'd78c3e54-a111-4b37-b7cb-2ecdbf7b775e',
                 'name' => 'English for IT: Needs and Responsibilities',
@@ -142,7 +142,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            5 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'c93e5813-1e7d-44b8-8975-48a773c91ece',
                 'name' => 'English for IT: People and Quantities',
@@ -168,7 +168,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            6 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'b7a5bc6b-49ce-45f3-905c-5b9aeab00fd4',
                 'name' => 'IT Customer Support Basics',
@@ -193,7 +193,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            7 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'f0304e9a-ef78-4bd7-b876-7690e65864f1',
                 'name' => 'Google Business Intelligence Professional Certificate(v.2)',
@@ -216,7 +216,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            8 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '6f523250-7c29-46b4-a390-9aea86e0b6c9',
                 'name' => 'Google Digital Marketing & E-commerce Professional Certificate(v.2)',
@@ -239,7 +239,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            9 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '3b2c2825-d5d9-4721-abf5-b6e8e30aa75e',
                 'name' => 'Google IT Automation with Python Professional Certificate(v.1)',
@@ -263,7 +263,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            10 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'd5ce76a3-9520-4f5e-a027-f6d5dbe473ca',
                 'name' => 'Google UX Design Professional Certificate(v.3)',
@@ -287,7 +287,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            11 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '035d5b26-5deb-420c-96a7-4919ea2f9654',
                 'name' => 'Google Advanced Data Analytics Professional Certificate(v.2)',
@@ -326,7 +326,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            12 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '39e86190-5c5c-4e38-aad5-3703bb8fd269',
                 'name' => 'Google Project Management Professional Certificate(v.3)',
@@ -349,7 +349,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            13 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '0a4e2f25-49b8-4108-8f9e-d4f1bbdd3e5c',
                 'name' => 'Google IT Support Professional Certificate(v.3)',
@@ -373,7 +373,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            14 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '912b3885-5869-448c-a19a-313dd024b5c8',
                 'name' => 'Google Cybersecurity Professional Certificate(v.2)',
@@ -397,7 +397,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            15 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '867a5686-393e-432c-b197-5fa52a7a14a6',
                 'name' => 'Hardware and Upgrade Support',
@@ -423,7 +423,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            16 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '95c6d142-23bf-45bd-b3b2-3ba906721648',
                 'name' => 'Apply AI: Analyze Customer Reviews',
@@ -447,7 +447,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            17 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'f1b9f3a3-8b49-414b-96a6-d0ff3727d523',
                 'name' => 'Create Digital Content, Communicate and Collaborate Online',
@@ -474,7 +474,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            18 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '6ff82ae2-512a-4c48-92fb-f7c9b4ff8200',
                 'name' => 'Endpoint Security',
@@ -506,7 +506,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            19 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'eb5ec1be-025c-459a-9432-b230f65ac582',
                 'name' => 'English for IT 1',
@@ -541,7 +541,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            20 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'd70f20c5-51bf-49a8-a3f7-dc3a3ebdf49c',
                 'name' => 'English for IT 2',
@@ -574,7 +574,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            21 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'dab833b1-aa74-42ed-abe7-9e1f258ce39c',
                 'name' => 'Cyber Threat Management',
@@ -608,7 +608,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            22 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '959d121e-9e8b-4569-bbcd-cf214247c433',
                 'name' => 'Ethical Hacker',
@@ -637,7 +637,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            23 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '898629e9-a92d-40d1-8c87-1b8217949048',
                 'name' => 'Introduction to Modern AI',
@@ -662,7 +662,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            24 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'af8c29cf-3b93-49f3-ac9d-61c398bf1650',
                 'name' => 'Network Defense',
@@ -696,7 +696,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            25 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '5e747efd-1bb6-41d3-9fd5-ba4d1bf11a3b',
                 'name' => 'Google Data Analytics Professional Certificate',
@@ -727,7 +727,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            26 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '8e60a6b0-36bd-4158-a009-73944e107458',
                 'name' => 'Introduction to IoT',
@@ -749,7 +749,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            27 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '4bcea0d2-a50f-45c5-afea-7ecaf4fc46f7',
                 'name' => 'Introduction to Cybersecurity',
@@ -773,7 +773,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            28 => [
+            [
                 'provider' => 'credly',
                 'external_id' => 'cae5f06c-e0ce-4774-a4c2-538065053498',
                 'name' => 'Introduction to Data Science',
@@ -795,7 +795,7 @@ class CompleteCredentialBadgeSeeder extends Seeder
                 'is_featured' => false,
                 'synced_at' => null,
             ],
-            29 => [
+            [
                 'provider' => 'credly',
                 'external_id' => '5e0f592b-57d1-4853-848f-efea5a559d27',
                 'name' => 'SAP Certified - Integration Developer',

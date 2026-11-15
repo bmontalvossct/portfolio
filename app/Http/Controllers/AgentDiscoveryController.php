@@ -23,7 +23,7 @@ class AgentDiscoveryController extends Controller
             '## Canonical pages',
             "- Portfolio: {$baseUrl}/",
             "- Services: {$baseUrl}/services",
-            "- Design and media: {$baseUrl}/designs",
+            "- Creative portfolio: {$baseUrl}/#designs",
             "- Professional badges: {$baseUrl}/badges",
             "- Certificates: {$baseUrl}/certifications",
             '',

@@ -32,7 +32,6 @@ class SeoMetadataTest extends TestCase
         $this->assertSame([
             'https://brittmontalvo.dev/',
             'https://brittmontalvo.dev/services',
-            'https://brittmontalvo.dev/designs',
             'https://brittmontalvo.dev/badges',
             'https://brittmontalvo.dev/certifications',
         ], array_map(
@@ -75,6 +74,8 @@ class SeoMetadataTest extends TestCase
         $agentGuide->assertSeeText('Digital Transformation & IT Consulting');
         $agentGuide->assertSeeText('Speaking, Workshops & Technical Training');
         $agentGuide->assertSeeText('https://brittmontalvo.dev/services');
+        $agentGuide->assertSeeText('https://brittmontalvo.dev/#designs');
+        $this->assertStringNotContainsString('https://brittmontalvo.dev/designs', $agentGuide->getContent());
         $this->assertStringNotContainsString('₱', $agentGuide->getContent());
         $this->assertStringNotContainsStringIgnoringCase('price:', $agentGuide->getContent());
     }
@@ -125,7 +126,7 @@ class SeoMetadataTest extends TestCase
         $names = collect($catalog['itemListElement'])->pluck('item.name')->all();
         $this->assertContains('Digital Transformation & IT Consulting', $names);
         $this->assertContains('Speaking, Workshops & Technical Training', $names);
-        $this->assertContains('Network & Infrastructure Consulting', $names);
+        $this->assertContains('Cybersecurity Assessment & Network Consulting', $names);
 
         $encodedSchema = strtolower((string) json_encode($schema, JSON_UNESCAPED_SLASHES));
         $this->assertStringNotContainsString('"price"', $encodedSchema);

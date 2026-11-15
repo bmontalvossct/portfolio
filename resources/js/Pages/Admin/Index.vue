@@ -158,7 +158,7 @@ function emptyAchievement() {
 }
 
 function emptyProject() {
-    return { _method: '', title: '', category: 'Website', summary: '', year: '', url: '', repo_url: '', tags_text: '', sort_order: 0, is_featured: true, thumbnail: null };
+    return { _method: '', title: '', category: 'Website', summary: '', year: '', url: '', repo_url: '', tags_text: '', gallery_urls_text: '', sort_order: 0, is_featured: true, thumbnail: null };
 }
 
 function emptyDesign() {
@@ -257,7 +257,7 @@ function submitAchievement() {
 
 function editProject(item) {
     editingProject.value = item.id;
-    projectForm.defaults({ ...emptyProject(), ...item, _method: 'put', tags_text: tagsText(item), thumbnail: null });
+    projectForm.defaults({ ...emptyProject(), ...item, _method: 'put', tags_text: tagsText(item), gallery_urls_text: (item.gallery_urls ?? []).join('\n'), thumbnail: null });
     projectForm.reset();
     revealEditor();
 }
@@ -629,6 +629,7 @@ function retryGuestbookNotification(entry) {
                     <div class="field"><label>Repository URL</label><input v-model="projectForm.repo_url" type="url"></div>
                     <div class="field"><label>Tags <small>comma separated</small></label><input v-model="projectForm.tags_text"></div>
                     <div class="field"><label>Project image</label><input type="file" accept="image/png,image/jpeg,image/webp" @input="projectForm.thumbnail = $event.target.files[0]"></div>
+                    <div class="field"><label for="project-gallery-urls">Additional image URLs <small>one per line; HTTPS or public project image path</small></label><textarea id="project-gallery-urls" v-model="projectForm.gallery_urls_text" rows="4" /><span v-if="projectForm.errors.gallery_urls_text" class="field-error">{{ projectForm.errors.gallery_urls_text }}</span></div>
                     <div class="form-grid two"><div class="field"><label>Order</label><input v-model.number="projectForm.sort_order" type="number" min="0"></div><label class="check-field"><input v-model="projectForm.is_featured" type="checkbox"><span>Featured</span></label></div>
                     <button class="primary-action" type="submit" :disabled="projectForm.processing"><Plus v-if="!editingProject" :size="16" />{{ editingProject ? 'Update project' : 'Add project' }}</button>
                 </form>

@@ -1,139 +1,196 @@
-@font-face {
-    font-family: 'Saira';
-    font-style: normal;
-    font-weight: 300 700;
-    font-display: swap;
-    src: url('/fonts/saira-latin.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Saira';
-    font-style: italic;
-    font-weight: 300;
-    font-display: swap;
-    src: url('/fonts/saira-italic-300-latin.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Saira Condensed';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('/fonts/saira-condensed-400-latin.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Saira Condensed';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('/fonts/saira-condensed-600-latin.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Saira Condensed';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/fonts/saira-condensed-700-latin.woff2') format('woff2');
-}
-
-:root {
-    --font-sans: 'Saira', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-mono: 'Saira Condensed', 'Arial Narrow', ui-sans-serif, system-ui, sans-serif;
-    --font-serif: 'Saira', ui-sans-serif, system-ui, sans-serif;
+﻿:root {
+    --font-display: Arial, Helvetica, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-sans: Arial, Helvetica, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: var(--font-sans);
     color-scheme: light;
-    --profile-bg: #f7f7f7;
-    --profile-ink: #000000;
+
+    --profile-bg: #ffffff;
+    --profile-ink: #1c2b33;
     --profile-50: #ffffff;
-    --profile-100: #ededed;
-    --profile-200: #d3d3d3;
-    --profile-300: #b5b5b5;
-    --profile-400: #7e7e7e;
-    --profile-500: #606060;
-    --profile-700: #2b2b2b;
-    --profile-blue-light: #0066b1;
-    --profile-blue: #1c69d4;
-    --profile-red: #e22718;
-    --profile-shadow: 0 18px 42px -28px rgb(0 0 0 / 55%);
+    --profile-100: #f4f7f8;
+    --profile-200: #e5ebef;
+    --profile-300: #c4cfd6;
+    --profile-400: #536976;
+    --profile-500: #465a69;
+    --profile-700: #344854;
+    --profile-900: #1c2b33;
+
+    --accent-primary: #08683c;
+    --accent-primary-hover: #064f2e;
+    --accent-primary-subtle: #eaf5ee;
+    --accent-secondary: #465a69;
+    --accent-cyber: #08683c;
+    --accent-success: #23714d;
+    --on-accent: #ffffff;
+    --surface-card: #ffffff;
+    --surface-elevated: #f4f7f8;
+    --surface-muted: #f4f7f8;
+    --blend-0: #ffffff;
+    --blend-1: #f1f7f1;
+    --blend-2: #edf4f8;
+    --blend-3: #f6f1e9;
+    --blend-4: #edf6f1;
+    --blend-5: #f0f1f8;
+    --blend-6: #f8f3e8;
+    --blend-7: #f0f5f5;
+    --blend-8: #f4f1f6;
+    --blend-9: #edf4ee;
+    --blend-10: #f4f7f8;
+    --surface-glass: #ffffff;
+    --surface-glass-hover: #f4f7f8;
+    --border-hairline: #dce3e9;
+    --border-hairline-strong: #aab9c3;
+    --border-glass: #dce3e9;
+    --border-glass-glow: #dce3e9;
+
+    --card-radius: 24px;
+    --card-radius-lg: 32px;
+    --card-radius-sm: 12px;
+    --pill-radius: 999px;
+    --profile-shadow: none;
+    --profile-shadow-hover: none;
+    --motion-fast: 160ms;
+    --motion-base: 240ms;
+    --motion-slow: 600ms;
+    --ease-out-cubic: cubic-bezier(0.2, 0, 0, 1);
+    --ease-in-out-cubic: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :root[data-theme='dark'] {
     color-scheme: dark;
     --profile-bg: #000000;
-    --profile-ink: #ffffff;
-    --profile-50: #0d0d0d;
-    --profile-100: #1a1a1a;
-    --profile-200: #262626;
-    --profile-300: #3c3c3c;
-    --profile-400: #7e7e7e;
-    --profile-500: #bbbbbb;
-    --profile-700: #e6e6e6;
-    --profile-blue-light: #0066b1;
-    --profile-blue: #1c69d4;
-    --profile-red: #e22718;
-    --profile-shadow: 0 18px 48px -32px rgb(0 0 0 / 80%);
+    --profile-ink: #f5f8fa;
+    --profile-50: #111111;
+    --profile-100: #1b1b1b;
+    --profile-200: #303030;
+    --profile-300: #666666;
+    --profile-400: #adc0ce;
+    --profile-500: #adc0ce;
+    --profile-700: #dce6ed;
+    --profile-900: #f5f8fa;
+    --accent-primary: #76daa2;
+    --accent-primary-hover: #a7e9c3;
+    --accent-primary-subtle: #193d2d;
+    --accent-secondary: #adc0ce;
+    --accent-cyber: #76daa2;
+    --accent-success: #a1ddbb;
+    --on-accent: #000000;
+    --surface-card: #111111;
+    --surface-elevated: #1b1b1b;
+    --surface-muted: #0b0b0b;
+    --blend-0: #000000;
+    --blend-1: #0c120e;
+    --blend-2: #0b1018;
+    --blend-3: #14110b;
+    --blend-4: #09140f;
+    --blend-5: #10101a;
+    --blend-6: #15120d;
+    --blend-7: #0d1415;
+    --blend-8: #161019;
+    --blend-9: #0c150f;
+    --blend-10: #1b1b1b;
+    --surface-glass: #000000;
+    --surface-glass-hover: #111111;
+    --border-hairline: #303030;
+    --border-hairline-strong: #707070;
+    --border-glass: #303030;
+    --border-glass-glow: #303030;
 }
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html {
-    background: var(--profile-bg);
-    color: var(--profile-ink);
-    font-family: var(--font-sans);
     scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    min-width: 320px;
     margin: 0;
-    background: var(--profile-bg);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
     color: var(--profile-ink);
-    font-size: 15px;
+    background: var(--profile-bg);
     text-rendering: optimizeLegibility;
-    transition:
-        background-color 500ms ease,
-        color 500ms ease;
+    -webkit-font-smoothing: antialiased;
 }
 
-body::selection {
-    background: var(--profile-blue);
-    color: #ffffff;
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
 }
 
-a {
-    color: inherit;
-    text-decoration-color: color-mix(in srgb, var(--profile-ink) 25%, transparent);
-    text-underline-offset: 2px;
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; }
+img, video { max-width: 100%; }
+::selection { background: var(--accent-primary-subtle); color: var(--profile-ink); }
+
+:focus-visible {
+    outline: 3px solid var(--accent-primary);
+    outline-offset: 4px;
 }
 
-a:hover {
-    text-decoration-color: var(--profile-ink);
+.skip-link {
+    position: fixed;
+    left: 16px;
+    top: 12px;
+    z-index: 1000;
+    padding: 12px 20px;
+    border-radius: var(--pill-radius);
+    background: var(--profile-ink);
+    color: var(--profile-bg);
+    transform: translateY(-150%);
+}
+.skip-link:focus { transform: translateY(0); }
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
-button,
-input {
-    font: inherit;
+.font-mono { font-family: var(--font-sans); }
+.glass-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--card-radius);
+    box-shadow: none;
 }
-
-.profile-shell {
-    min-height: 100vh;
-    background:
-        radial-gradient(circle at top right, color-mix(in srgb, var(--profile-200) 72%, transparent) 0 1px, transparent 1px 100%),
-        var(--profile-bg);
-    background-size: 9px 9px, auto;
+.glass-card-lg { border-radius: var(--card-radius-lg); }
+.tech-pill, .dict-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: var(--pill-radius);
+    padding: 6px 12px;
+    background: var(--surface-elevated);
+    color: var(--profile-700);
+    font-size: 0.875rem;
+    font-weight: 400;
 }
+.pulse-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-success); }
 
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 1ms !important;
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
-        transition-duration: 1ms !important;
     }
 }

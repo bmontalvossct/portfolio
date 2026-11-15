@@ -69,19 +69,6 @@ class SitemapController extends Controller
                 'images' => [],
             ],
             [
-                'loc' => $baseUrl.'/designs',
-                'lastmod' => $this->latest([DesignMedia::query()]),
-                'images' => $this->localImages(
-                    $designMedia->map(
-                        fn (array $item): array => [
-                            'url' => $item['thumbnail_url'] ?: ($item['media_type'] === 'image' ? $item['media_url'] : null),
-                            'title' => $item['title'],
-                        ],
-                    ),
-                    $baseUrl,
-                ),
-            ],
-            [
                 'loc' => $baseUrl.'/badges',
                 'lastmod' => $this->latest([CredentialBadge::query()]),
                 'images' => [],

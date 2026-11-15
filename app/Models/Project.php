@@ -14,6 +14,7 @@ class Project extends Model
         'url',
         'repo_url',
         'thumbnail_url',
+        'gallery_urls',
         'tags',
         'sort_order',
         'is_featured',
@@ -23,6 +24,7 @@ class Project extends Model
     {
         return [
             'tags' => 'array',
+            'gallery_urls' => 'array',
             'is_featured' => 'boolean',
         ];
     }

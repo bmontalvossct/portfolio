@@ -1,37 +1,11 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
-import {
-    ArrowUpRight,
-    Award,
-    BarChart3,
-    Bot,
-    BookOpen,
-    BriefcaseBusiness,
-    CheckCircle2,
-    Code2,
-    Database,
-    ExternalLink,
-    FileHeart,
-    FileText,
-    GraduationCap,
-    GitBranch,
-    Images,
-    Layout,
-    Mail,
-    MapPin,
-    Maximize2,
-    Moon,
-    Network,
-    Newspaper,
-    Palette,
-    Search,
-    Store,
-    Sun,
-    Wrench,
-    X,
-} from '@lucide/vue';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Link, useForm } from '@inertiajs/vue3';
+import { ArrowUpRight, Award, BarChart3, Bot, BriefcaseBusiness, Code2, Copy, Database, HeartPulse, Layout, Menu, Moon, Network, Palette, ShieldCheck, Store, Sun, GitBranch, Wrench, X } from '@lucide/vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import gsap from 'gsap';
 import SeoHead from '../../Components/SeoHead.vue';
+import PublicationSpread from '../../Components/PublicationSpread.vue';
+import CreativeFlipbook from '../../Components/CreativeFlipbook.vue';
 import { gmailComposeUrl } from '../../Support/gmail.js';
 
 const props = defineProps({
@@ -46,69 +20,521 @@ const props = defineProps({
     guestbookEntries: { type: Array, default: () => [] },
     portfolioTools: { type: Array, default: () => [] },
     projects: { type: Array, default: () => [] },
+    visitStats: { type: Object, default: null },
     publishedWorks: { type: Array, default: () => [] },
     workExperiences: { type: Array, default: () => [] },
     flash: { type: Object, default: () => ({}) },
 });
 
+const githubProfileUrl = computed(() => props.githubActivity?.profile_url || props.profile.external_links?.find((link) => link.label?.toLowerCase() === 'github')?.url);
+const linkedinProfileUrl = computed(() => props.profile.external_links?.find((link) => link.label?.toLowerCase() === 'linkedin')?.url);
+const collaborationMessage = 'Hello Britt,\n\nI would like to discuss a potential collaboration.\n\nBest regards,';
+const copyEmailStatus = ref('');
+async function copyContactEmail() {
+    try {
+        await navigator.clipboard.writeText(props.profile.email);
+        copyEmailStatus.value = 'Email address copied.';
+    } catch {
+        copyEmailStatus.value = 'Copy unavailable. Select the email address above to copy it.';
+    }
+}
+const inquiry = useForm({ name: '', email: '', category: 'Software development', message: '', website: '' });
+const inquiryCategories = ['Software development', 'Network infrastructure', 'Cybersecurity', 'Systems integration', 'Research collaboration', 'IT consulting'];
+const inquirySuccess = ref('');
+function submitInquiry() {
+    inquirySuccess.value = '';
+    inquiry.post('/inquiry', {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            if (page.props.flash?.inquiry_success) {
+                inquiry.reset();
+                inquirySuccess.value = page.props.flash.inquiry_success;
+            }
+        },
+    });
+}
+
+const githubWeeks = computed(() => (props.githubActivity?.weeks || []).map((week, index, weeks) => {
+    const month = week.start_date?.slice(0, 7);
+    const showMonth = month && (index === 0 || month !== weeks[index - 1].start_date?.slice(0, 7));
+    return { ...week, monthLabel: showMonth ? new Date(`${week.start_date}T00:00:00Z`).toLocaleString('en', { month: 'short', timeZone: 'UTC' }) : '' };
+}));
+function githubDayLabel(day) {
+    const date = new Date(`${day.date}T00:00:00Z`).toLocaleDateString('en', { dateStyle: 'long', timeZone: 'UTC' });
+    return `${date}: ${day.level === 0 ? 'no contributions' : `contribution activity level ${day.level} of 4`}`;
+}
+
+const experienceGroups = computed(() => props.workExperiences.reduce((groups, experience) => {
+    const organizationKey = (experience.organization ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+    const previous = groups[groups.length - 1];
+
+    if (organizationKey && previous?.organizationKey === organizationKey) {
+        previous.roles.push(experience);
+        previous.logoUrl ||= experience.logo_url;
+    } else {
+        groups.push({
+            id: experience.id,
+            organizationKey,
+            organization: experience.organization,
+            logoUrl: experience.logo_url,
+            roles: [experience],
+        });
+    }
+
+    return groups;
+}, []));
+
+function experienceDates(experience) {
+    const start = experience.start_date?.trim();
+    const end = experience.is_current === true ? 'Present' : experience.end_date?.trim();
+    return [start, end].filter(Boolean).join(' to ');
+}
+
+function experienceContributions(experience) {
+    if (!Array.isArray(experience.responsibilities)) return [];
+    return experience.responsibilities.filter((item) => typeof item === 'string').map((item) => item.trim()).filter(Boolean);
+}
+
+function isFreelanceExperience(experience) {
+    return /freelanc|self[\s-]*employed/i.test(`${experience.organization ?? ''} ${experience.position ?? ''}`);
+}
+
+function freelanceResponsibilityGroups(experience) {
+    return experienceContributions(experience).reduce((groups, text) => {
+        if (/^\d+\.\s+\S/.test(text)) {
+            groups.push({ heading: text, items: [] });
+        } else if (groups.length && groups[groups.length - 1].heading) {
+            groups[groups.length - 1].items.push(text);
+        } else {
+            groups.push({ heading: null, items: [text] });
+        }
+        return groups;
+    }, []);
+}
+
 const activeProjectCategory = ref('all');
-const activeDesignType = ref('all');
 const activeWorkType = ref('all');
-const portfolioShell = ref(null);
-const portraitForwardVideo = ref(null);
-const portraitReverseVideo = ref(null);
-const activePortraitDirection = ref(1);
-const currentViewerCount = ref(25);
-const hoveredBadge = ref(null);
 const isDark = ref(false);
 const publicationSearch = ref('');
+const workPage = ref(0);
+const workTurnDirection = ref(0);
+const workTurning = ref(false);
+const workBookRevision = ref(0);
+const workMeasurements = ref(null);
+const workBookHeight = ref(0);
+let workMeasureObserver = null;
+let workMeasureFrame = null;
+let workBookDisposed = false;
 const selectedBadge = ref(null);
-const selectedCertificate = ref(null);
-const selectedBackground = ref(null);
 const selectedDesign = ref(null);
+const designIndex = ref(0);
+const graphicDirection = ref(1);
+const graphicDesigns = [
+    { id: 'io', title: 'IO graphic design', media_url: '/creative-assets/graphic-io.jpg' },
+    { id: 'dimsum', title: 'El Corso dimsum graphic design', media_url: '/creative-assets/graphic-el-corso-2.jpg' },
+    { id: 'whisky', title: 'El Corso whisky graphic design', media_url: '/creative-assets/graphic-el-corso.jpg' },
+];
+const creativeVideo = { media_type: 'video', media_url: '/creative-assets/palakasan-2025-web.mp4' };
+const graphicSamples = graphicDesigns;
+const creativeVideoError = ref(false);
+const creativeVideoElement = ref(null);
 const selectedProject = ref(null);
+const selectedRecognition = ref(null);
+const selectedExperience = ref(null);
 const theme = ref('system');
+const pageRoot = ref(null);
+const menuOpen = ref(false);
+const menuButton = ref(null);
+const achievementsSection = ref(null);
+const carouselVisible = ref(false);
+const portraitStage = ref(null);
+const portraitForward = ref(null);
+const portraitReverse = ref(null);
+const profilePortraitForwardUrl = '/storage/portfolio/Videos/Profile%20Video.mp4';
+const profilePortraitReverseUrl = '/storage/portfolio/profile/portrait-reversed.mp4';
+const portraitDirection = ref(1);
+const portraitHasFrame = ref(false);
+const portraitAvailable = ref(true);
+const portraitVisible = ref(false);
+const reducedMotion = ref(true);
+const dataOpen = ref(false);
+const dataPinned = ref(false);
+let dataDelay = null;
+const extraOpen = ref({ health: false, ai: false });
+const extraPinned = ref({ health: false, ai: false });
+const extraDelays = { health: null, ai: null };
+const extraTimers = { health: null, ai: null };
+const extraVisible = ref({ health: 0, ai: 0 });
+const healthDetails = ['EMR readiness assessment', 'EMR navigation and user training', 'System implementation and evaluation', 'Workflow and process improvement', 'Ongoing technical support'];
+function extraLength(key) { return key === 'health' ? healthDetails.length : automationTools.length; }
+function scheduleExtra(key) {
+    if (extraOpen.value[key] || extraDelays[key]) return;
+    extraDelays[key] = setTimeout(() => {
+        extraDelays[key] = null;
+        extraOpen.value[key] = true;
+        extraVisible.value[key] = reducedMotion.value ? extraLength(key) : 0;
+        if (reducedMotion.value) return;
+        extraTimers[key] = setInterval(() => {
+            extraVisible.value[key] += 1;
+            if (extraVisible.value[key] >= extraLength(key)) { clearInterval(extraTimers[key]); extraTimers[key] = null; }
+        }, 180);
+    }, 1500);
+}
+function closeExtra(key) { clearTimeout(extraDelays[key]); clearInterval(extraTimers[key]); extraDelays[key] = null; extraTimers[key] = null; extraOpen.value[key] = false; }
+function hideExtra(key, event) { if (!extraPinned.value[key] && !event.currentTarget.contains(event.relatedTarget)) closeExtra(key); }
+function toggleExtra(key) { extraPinned.value[key] = !extraPinned.value[key]; if (extraPinned.value[key]) scheduleExtra(key); else closeExtra(key); }
+const weeklyViews = computed(() => {
+    if (!Array.isArray(props.visitStats?.weekly?.days)) return [];
+    return props.visitStats.weekly.days.filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry.date)).map((entry) => ({
+        date: entry.date,
+        label: new Intl.DateTimeFormat('en', { weekday: 'short', timeZone: 'UTC' }).format(new Date(`${entry.date}T00:00:00Z`)),
+        count: Number.isFinite(entry.count) && entry.count >= 0 ? entry.count + 20 : null,
+    }));
+});
+const maxViews = computed(() => Math.max(1, ...weeklyViews.value.map((item) => item.count ?? 0)));
+const adjustedWeeklyViews = computed(() => weeklyViews.value.reduce((total, item) => total + (item.count ?? 0), 0));
+const chartPoints = computed(() => weeklyViews.value.map((item, index) => ({ ...item, x: 20 + index * (260 / 6), y: item.count === null ? null : 90 - (item.count / maxViews.value) * 70 })));
+const chartPath = computed(() => {
+    let drawing = false;
+    return chartPoints.value.map((point) => {
+        if (point.y === null) { drawing = false; return ''; }
+        const command = drawing ? 'L' : 'M';
+        drawing = true;
+        return `${command}${point.x} ${point.y}`;
+    }).filter(Boolean).join(' ');
+});
+function scheduleData() { if (!dataOpen.value && !dataDelay) dataDelay = setTimeout(() => { dataDelay = null; dataOpen.value = true; }, 1500); }
+function closeData() { clearTimeout(dataDelay); dataDelay = null; dataOpen.value = false; }
+function hideData(event) { if (!dataPinned.value && !event.currentTarget.contains(event.relatedTarget)) closeData(); }
+function toggleData() { dataPinned.value = !dataPinned.value; if (dataPinned.value) scheduleData(); else closeData(); }
+const connectionOpen = ref(false);
+const connectionPinned = ref(false);
+const connectionText = ref('');
+const connectionResult = ref('');
+const connectionLoading = ref(false);
+let connectionTimer = null;
+let connectionDelay = null;
+let connectionRequest = null;
+const networkOpen = ref(false);
+const networkPinned = ref(false);
+const networkText = ref('');
+const networkDescription = 'Network design and configuration\nRouting and VLAN segmentation\nWAN failover\nFirewall and wireless security\nNetwork troubleshooting';
+let networkDelay = null;
+let networkTimer = null;
+const webOpen = ref(false);
+const webPinned = ref(false);
+const webVisibleCount = ref(0);
+const webTechnologies = ['PHP', 'JavaScript', 'Python', 'Laravel', 'Vue.js', 'Inertia.js'];
+const automationTools = ['n8n', 'ChatGPT', 'Claude', 'GPTZero', 'Zapier', 'GoHighLevel', 'Ollama', 'Clawdbot', 'Meta'];
+let webDelay = null;
+let webTimer = null;
 
-let gradientFrame = null;
-let gradientX = 50;
-let gradientY = 18;
-let gradientTargetX = 50;
-let gradientTargetY = 18;
-let viewerHeartbeatTimer = null;
-let portraitAnimationDirection = 1;
-let pendingPortraitDirection = null;
-let portraitPlaybackToken = 0;
+function scheduleWeb() {
+    if (webOpen.value || webDelay) return;
+    webDelay = setTimeout(() => {
+        webDelay = null;
+        webOpen.value = true;
+        webVisibleCount.value = reducedMotion.value ? webTechnologies.length : 0;
+        if (reducedMotion.value) return;
+        webTimer = setInterval(() => {
+            webVisibleCount.value += 1;
+            if (webVisibleCount.value >= webTechnologies.length) clearInterval(webTimer);
+        }, 180);
+    }, 1500);
+}
+
+function hideWeb(event) {
+    if (webPinned.value || event.currentTarget.contains(event.relatedTarget)) return;
+    closeWeb();
+}
+function closeWeb() {
+    clearTimeout(webDelay);
+    clearInterval(webTimer);
+    webDelay = null;
+    webOpen.value = false;
+}
+function toggleWeb() { webPinned.value = !webPinned.value; if (webPinned.value) scheduleWeb(); else closeWeb(); }
+
+function scheduleNetwork() {
+    if (networkOpen.value || networkDelay) return;
+    networkDelay = setTimeout(() => {
+        networkDelay = null;
+        networkOpen.value = true;
+        networkText.value = reducedMotion.value ? networkDescription : '';
+        if (reducedMotion.value) return;
+        let position = 0;
+        networkTimer = setInterval(() => {
+            position = Math.min(position + 2, networkDescription.length);
+            networkText.value = networkDescription.slice(0, position);
+            if (position >= networkDescription.length) clearInterval(networkTimer);
+        }, 18);
+    }, 1500);
+}
+
+function hideNetwork(event) {
+    if (networkPinned.value || event.currentTarget.contains(event.relatedTarget)) return;
+    closeNetwork();
+}
+function closeNetwork() {
+    clearTimeout(networkDelay);
+    clearInterval(networkTimer);
+    networkDelay = null;
+    networkOpen.value = false;
+}
+function toggleNetwork() { networkPinned.value = !networkPinned.value; if (networkPinned.value) scheduleNetwork(); else closeNetwork(); }
+
+function typeConnectionText(text) {
+    clearInterval(connectionTimer);
+    connectionResult.value = text;
+    connectionText.value = reducedMotion.value ? text : '';
+    if (reducedMotion.value) return;
+    let position = 0;
+    connectionTimer = setInterval(() => {
+        position = Math.min(position + 2, text.length);
+        connectionText.value = text.slice(0, position);
+        if (position >= text.length) clearInterval(connectionTimer);
+    }, 18);
+}
+
+async function showConnection() {
+    if (connectionOpen.value) return;
+    connectionOpen.value = true;
+    if (connectionResult.value) { typeConnectionText(connectionResult.value); return; }
+    if (connectionRequest) return;
+    connectionText.value = '';
+    connectionLoading.value = true;
+    const request = new AbortController();
+    connectionRequest = request;
+    try {
+        let ip = null;
+        let location = 'Unavailable';
+        const lookup = new AbortController();
+        const abortLookup = () => lookup.abort();
+        request.signal.addEventListener('abort', abortLookup, { once: true });
+        const timeout = setTimeout(abortLookup, 3500);
+        try {
+            const response = await fetch('https://ipwho.is/', { signal: lookup.signal, cache: 'no-store', referrerPolicy: 'no-referrer' });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success === true) {
+                    if (typeof data.ip === 'string' && /^[0-9a-f:.]{2,45}$/i.test(data.ip)) ip = data.ip;
+                    if (typeof data.latitude === 'number' && Number.isFinite(data.latitude) && Math.abs(data.latitude) <= 90 && typeof data.longitude === 'number' && Number.isFinite(data.longitude) && Math.abs(data.longitude) <= 180) location = `${data.latitude.toFixed(2)}, ${data.longitude.toFixed(2)} (IP-based estimate)`;
+                }
+            }
+        } catch { /* Show unavailable when the IP location provider cannot be reached. */ }
+        finally { clearTimeout(timeout); request.signal.removeEventListener('abort', abortLookup); }
+        if (request.signal.aborted) return;
+        if (!ip) {
+            try {
+                const response = await fetch('/visitor-connection', { signal: request.signal, cache: 'no-store', headers: { Accept: 'application/json' } });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (typeof data.ip === 'string' && /^[0-9a-f:.]{2,45}$/i.test(data.ip)) ip = data.ip;
+                }
+            } catch { /* Try the public IP fallback below. */ }
+        }
+        if (request.signal.aborted) return;
+        if (!ip) {
+            const lookup = new AbortController();
+            const abortLookup = () => lookup.abort();
+            request.signal.addEventListener('abort', abortLookup, { once: true });
+            const timeout = setTimeout(abortLookup, 3500);
+            try {
+                const lookupResponse = await fetch('https://api64.ipify.org?format=json', { signal: lookup.signal, cache: 'no-store', referrerPolicy: 'no-referrer' });
+                if (lookupResponse.ok) {
+                    const details = await lookupResponse.json();
+                    if (typeof details.ip === 'string' && /^[0-9a-f:.]{2,45}$/i.test(details.ip)) ip = details.ip;
+                }
+            } catch { /* The local response remains usable if the optional lookup fails. */ }
+            finally { clearTimeout(timeout); request.signal.removeEventListener('abort', abortLookup); }
+        }
+        if (request.signal.aborted) return;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unavailable';
+        const agent = navigator.userAgent;
+        const browser = /Edg\//.test(agent) ? 'Microsoft Edge' : /OPR\//.test(agent) ? 'Opera' : /Firefox\//.test(agent) ? 'Firefox' : /Chrome\//.test(agent) ? 'Chrome' : /Safari\//.test(agent) ? 'Safari' : 'Unavailable';
+        typeConnectionText(`Public IP: ${ip || 'Unavailable'}\nApproximate location: ${location}\nBrowser: ${browser}\nTime zone: ${timezone}`);
+    } catch (error) {
+        if (error.name !== 'AbortError') typeConnectionText('Connection details are unavailable right now.');
+    } finally {
+        if (connectionRequest === request) {
+            connectionRequest = null;
+            connectionLoading.value = false;
+        }
+    }
+}
+
+function closeConnection() {
+    connectionOpen.value = false;
+    clearTimeout(connectionDelay);
+    connectionDelay = null;
+    clearInterval(connectionTimer);
+    connectionRequest?.abort();
+    connectionRequest = null;
+    connectionLoading.value = false;
+}
+
+function hideConnection(event) {
+    if (!connectionPinned.value && !event.currentTarget.contains(event.relatedTarget)) closeConnection();
+}
+
+function scheduleConnection() {
+    if (connectionOpen.value || connectionDelay) return;
+    connectionDelay = setTimeout(() => { connectionDelay = null; showConnection(); }, 1500);
+}
+
+function toggleConnection() {
+    connectionPinned.value = !connectionPinned.value;
+    if (connectionPinned.value) scheduleConnection();
+    else closeConnection();
+}
+let portraitObserver = null;
+let sectionObserver = null;
+let portraitPlayToken = 0;
+let carouselObserver = null;
+
+function pausePortrait() {
+    portraitPlayToken += 1;
+    portraitForward.value?.pause();
+    portraitReverse.value?.pause();
+}
+
+async function playPortraitTransition(direction) {
+    pausePortrait();
+    if (reducedMotion.value || !portraitVisible.value || document.hidden || !portraitAvailable.value) return;
+    const video = direction === 1 ? portraitForward.value : portraitReverse.value;
+    if (!video) return;
+    video.currentTime = 0;
+    const token = ++portraitPlayToken;
+    try {
+        await video.play();
+        if (token !== portraitPlayToken) { video.pause(); return; }
+        portraitDirection.value = direction;
+        portraitHasFrame.value = true;
+    } catch { /* Keep the still portrait if playback is unavailable. */ }
+}
+
+function handlePortraitVisibility() {
+    if (document.hidden) pausePortrait();
+}
+
+function recognitionUrl(achievement) {
+    const title = String(achievement.title ?? '').trim().toLowerCase();
+    const badge = title && props.badges.find((item) => String(item.name ?? '').trim().toLowerCase().startsWith(title) && item.certificate_url);
+    return badge?.certificate_url || achievement.external_url || null;
+}
+
+function recognitionPreviewUrl(achievement) {
+    return achievement?.title === 'Scam Ready ASEAN Master Trainer'
+        && achievement.issuer === 'SmartCT / ASEAN Foundation'
+        && achievement.certificate_preview_url === '/images/recognitions/scam-ready-asean-certificate.jpg'
+        ? achievement.certificate_preview_url : null;
+}
+
+function portraitError() {
+    portraitAvailable.value = false;
+    portraitHasFrame.value = false;
+    pausePortrait();
+}
+
+// Guestbook form state
+const guestbookForm = useForm({
+    name: '',
+    email: '',
+    website: '',
+    role_or_organization: '',
+    rating: 5,
+    body: '',
+});
+const guestbookSuccess = ref(false);
+
+function submitGuestbook() {
+    guestbookSuccess.value = false;
+    guestbookForm.post('/guestbook', {
+        preserveScroll: true,
+        onSuccess: () => {
+            guestbookForm.reset();
+            guestbookSuccess.value = true;
+        },
+        onError: async () => {
+            await nextTick();
+            pageRoot.value?.querySelector('.form-errors')?.focus();
+        },
+    });
+}
 
 const projectCategories = computed(() => [
-    { key: 'all', label: 'All work' },
+    { key: 'all', label: 'All Projects' },
     ...[...new Set(props.projects.map((item) => item.category).filter(Boolean))]
         .map((category) => ({ key: category, label: category })),
 ]);
 
+function latestProjectYear(year) {
+    const years = String(year ?? '').match(/\b(?:19|20)\d{2}\b/g);
+    return years ? Math.max(...years.map(Number)) : 0;
+}
+
 const filteredProjects = computed(() => props.projects.filter((item) => (
     activeProjectCategory.value === 'all' || item.category === activeProjectCategory.value
-)));
+)).sort((a, b) => latestProjectYear(b.year) - latestProjectYear(a.year)));
 
-const designTypes = computed(() => [
-    { key: 'all', label: 'All media' },
-    ...[...new Set(props.designMedia.map((item) => item.media_type))]
-        .map((type) => ({ key: type, label: designTypeLabel(type) })),
-]);
+const failedProjectMarks = ref(new Set());
+const loadedProjectMarks = ref(new Set());
+function isAmplifierProject(project) {
+    return String(project.title ?? '').trim().toLowerCase() === 'amplifier publication & design system';
+}
 
-const featuredDesignMedia = computed(() => {
-    const selections = [
-        (item) => item.title === 'Campaign Poster',
-        (item) => item.title === 'Coffeee Sip Poster',
-        (item) => item.title === 'Brochure Design',
-    ];
+function projectMarkUrl(project) {
+    const title = String(project.title ?? '').trim().toLowerCase();
+    if (title === 'health information systems implementation') return '/images/projects/ihomis-plus-logo.png';
+    if (title === 'governed mch forecasting and risk prediction dss') return '/storage/portfolio/organizations/department-of-health.png';
+    if (isAmplifierProject(project)) return '/storage/portfolio/organizations/university-of-san-carlos.png';
+    if (!project.url) return null;
+    try {
+        const site = new URL(project.url);
+        if (!['http:', 'https:'].includes(site.protocol)) return null;
+        if (site.hostname === 'classcheck.brittmontalvo.dev') return '/images/projects/classcheck-logo.png';
+        if (site.hostname === 'gamma.snsu.edu.ph') return '/storage/portfolio/organizations/snsu.png';
+        if (site.hostname === 'app.powerbi.com') return getIconifyLogoUrl('Power BI');
+        return `${site.origin}/favicon.ico`;
+    } catch {
+        return null;
+    }
+}
 
-    return selections.map((matches) => props.designMedia.find(matches)).filter(Boolean);
+function projectInitials(title) {
+    return String(title || 'Project').split(/\s+/).filter((word) => word && !/^(and|or|the|of|for|a|an|&|-)$/i.test(word)).slice(0, 2).map((word) => word[0].toUpperCase()).join('');
+}
+
+const projectSlideIndex = ref(0);
+const projectImageFailed = ref(false);
+const projectFallbackFailed = ref(false);
+const projectFallbackLogo = computed(() => {
+    const title = String(selectedProject.value?.title ?? '').trim().toLowerCase();
+    return title === 'health information systems implementation' || isAmplifierProject(selectedProject.value || {}) ? projectMarkUrl(selectedProject.value) : null;
 });
-const profilePortraitForwardUrl = '/storage/portfolio/Videos/Profile%20Video.mp4';
-const profilePortraitReverseUrl = '/storage/portfolio/profile/portrait-reversed.mp4';
+const failedProjectLogos = ref(new Set());
+const projectTechnologies = computed(() => {
+    const unique = new Map();
+    for (const tag of selectedProject.value?.tags ?? []) {
+        if (typeof tag !== 'string' || !tag.trim()) continue;
+        const name = tag.trim();
+        const logo = getIconifyLogoUrl(name);
+        const key = logo ? `logo:${logo.toLowerCase()}` : `name:${name.toLowerCase()}`;
+        if (!unique.has(key)) unique.set(key, { key, logo, names: [] });
+        const item = unique.get(key);
+        if (!item.names.some((existing) => existing.toLowerCase() === name.toLowerCase())) item.names.push(name);
+    }
+    return [...unique.values()].map((item) => ({ ...item, label: item.names.join(' / ') }));
+});
+const projectSlides = computed(() => [...new Set([
+    projectFallbackLogo.value,
+    selectedProject.value?.thumbnail_url,
+    ...(Array.isArray(selectedProject.value?.gallery_urls) ? selectedProject.value.gallery_urls : []),
+].filter((url) => typeof url === 'string' && url.trim()))]);
+function selectProjectSlide(index) { projectSlideIndex.value = index; projectImageFailed.value = false; projectFallbackFailed.value = false; }
 
 const workTypes = computed(() => [
-    { key: 'all', label: 'All formats' },
+    { key: 'all', label: 'All Formats' },
     ...[...new Set(props.publishedWorks.map((item) => item.type))]
         .map((type) => ({ key: type, label: labelFor(type) })),
 ]);
@@ -126,29 +552,91 @@ const filteredWorks = computed(() => {
         return matchesType && (!term || content.includes(term));
     });
 });
-
-const visibleBadges = computed(() => props.badges.slice(0, 6));
-const visibleCertificates = computed(() => props.certificates.slice(0, 6));
-const previewBadge = computed(() => hoveredBadge.value ?? selectedBadge.value ?? props.badges[0] ?? null);
-
-function achievementLogoUrl(achievement) {
-    if (achievement.image_url) return achievement.image_url;
-
-    return String(achievement.issuer ?? '').trim().toLowerCase() === 'sap'
-        ? '/images/brands/sap.svg'
-        : null;
+function resetWorkBook() {
+    workBookRevision.value += 1;
+    workTurning.value = false;
+    workTurnDirection.value = 0;
+    workPage.value = 0;
 }
+watch([activeWorkType, publicationSearch, () => props.publishedWorks], resetWorkBook);
+watch(reducedMotion, (reduce) => {
+    if (!reduce || !workTurning.value) return;
+    workBookRevision.value += 1;
+    workTurning.value = false;
+    workTurnDirection.value = 0;
+});
+const currentWork = computed(() => filteredWorks.value[workPage.value] ?? null);
+function turnWorkPage(direction) {
+    if (workTurning.value) return;
+    const nextPage = Math.max(0, Math.min(filteredWorks.value.length - 1, workPage.value + direction));
+    if (nextPage === workPage.value) return;
+    workTurnDirection.value = reducedMotion.value ? 0 : direction;
+    workTurning.value = !reducedMotion.value;
+    workPage.value = nextPage;
+}
+function retireWorkPage(element) {
+    element.setAttribute('inert', '');
+    element.setAttribute('aria-hidden', 'true');
+}
+function scheduleWorkBookMeasure() {
+    if (workBookDisposed || workMeasureFrame !== null) return;
+    workMeasureFrame = requestAnimationFrame(() => {
+        workMeasureFrame = null;
+        const spreads = workMeasurements.value?.children;
+        if (!spreads?.length) return;
+        const height = Math.ceil(Math.max(...Array.from(spreads, (spread) => spread.getBoundingClientRect().height))) + 2;
+        if (height > 2 && height !== workBookHeight.value) workBookHeight.value = height;
+    });
+}
+
+function observeWorkBookMeasurements() {
+    workMeasureObserver?.disconnect();
+    const measurements = workMeasurements.value;
+    if (!measurements) return;
+    workMeasureObserver = new ResizeObserver(scheduleWorkBookMeasure);
+    workMeasureObserver.observe(measurements);
+    Array.from(measurements.children).forEach((spread) => workMeasureObserver.observe(spread));
+    scheduleWorkBookMeasure();
+}
+
+watch(() => props.publishedWorks, async () => {
+    await nextTick();
+    if (!workBookDisposed) observeWorkBookMeasurements();
+}, { deep: true });
+
+onMounted(() => {
+    observeWorkBookMeasurements();
+    document.fonts?.ready.then(scheduleWorkBookMeasure);
+    document.fonts?.addEventListener('loadingdone', scheduleWorkBookMeasure);
+    window.addEventListener('resize', scheduleWorkBookMeasure);
+});
+
+onBeforeUnmount(() => {
+    workBookDisposed = true;
+    workMeasureObserver?.disconnect();
+    if (workMeasureFrame !== null) cancelAnimationFrame(workMeasureFrame);
+    document.fonts?.removeEventListener('loadingdone', scheduleWorkBookMeasure);
+    window.removeEventListener('resize', scheduleWorkBookMeasure);
+});
+
+const visibleBadges = computed(() => props.badges.slice(0, 9));
+
+const heroPortraitSrc = computed(() => {
+    return isDark.value
+        ? (props.profile.dark_avatar_url || props.profile.avatar_url || '/images/profile-avatar.jpg')
+        : (props.profile.avatar_url || '/images/profile-avatar.jpg');
+});
 
 const toolCategoryDefinitions = [
     { key: 'backend', label: 'Backend', icon: Database },
     { key: 'frontend', label: 'Frontend', icon: Layout },
     { key: 'automation', label: 'Automation & AI', icon: Bot },
     { key: 'data', label: 'Data & BI', icon: BarChart3 },
-    { key: 'design', label: 'Design tools', icon: Palette },
+    { key: 'design', label: 'Design Tools', icon: Palette },
     { key: 'infrastructure', label: 'Infrastructure', icon: Network },
-    { key: 'platforms', label: 'Platforms & marketing', icon: Store },
+    { key: 'platforms', label: 'Platforms & Cloud', icon: Store },
     { key: 'development', label: 'Development', icon: GitBranch },
-    { key: 'other', label: 'Other', icon: Wrench },
+    { key: 'other', label: 'Other Tools', icon: Wrench },
 ];
 
 const groupedPortfolioTools = computed(() => toolCategoryDefinitions
@@ -158,57 +646,142 @@ const groupedPortfolioTools = computed(() => toolCategoryDefinitions
     }))
     .filter((category) => category.tools.length));
 
-function toolFallbackIcon(tool) {
-    const name = String(tool.name ?? '').toLowerCase();
+function getIconifyLogoUrl(nameStr) {
+    if (!nameStr) return null;
+    const name = String(nameStr).toLowerCase().trim();
 
-    if (name.includes('ai') || name.includes('gpt') || name.includes('notebook')) return Bot;
-    if (name.includes('power bi') || name.includes('data')) return BarChart3;
-    if (name.includes('git')) return GitBranch;
-    if (name.includes('adobe') || name.includes('canva') || name.includes('figma')) return Palette;
-    if (name.includes('laravel') || name.includes('php') || name.includes('python')) return Database;
+    if (
+        name.includes('department of health') ||
+        name === 'doh' ||
+        name === 'fhsis' ||
+        name.includes('emr') ||
+        name.includes('electronic medical record')
+    ) {
+        return '/storage/portfolio/organizations/department-of-health.png';
+    }
+    if (name.includes('surigao del norte state university') || name.includes('snsu')) {
+        return '/storage/portfolio/organizations/snsu.png';
+    }
 
-    return Wrench;
+    const iconMap = {
+        'linkedin': 'https://api.iconify.design/logos/linkedin-icon.svg',
+        'power bi': 'https://api.iconify.design/logos/microsoft-power-bi.svg',
+        'powerbi': 'https://api.iconify.design/logos/microsoft-power-bi.svg',
+        'microsoft power bi': 'https://api.iconify.design/logos/microsoft-power-bi.svg',
+        'microsoft': 'https://api.iconify.design/logos/microsoft-icon.svg',
+        'microsoft office': 'https://api.iconify.design/logos/microsoft-icon.svg',
+        'microsoft 365': 'https://api.iconify.design/logos/microsoft-icon.svg',
+        'microsoft excel': 'https://api.iconify.design/mdi/microsoft-excel.svg?color=%23217346',
+        'canva': 'https://api.iconify.design/devicon/canva.svg',
+        'adobe': 'https://api.iconify.design/logos/adobe-icon.svg',
+        'adobe creative cloud': 'https://api.iconify.design/cib/adobe-creative-cloud.svg?color=%23DA1F26',
+        'adobe creative suite': 'https://api.iconify.design/cib/adobe-creative-cloud.svg?color=%23DA1F26',
+        'adobe photoshop': 'https://api.iconify.design/logos/adobe-photoshop.svg',
+        'adobe illustrator': 'https://api.iconify.design/logos/adobe-illustrator.svg',
+        'adobe indesign': 'https://api.iconify.design/logos/adobe-indesign.svg',
+        'adobe premiere pro': 'https://api.iconify.design/logos/adobe-premiere.svg',
+        'laravel': 'https://api.iconify.design/logos/laravel.svg',
+        'php': 'https://api.iconify.design/logos/php.svg',
+        'vue.js': 'https://api.iconify.design/logos/vue.svg',
+        'vue': 'https://api.iconify.design/logos/vue.svg',
+        'inertia.js': 'https://api.iconify.design/simple-icons/inertia.svg',
+        'inertia': 'https://api.iconify.design/simple-icons/inertia.svg',
+        'codeigniter': 'https://api.iconify.design/simple-icons/codeigniter.svg',
+        'python': 'https://api.iconify.design/logos/python.svg',
+        'docker': 'https://api.iconify.design/logos/docker-icon.svg',
+        'tailwind css': 'https://api.iconify.design/logos/tailwindcss-icon.svg',
+        'tailwindcss': 'https://api.iconify.design/logos/tailwindcss-icon.svg',
+        'bootstrap': 'https://api.iconify.design/logos/bootstrap.svg',
+        'mysql': 'https://api.iconify.design/logos/mysql-icon.svg',
+        'postgresql': 'https://api.iconify.design/logos/postgresql.svg',
+        'sqlite': 'https://api.iconify.design/logos/sqlite.svg',
+        'sql': 'https://api.iconify.design/logos/mysql-icon.svg',
+        'sql databases': 'https://api.iconify.design/logos/mysql-icon.svg',
+        'git': 'https://api.iconify.design/logos/git-icon.svg',
+        'github': 'https://api.iconify.design/logos/github-icon.svg',
+        'gitlab': 'https://api.iconify.design/logos/gitlab.svg',
+        'figma': 'https://api.iconify.design/logos/figma.svg',
+        'mikrotik': 'https://api.iconify.design/simple-icons/mikrotik.svg',
+        'cisco': 'https://api.iconify.design/simple-icons/cisco.svg',
+        'n8n': 'https://api.iconify.design/simple-icons/n8n.svg',
+        'javascript': 'https://api.iconify.design/logos/javascript.svg',
+        'typescript': 'https://api.iconify.design/logos/typescript-icon.svg',
+        'html5': 'https://api.iconify.design/logos/html-5.svg',
+        'html': 'https://api.iconify.design/logos/html-5.svg',
+        'css3': 'https://api.iconify.design/logos/css-3.svg',
+        'css': 'https://api.iconify.design/logos/css-3.svg',
+        'vite': 'https://api.iconify.design/logos/vitejs.svg',
+        'nginx': 'https://api.iconify.design/logos/nginx.svg',
+        'apache': 'https://api.iconify.design/logos/apache.svg',
+        'linux': 'https://api.iconify.design/logos/tux.svg',
+        'ubuntu': 'https://api.iconify.design/logos/ubuntu.svg',
+        'cpanel': 'https://api.iconify.design/logos/cpanel.svg',
+        'notion': 'https://api.iconify.design/logos/notion-icon.svg',
+        'google workspace': 'https://api.iconify.design/logos/google-icon.svg',
+        'google': 'https://api.iconify.design/logos/google-icon.svg',
+        'gemini': 'https://api.iconify.design/logos/google-gemini.svg',
+        'google gemini': 'https://api.iconify.design/logos/google-gemini.svg',
+        'chatgpt': 'https://api.iconify.design/logos/openai-icon.svg',
+        'claude': 'https://api.iconify.design/simple-icons/claude.svg',
+        'zapier': 'https://api.iconify.design/logos/zapier-icon.svg',
+        'gohighlevel': 'https://autogencrm.com/wp-content/uploads/2026/05/gohighlevel-icon-dark-bg.jpg',
+        'ollama': 'https://api.iconify.design/logos/ollama.svg',
+        'clawdbot': 'https://openclaw.ai/favicon.svg',
+        'meta': 'https://api.iconify.design/logos/meta-icon.svg',
+        'openai': 'https://api.iconify.design/logos/openai-icon.svg',
+        'gpt-4': 'https://api.iconify.design/logos/openai-icon.svg',
+        'gptzero': 'https://gptzero.me/favicon.ico',
+        'hugging face': 'https://api.iconify.design/logos/hugging-face-icon.svg',
+        'notebooklm': 'https://api.iconify.design/logos/google-icon.svg',
+        'postman': 'https://api.iconify.design/logos/postman-icon.svg',
+        'redis': 'https://api.iconify.design/logos/redis.svg',
+        'pandas': 'https://api.iconify.design/logos/pandas-icon.svg',
+        'numpy': 'https://api.iconify.design/logos/numpy.svg',
+        'scikit-learn': 'https://api.iconify.design/logos/scikit-learn.svg',
+        'credly': 'https://api.iconify.design/simple-icons/credly.svg',
+    };
+
+    return iconMap[name] || null;
 }
 
-function designTypeLabel(type) {
-    if (type === 'image') return 'Images';
-    if (type === 'video') return 'Motion';
-    if (type === 'pdf') return 'Brochure PDF';
-
-    return type;
+function toolIconUrl(tool) {
+    if (!tool || !tool.name) return null;
+    if (tool.icon_url) return tool.icon_url;
+    return getIconifyLogoUrl(tool.name);
 }
 
 function labelFor(type) {
     return String(type ?? 'work').replace('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-function projectIcon(category) {
-    const clean = String(category ?? '').toLowerCase();
+function achievementLogoUrl(achievement) {
+    if (!achievement) return null;
 
-    if (clean.includes('dashboard') || clean.includes('power bi')) return BarChart3;
-    if (clean.includes('dss') || clean.includes('forecasting')) return Bot;
+    const title = String(achievement.title ?? '').trim().toLowerCase();
+    const issuer = String(achievement.issuer ?? '').trim().toLowerCase();
 
-    return Layout;
-}
-
-function isPowerBiProject(project) {
-    try {
-        const url = new URL(project?.url ?? '');
-        return url.hostname.includes('powerbi.com');
-    } catch {
-        return false;
+    if (title.includes('dict') || issuer.includes('dict') || issuer.includes('department of information')) {
+        return '/storage/portfolio/organizations/dict.svg';
     }
+    if (title.includes('civil service') || issuer.includes('civil service')) {
+        return achievement.image_url || '/storage/portfolio/organizations/civil-service-commission.png';
+    }
+    if (achievement.image_url) {
+        return achievement.image_url;
+    }
+    if (issuer === 'sap') {
+        return '/images/brands/sap.svg';
+    }
+
+    return null;
 }
 
-function initials(value) {
-    return String(value ?? 'BM')
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase();
-}
+const dialogOpen = computed(() => Boolean(selectedBadge.value || selectedProject.value || selectedDesign.value || selectedRecognition.value || selectedExperience.value));
+let returnFocus = null;
+let previousOverflow = '';
+let systemThemeQuery;
+let reducedMotionQuery;
+let introContext;
 
 function applyTheme() {
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -217,1006 +790,1143 @@ function applyTheme() {
 }
 
 function setTheme(value) {
+    const changed = (value === 'dark') !== isDark.value;
     theme.value = value;
+    if (changed) {
+        applyTheme();
+        void playPortraitTransition(value === 'dark' ? 1 : -1);
+    }
 }
-
-function openBadge(badge) {
-    selectedBadge.value = badge;
+function rememberFocus() { returnFocus = document.activeElement; }
+function openBadge(badge) { rememberFocus(); selectedBadge.value = badge; }
+function openProject(project) { rememberFocus(); selectProjectSlide(0); selectedProject.value = project; }
+function openDesign(media) { rememberFocus(); creativeVideoError.value = false; selectedDesign.value = media; }
+function openGraphicGallery() { rememberFocus(); designIndex.value = 0; selectedDesign.value = { media_type: 'gallery', title: 'Graphic design' }; }
+function moveGraphic(direction) { graphicDirection.value = -direction; designIndex.value = (designIndex.value + direction + graphicDesigns.length) % graphicDesigns.length; }
+function openCreativeMagazine() { rememberFocus(); selectedDesign.value = { media_type: 'magazine' }; }
+function openJobDescription(experience) { rememberFocus(); selectedExperience.value = experience; }
+function openRecognition(achievement, copy) {
+    if (!recognitionPreviewUrl(achievement)) return;
+    rememberFocus();
+    if (copy === 2) {
+        returnFocus = pageRoot.value?.querySelector('.recognition-group:not([aria-hidden="true"]) .achievement-preview') || returnFocus;
+    }
+    selectedRecognition.value = achievement;
 }
-
-function closeBadge() {
+function closeDialog() {
+    creativeVideoElement.value?.pause();
     selectedBadge.value = null;
-}
-
-function openProject(project) {
-    selectedProject.value = project;
-}
-
-function closeProject() {
     selectedProject.value = null;
-}
-
-function openCertificate(certificate) {
-    selectedCertificate.value = certificate;
-}
-
-function closeCertificate() {
-    selectedCertificate.value = null;
-}
-
-function openBackground(type, item) {
-    selectedBackground.value = { type, item };
-}
-
-function closeBackground() {
-    selectedBackground.value = null;
-}
-
-function openDesign(item) {
-    selectedDesign.value = item;
-}
-
-function closeDesign() {
+    selectProjectSlide(0);
     selectedDesign.value = null;
-}
-
-function onBadgeImageError(event) {
-    const target = event.currentTarget;
-    if (target) {
-        target.style.display = 'none';
-        const fallback = target.nextElementSibling;
-        if (fallback) {
-            fallback.classList.add('is-active');
-            fallback.style.display = 'grid';
-        }
-    }
-}
-
-function videoElementForDirection(direction) {
-    return direction === 1 ? portraitForwardVideo.value : portraitReverseVideo.value;
-}
-
-function stopPortraitPlayback() {
-    portraitPlaybackToken += 1;
-    pendingPortraitDirection = null;
-
-    if (portraitForwardVideo.value) {
-        portraitForwardVideo.value.pause();
-        portraitForwardVideo.value.currentTime = 0;
-    }
-
-    if (portraitReverseVideo.value) {
-        portraitReverseVideo.value.pause();
-        portraitReverseVideo.value.currentTime = 0;
-    }
-}
-
-function playDirection(direction) {
-    const video = videoElementForDirection(direction);
-    if (!video) return;
-
-    if (video.readyState < 2) {
-        pendingPortraitDirection = direction;
-        return;
-    }
-
-    const currentToken = ++portraitPlaybackToken;
-    activePortraitDirection.value = direction;
-    video.currentTime = 0;
-
-    const promise = video.play();
-    if (promise && typeof promise.then === 'function') {
-        promise
-            .then(() => {
-                if (currentToken !== portraitPlaybackToken) return;
-
-                video.onended = () => {
-                    if (currentToken !== portraitPlaybackToken) return;
-                    video.onended = null;
-                    portraitAnimationDirection = direction === 1 ? -1 : 1;
-                    playDirection(portraitAnimationDirection);
-                };
-            })
-            .catch(() => {
-                // Autoplay policy fallback
-            });
-    }
-}
-
-function initializePortraitVideo(direction) {
-    if (direction === 1 && pendingPortraitDirection === null) {
-        playDirection(1);
-    }
-}
-
-function resumePendingPortrait(direction) {
-    if (pendingPortraitDirection === direction) {
-        pendingPortraitDirection = null;
-        playDirection(direction);
-    }
-}
-
-async function refreshViewerCount() {
-    if (document.hidden) return;
-
-    try {
-        const response = await fetch('/viewer-presence', {
-            headers: { Accept: 'application/json' },
-            cache: 'no-store',
-        });
-
-        if (!response.ok) return;
-
-        const payload = await response.json();
-        if (typeof payload?.viewers === 'number') {
-            currentViewerCount.value = payload.viewers;
-        }
-    } catch {
-        // Soft fail
-    }
-}
-
-function handleVisibilityChange() {
-    if (!document.hidden) void refreshViewerCount();
+    selectedRecognition.value = null;
+    selectedExperience.value = null;
 }
 
 function onKeydown(event) {
     if (event.key === 'Escape') {
-        closeBadge();
-        closeCertificate();
-        closeDesign();
-        closeProject();
-        closeBackground();
+        if (dialogOpen.value) closeDialog();
+        else if (menuOpen.value) {
+            menuOpen.value = false;
+            menuButton.value?.focus();
+        } else { connectionPinned.value = networkPinned.value = webPinned.value = dataPinned.value = false; extraPinned.value = { health: false, ai: false }; closeConnection(); closeNetwork(); closeWeb(); closeData(); closeExtra('health'); closeExtra('ai'); }
+    }
+    if (event.key !== 'Tab' || !dialogOpen.value) return;
+    const dialog = pageRoot.value?.querySelector('[role="dialog"]');
+    const elements = [...(dialog?.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex="0"]') || [])];
+    if (!elements.length) { event.preventDefault(); dialog?.focus(); return; }
+    const first = elements[0];
+    const last = elements[elements.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
     }
 }
 
-function renderGradientPosition() {
-    gradientX += (gradientTargetX - gradientX) * 0.12;
-    gradientY += (gradientTargetY - gradientY) * 0.12;
-
-    portfolioShell.value?.style.setProperty('--gradient-x', `${gradientX.toFixed(2)}%`);
-    portfolioShell.value?.style.setProperty('--gradient-y', `${gradientY.toFixed(2)}%`);
-    portfolioShell.value?.style.setProperty('--gradient-counter-x', `${(100 - gradientX).toFixed(2)}%`);
-    portfolioShell.value?.style.setProperty('--gradient-counter-y', `${Math.min(88, 36 + gradientY * 0.48).toFixed(2)}%`);
-
-    if (Math.abs(gradientTargetX - gradientX) > 0.04 || Math.abs(gradientTargetY - gradientY) > 0.04) {
-        gradientFrame = window.requestAnimationFrame(renderGradientPosition);
+watch(dialogOpen, async (open) => {
+    if (open) {
+        previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        await nextTick();
+        pageRoot.value?.querySelector('[role="dialog"] .close-btn')?.focus();
     } else {
-        gradientFrame = null;
+        document.body.style.overflow = previousOverflow;
+        await nextTick();
+        if (returnFocus?.isConnected) returnFocus.focus();
     }
-}
+});
 
-function queueGradientPosition() {
-    if (gradientFrame === null) {
-        gradientFrame = window.requestAnimationFrame(renderGradientPosition);
+function onMotionChange() {
+    // Reverting immediately restores readable content if the preference changes mid-intro.
+    introContext?.revert();
+    introContext = null;
+    reducedMotion.value = reducedMotionQuery.matches;
+    if (reducedMotion.value) {
+        clearInterval(networkTimer);
+        clearInterval(webTimer);
+        for (const key of ['health', 'ai']) { clearInterval(extraTimers[key]); extraTimers[key] = null; if (extraOpen.value[key]) extraVisible.value[key] = extraLength(key); }
+        if (networkOpen.value) networkText.value = networkDescription;
+        if (webOpen.value) webVisibleCount.value = webTechnologies.length;
     }
-}
-
-function moveGradient(event) {
-    if (event.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    gradientTargetX = Math.max(4, Math.min(96, (event.clientX / window.innerWidth) * 100));
-    gradientTargetY = Math.max(5, Math.min(95, (event.clientY / window.innerHeight) * 100));
-    queueGradientPosition();
-}
-
-function resetGradient() {
-    gradientTargetX = 50;
-    gradientTargetY = 18;
-    queueGradientPosition();
+    if (reducedMotion.value && connectionResult.value) {
+        clearInterval(connectionTimer);
+        connectionText.value = connectionResult.value;
+    }
+    if (reducedMotion.value) pausePortrait();
 }
 
 onMounted(() => {
-    theme.value = window.localStorage.getItem('profile-theme') ?? 'system';
+    try { theme.value = window.localStorage.getItem('profile-theme') ?? 'system'; } catch { /* Use system preference when storage is unavailable. */ }
+    systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    reducedMotion.value = reducedMotionQuery.matches;
+    systemThemeQuery.addEventListener('change', applyTheme);
+    reducedMotionQuery.addEventListener('change', onMotionChange);
+    document.addEventListener('keydown', onKeydown);
+    document.addEventListener('visibilitychange', handlePortraitVisibility);
+    if ('IntersectionObserver' in window) {
+        sectionObserver = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                if (!entry.isIntersecting) continue;
+                entry.target.classList.add('section-arrived');
+                sectionObserver.unobserve(entry.target);
+            }
+        }, { threshold: 0.05 });
+        pageRoot.value?.querySelectorAll('.folio-main > section:not(.hero-section)').forEach((section) => sectionObserver.observe(section));
+        portraitObserver = new IntersectionObserver(([entry]) => {
+            portraitVisible.value = entry.isIntersecting;
+            if (!portraitVisible.value) pausePortrait();
+        }, { threshold: 0.05 });
+        portraitObserver.observe(portraitStage.value);
+        carouselObserver = new IntersectionObserver(([entry]) => { carouselVisible.value = entry.isIntersecting; }, { threshold: 0.05 });
+        if (achievementsSection.value) carouselObserver.observe(achievementsSection.value);
+    } else {
+        portraitVisible.value = true;
+        carouselVisible.value = true;
+    }
     applyTheme();
-    void refreshViewerCount();
-    viewerHeartbeatTimer = window.setInterval(refreshViewerCount, 5_000);
-    window.addEventListener('keydown', onKeydown);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
-});
-
-onBeforeUnmount(() => {
-    if (gradientFrame !== null) window.cancelAnimationFrame(gradientFrame);
-    if (viewerHeartbeatTimer !== null) window.clearInterval(viewerHeartbeatTimer);
-    stopPortraitPlayback();
-    window.removeEventListener('keydown', onKeydown);
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', applyTheme);
-    document.body.style.overflow = '';
+    if (!reducedMotionQuery.matches) {
+        introContext = gsap.context(() => {
+            gsap.from('.hero-intro', { y: 12, opacity: 0, duration: 0.6, ease: 'power2.out', clearProps: 'all' });
+            gsap.from('.hero-portrait', { y: 18, opacity: 0, duration: 0.6, delay: 0.08, ease: 'power2.out', clearProps: 'all' });
+        }, pageRoot.value);
+    }
 });
 
 watch(theme, (value) => {
-    window.localStorage.setItem('profile-theme', value);
+    try { window.localStorage.setItem('profile-theme', value); } catch { /* The theme still works for this visit. */ }
     applyTheme();
 });
 
-watch([selectedBadge, selectedCertificate, selectedDesign, selectedProject, selectedBackground], ([badge, certificate, design, project, bg]) => {
-    document.body.style.overflow = badge || certificate || design || project || bg ? 'hidden' : '';
+onBeforeUnmount(() => {
+    clearTimeout(dataDelay);
+    clearTimeout(extraDelays.health);
+    clearTimeout(extraDelays.ai);
+    clearInterval(extraTimers.health);
+    clearInterval(extraTimers.ai);
+    clearTimeout(webDelay);
+    clearInterval(webTimer);
+    clearTimeout(networkDelay);
+    clearInterval(networkTimer);
+    clearTimeout(connectionDelay);
+    clearInterval(connectionTimer);
+    connectionRequest?.abort();
+    introContext?.revert();
+    pausePortrait();
+    portraitObserver?.disconnect();
+    carouselObserver?.disconnect();
+    sectionObserver?.disconnect();
+    document.removeEventListener('visibilitychange', handlePortraitVisibility);
+    systemThemeQuery?.removeEventListener('change', applyTheme);
+    reducedMotionQuery?.removeEventListener('change', onMotionChange);
+    document.removeEventListener('keydown', onKeydown);
+    if (dialogOpen.value) document.body.style.overflow = previousOverflow;
 });
 </script>
 
 <template>
     <SeoHead :seo="seo" />
-
-    <div ref="portfolioShell" class="portfolio-shell" @pointermove.passive="moveGradient" @pointerleave="resetGradient">
-        <div class="gemini-wash" aria-hidden="true"></div>
-        <header class="topbar">
-            <a class="brand" href="#profile" :aria-label="`${profile.display_name} home`">
-                <span class="brand-mark">
-                    <span>{{ initials(profile.display_name) }}</span>
-                    <img v-if="profile.avatar_url" :src="profile.avatar_url" alt="" @error="$event.currentTarget.remove()">
-                </span>
-                <strong>{{ profile.display_name }}</strong>
-            </a>
-
-            <nav class="nav-links" aria-label="Portfolio sections">
-                <a href="#work">Work</a>
-                <Link href="/services">Services</Link>
-                <a href="#designs">Designs</a>
-                <a href="#published">Published</a>
-                <a href="#credentials">Credentials</a>
-                <a href="#tools">Tools</a>
-                <a href="#background">Background</a>
-            </nav>
-
-            <div class="theme-switch" aria-label="Color theme">
-                <button type="button" title="Light theme" aria-label="Light theme" :class="{ active: !isDark }" @click="setTheme('light')"><Sun :size="15" /></button>
-                <button type="button" title="Dark theme" aria-label="Dark theme" :class="{ active: isDark }" @click="setTheme('dark')"><Moon :size="15" /></button>
+    <div ref="pageRoot" class="folio-root">
+        <a class="skip-link" href="#main-content" :inert="dialogOpen">Skip to main content</a>
+        <header class="folio-header" :inert="dialogOpen">
+            <div class="header-content">
+                <button ref="menuButton" type="button" class="menu-toggle" :aria-expanded="menuOpen" aria-controls="portfolio-navigation" @click="menuOpen = !menuOpen">
+                    <X v-if="menuOpen" :size="22" aria-hidden="true" /><Menu v-else :size="22" aria-hidden="true" />
+                    <span>{{ menuOpen ? 'Close' : 'Menu' }}</span>
+                </button>
+                <nav id="portfolio-navigation" class="header-nav" :class="{ 'is-open': menuOpen }" aria-label="Portfolio sections" @click="menuOpen = false">
+                    <a href="#work">Projects</a><a href="#services">Services</a><a href="#credentials">Credentials</a><a href="#experience">Experience</a><a href="#contact">Contact</a>
+                </nav>
+                <div class="theme-controls" :class="{ 'is-dark': isDark }" role="group" aria-label="Color theme">
+                    <button type="button" :aria-pressed="!isDark" aria-label="Light theme" @click="setTheme('light')"><Sun :size="18" aria-hidden="true" /></button>
+                    <button type="button" :aria-pressed="isDark" aria-label="Dark theme" @click="setTheme('dark')"><Moon :size="18" aria-hidden="true" /></button>
+                </div>
             </div>
         </header>
 
-        <aside class="live-viewers" role="status" aria-live="polite" aria-label="Current portfolio viewers">
-            <span class="live-viewers-dot" aria-hidden="true"></span>
-            <span class="live-viewers-copy">
-                <small>Live now</small>
-                <strong>{{ currentViewerCount }} {{ currentViewerCount === 1 ? 'viewer' : 'viewers' }}</strong>
-            </span>
-        </aside>
-
-        <main>
-            <section id="profile" class="hero section-wrap">
-                <div class="folio-label">Portfolio / 2026</div>
-                <div class="hero-grid">
-                    <p class="hero-role">{{ profile.headline }}</p>
-
-                    <div class="hero-copy">
-                        <h1>{{ profile.display_name }}</h1>
-                        <p class="hero-bio">{{ profile.bio }}</p>
-
-                        <div class="location-line">
-                            <span v-if="profile.location"><MapPin :size="14" />{{ profile.location }}</span>
-                            <span v-if="profile.availability"><CheckCircle2 :size="14" />{{ profile.availability }}</span>
+        <main id="main-content" class="folio-main" tabindex="-1" :inert="dialogOpen">
+            <section class="hero-section" aria-labelledby="hero-title">
+                <div class="hero-intro">
+                    <h1 id="hero-title">{{ profile.display_name }}</h1>
+                    <p class="hero-role">Information Systems, Cybersecurity and Digitalization.</p>
+                    <p class="hero-bio">{{ profile.bio }}</p>
+                    <div class="hero-link-group">
+                        <div class="hero-actions">
+                            <Link href="/services" class="primary-btn">Explore services</Link>
+                            <a href="#work" class="secondary-btn">See my works <ArrowUpRight :size="18" aria-hidden="true" /></a>
                         </div>
-
-                        <div class="hero-links" aria-label="Profile links">
-                            <a v-for="link in profile.external_links" :key="link.url" :href="link.url" target="_blank" rel="noreferrer">
-                                {{ link.label }}<ArrowUpRight :size="14" />
-                            </a>
-                            <a v-if="profile.email" :href="gmailComposeUrl(profile.email)" target="_blank" rel="noreferrer"><Mail :size="14" />Email</a>
+                        <div v-if="profile.external_links?.length" class="hero-external-links" aria-label="Professional profiles">
+                            <a v-for="link in profile.external_links" :key="link.label" :href="link.url" :data-brand="link.label.toLowerCase()" target="_blank" rel="noopener noreferrer"><span v-if="['credly', 'github', 'linkedin'].includes(link.label.toLowerCase())" class="profile-link-logo" :style="{ maskImage: `url(https://api.iconify.design/simple-icons/${link.label.toLowerCase()}.svg)` }" aria-hidden="true"></span>{{ link.label }} <ArrowUpRight :size="15" aria-hidden="true" /></a>
                         </div>
                     </div>
-
-                    <figure class="portrait-block">
-                        <div v-if="profilePortraitForwardUrl" class="portrait-video-stage">
-                            <video ref="portraitForwardVideo" :class="{ 'is-active': activePortraitDirection === 1 }" :src="profilePortraitForwardUrl" muted playsinline preload="auto" fetchpriority="high" disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate noremoteplayback" :aria-label="`${profile.display_name} animated portrait`" @loadedmetadata="initializePortraitVideo(1)" @canplay="resumePendingPortrait(1)"></video>
-                            <video ref="portraitReverseVideo" :class="{ 'is-active': activePortraitDirection === -1 }" :src="profilePortraitReverseUrl" muted playsinline preload="none" disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate noremoteplayback" aria-hidden="true" @loadedmetadata="initializePortraitVideo(-1)" @canplay="resumePendingPortrait(-1)"></video>
-                        </div>
-                        <img v-else-if="profile.avatar_url" :src="profile.avatar_url" :alt="profile.display_name">
-                        <div v-else class="portrait-fallback">{{ initials(profile.display_name) }}</div>
-                        <figcaption>
-                            <span>Information Analyst</span>
-                            <span>Research / Programming / Design</span>
-                        </figcaption>
-                    </figure>
                 </div>
-
-                <div class="stat-line" aria-label="Portfolio highlights">
-                    <div v-for="stat in profile.stats" :key="stat.label">
-                        <strong>{{ stat.value }}</strong>
-                        <span>{{ stat.label }}</span>
-                    </div>
-                </div>
+                <figure ref="portraitStage" class="hero-portrait">
+                    <img :src="heroPortraitSrc" :alt="profile.display_name" width="640" height="720" fetchpriority="high">
+                    <video ref="portraitForward" class="portrait-video" :class="{ 'is-active': portraitHasFrame && portraitDirection === 1 }" :src="profilePortraitForwardUrl" muted playsinline preload="metadata" aria-hidden="true" @loadeddata="portraitHasFrame = true" @ended="pausePortrait" @error="portraitError"></video>
+                    <video ref="portraitReverse" class="portrait-video" :class="{ 'is-active': portraitHasFrame && portraitDirection === -1 }" :src="profilePortraitReverseUrl" muted playsinline preload="metadata" aria-hidden="true" @ended="pausePortrait" @error="portraitError"></video>
+                </figure>
             </section>
 
-            <section id="work" class="content-band section-wrap">
-                <div class="section-head">
-                    <div><span class="folio-label">01 / featured</span><h2>Selected work</h2></div>
-                    <p>Production systems, research applications, responsive portals, and data analytics.</p>
+            <section v-if="achievements.length" id="achievements" ref="achievementsSection" class="recognition-carousel" :class="{ 'is-paused': !carouselVisible }" aria-labelledby="achievements-heading">
+                <div class="recognition-heading">
+                    <h2 id="achievements-heading">Recognitions</h2>
                 </div>
-
-                <div class="filter-row" aria-label="Project categories">
-                    <button v-for="category in projectCategories" :key="category.key" type="button" :class="{ active: activeProjectCategory === category.key }" @click="activeProjectCategory = category.key">{{ category.label }}</button>
-                </div>
-
-                <div class="project-grid">
-                    <article v-for="(project, index) in filteredProjects" :key="project.id" class="project-card">
-                        <div class="project-index" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</div>
-                        <div class="project-copy">
-                            <div class="meta-line"><span>{{ project.category || 'Selected project' }}</span><span>{{ project.year }}</span></div>
-                            <h3>{{ project.title }}</h3>
-                            <p>{{ project.summary }}</p>
-                            <div class="tag-row"><span v-for="tag in project.tags" :key="tag">{{ tag }}</span></div>
-                            <button class="project-more" type="button" aria-haspopup="dialog" @click="openProject(project)">View details<ArrowUpRight :size="14" /></button>
-                        </div>
-                    </article>
-                </div>
-            </section>
-
-            <section id="designs" class="content-band section-wrap design-band">
-                <div class="section-head">
-                    <div><span class="folio-label">02 / design</span><h2>Selected media</h2></div>
-                    <div class="section-actions">
-                        <Link class="section-link" href="/designs">Design archive<ArrowUpRight :size="14" /></Link>
-                        <a v-if="profile.canva_url" class="section-link" :href="profile.canva_url" target="_blank" rel="noreferrer">Canva public profile<ArrowUpRight :size="14" /></a>
-                    </div>
-                </div>
-
-                <div class="filter-row" aria-label="Design formats">
-                    <button v-for="type in designTypes" :key="type.key" type="button" :class="{ active: activeDesignType === type.key }" @click="activeDesignType = type.key">{{ type.label }}</button>
-                </div>
-
-                <div v-if="featuredDesignMedia.length" class="design-grid">
-                    <article v-for="item in featuredDesignMedia" :key="item.id" class="design-card">
-                        <div class="design-media">
-                            <video v-if="item.media_type === 'video'" :src="item.media_url" :poster="item.thumbnail_url || undefined" muted playsinline preload="metadata"></video>
-                            <div v-else-if="item.media_type === 'pdf'" class="pdf-card-preview">
-                                <FileText :size="30" />
-                                <span>{{ item.type_label }}</span>
-                            </div>
-                            <img v-else :src="item.media_url" :alt="item.title" loading="lazy">
-                            <span class="design-expand" aria-hidden="true"><Maximize2 :size="15" /></span>
-                        </div>
-                        <div class="design-copy">
-                            <div class="meta-line"><span>{{ item.type_label }}</span><span>{{ item.year || 'Portfolio' }}</span></div>
-                            <h3>{{ item.title }}</h3>
-                        </div>
-                        <button class="design-card-trigger" type="button" :aria-label="`Open ${item.title}`" @click="openDesign(item)"></button>
-                    </article>
-                </div>
-                <div v-else class="design-empty">
-                    <Images :size="24" />
-                    <div><strong>No featured media configured</strong><p>Explore all available design assets in the media archive.</p></div>
-                </div>
-            </section>
-
-            <section id="published" class="content-band section-wrap">
-                <div class="section-head">
-                    <div><span class="folio-label">03 / research</span><h2>Published works</h2></div>
-                    <div class="search-box">
-                        <Search :size="15" />
-                        <input v-model="publicationSearch" type="search" placeholder="Filter research and publications" aria-label="Filter publications">
-                    </div>
-                </div>
-
-                <div class="filter-row" aria-label="Publication formats">
-                    <button v-for="type in workTypes" :key="type.key" type="button" :class="{ active: activeWorkType === type.key }" @click="activeWorkType = type.key">{{ type.label }}</button>
-                </div>
-
-                <div class="publication-list">
-                    <article v-for="work in filteredWorks" :key="work.id" class="publication-row">
-                        <div class="publication-cover">
-                            <img v-if="work.cover_preview_url || work.cover_url" :src="work.cover_preview_url || work.cover_url" :alt="`${work.title} cover`" loading="lazy">
-                            <BookOpen v-else :size="24" />
-                        </div>
-                        <div class="publication-main">
-                            <div class="meta-line"><span>{{ work.type_label }}</span><span>{{ work.published_on }}</span></div>
-                            <h3>{{ work.title }}</h3>
-                            <p class="publication-name">{{ work.publication }}</p>
-                            <p>{{ work.summary }}</p>
-                            <div class="tag-row"><span v-for="tag in work.tags" :key="tag">{{ tag }}</span></div>
-                        </div>
-                        <div class="publication-action">
-                            <a v-if="work.external_url" :href="work.external_url" target="_blank" rel="noreferrer" :title="`Open ${work.title}`" :aria-label="`Open ${work.title}`"><ArrowUpRight :size="18" /></a>
-                        </div>
-                    </article>
-                </div>
-            </section>
-
-            <section v-if="githubActivity" id="github" class="content-band section-wrap github-band">
-                <div class="section-head">
-                    <div><span class="folio-label">04 / code</span><h2>GitHub contributions</h2></div>
-                    <a class="section-link" :href="`https://github.com/${profile.github_username}`" target="_blank" rel="noreferrer">@{{ profile.github_username }}<ArrowUpRight :size="14" /></a>
-                </div>
-
-                <div class="contribution-panel">
-                    <div class="contribution-summary">
-                        <strong>{{ githubActivity.total }}</strong>
-                        <span>contributions in the last year</span>
-                    </div>
-                    <div class="contribution-scroll">
-                        <div class="contribution-grid" aria-hidden="true">
-                            <div v-for="(week, weekIndex) in githubActivity.weeks" :key="weekIndex" class="contribution-week">
-                                <span v-for="(day, dayIndex) in week" :key="dayIndex" class="contribution-day" :class="`level-${day.level}`" :title="`${day.count} contributions on ${day.date}`"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="contribution-legend"><small>Less</small><div><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><i class="level-4"></i></div><small>More</small></div>
-                </div>
-            </section>
-
-            <section v-if="achievements.length" id="achievements" class="content-band section-wrap">
-                <div class="section-head">
-                    <div><span class="folio-label">05 / milestones</span><h2>Achievements</h2></div>
-                </div>
-
-                <div class="achievement-grid">
-                    <article v-for="achievement in achievements" :key="achievement.id" class="achievement-item">
-                        <div class="achievement-mark">
-                            <img v-if="achievementLogoUrl(achievement)" :src="achievementLogoUrl(achievement)" :alt="achievement.issuer || achievement.title" loading="lazy">
-                            <Award v-else :size="24" />
-                        </div>
-                        <div class="meta-line"><span>{{ achievement.issuer || 'Milestone' }}</span><span>{{ achievement.achieved_on }}</span></div>
-                        <h3>{{ achievement.title }}</h3>
-                        <p>{{ achievement.summary }}</p>
-                        <a v-if="achievement.external_url" :href="achievement.external_url" target="_blank" rel="noreferrer" class="inline-link">Evidence<ArrowUpRight :size="14" /></a>
-                    </article>
-                </div>
-            </section>
-
-            <section id="credentials" class="content-band section-wrap">
-                <div class="section-head">
-                    <div><span class="folio-label">06 / verified</span><h2>Credential badges</h2></div>
-                    <div class="section-actions">
-                        <Link class="section-link" href="/badges">Badge archive<ArrowUpRight :size="14" /></Link>
-                        <a class="section-link" :href="`https://www.credly.com/users/${profile.credly_username}`" target="_blank" rel="noreferrer">Credly profile<ArrowUpRight :size="14" /></a>
-                    </div>
-                </div>
-
-                <div class="badge-layout">
-                    <div class="badge-grid">
-                        <button
-                            v-for="badge in visibleBadges"
-                            :key="badge.id"
-                            class="badge-card"
-                            type="button"
-                            @mouseenter="hoveredBadge = badge"
-                            @mouseleave="hoveredBadge = null"
-                            @focus="hoveredBadge = badge"
-                            @click="openBadge(badge)"
-                        >
-                            <span class="badge-image">
-                                <img
-                                    v-if="badge.image_url"
-                                    :src="badge.image_url"
-                                    :alt="badge.name"
-                                    loading="lazy"
-                                    decoding="async"
-                                    @error="onBadgeImageError($event)"
-                                >
-                                <span class="badge-fallback" :class="{ 'is-active': !badge.image_url }">{{ initials(badge.name) }}</span>
-                            </span>
-                            <span class="badge-copy">
-                                <small>{{ badge.issuer || 'Credential' }}</small>
-                                <strong>{{ badge.name }}</strong>
-                                <span>{{ badge.issued_at }}</span>
-                            </span>
-                        </button>
-                    </div>
-
-                    <aside v-if="previewBadge" class="badge-preview">
-                        <div class="preview-badge-header">
-                            <span class="folio-label">Credential preview</span>
-                            <span class="badge-verified-pill"><CheckCircle2 :size="12" />Verified</span>
-                        </div>
-                        <div class="badge-preview-art">
-                            <img
-                                v-if="previewBadge.image_url"
-                                :src="previewBadge.image_url"
-                                :alt="previewBadge.name"
-                                decoding="async"
-                                @error="onBadgeImageError($event)"
-                            >
-                            <div class="preview-fallback" :class="{ 'is-active': !previewBadge.image_url }">{{ initials(previewBadge.name) }}</div>
-                        </div>
-                        <p class="preview-issuer">{{ previewBadge.issuer }}</p>
-                        <h3>{{ previewBadge.name }}</h3>
-                        <button class="preview-action" type="button" @click="openBadge(previewBadge)">View details<ArrowUpRight :size="14" /></button>
-                    </aside>
-                </div>
-                <Link v-if="badges.length" class="archive-route" href="/badges">Explore all {{ badges.length }} verified badges<ArrowUpRight :size="14" /></Link>
-            </section>
-
-            <section v-if="certificates.length" id="certificates" class="content-band section-wrap">
-                <div class="section-head">
-                    <div><span class="folio-label">07 / archive</span><h2>Certificates</h2></div>
-                    <Link class="section-link" href="/certifications">Certificate archive<ArrowUpRight :size="14" /></Link>
-                </div>
-
-                <div class="certificate-grid">
-                    <button
-                        v-for="certificate in visibleCertificates"
-                        :key="certificate.id"
-                        class="certificate-card"
-                        type="button"
-                        :aria-label="'View ' + certificate.title + ' details'"
-                        @click="openCertificate(certificate)"
-                    >
-                        <span class="certificate-art">
-                            <img v-if="certificate.thumbnail_url" :src="certificate.thumbnail_url" :alt="certificate.provider_name + ' logo'" loading="lazy">
-                            <strong v-else class="provider-initials">{{ certificate.provider_initials }}</strong>
-                        </span>
-                        <span class="certificate-copy"><small>{{ certificate.provider_name || certificate.issuer || 'Certificate' }}</small><strong>{{ certificate.title }}</strong><span>{{ certificate.issued_on }}</span></span>
-                        <Maximize2 :size="16" />
-                    </button>
-                </div>
-                <Link class="archive-route" href="/certifications">Browse all {{ certificates.length }} certificates<ArrowUpRight :size="14" /></Link>
-            </section>
-
-            <section id="background" class="content-band section-wrap background-band">
-                <div class="section-head"><div><span class="folio-label">08 / background</span><h2>Experience & education</h2></div></div>
-                <div class="background-grid">
-                    <div class="timeline-group">
-                        <div class="timeline-title"><BriefcaseBusiness :size="18" /><span>Experience</span></div>
-                        <button v-for="role in workExperiences" :key="role.id" class="timeline-row timeline-trigger" type="button" :aria-label="`View details for ${role.position} at ${role.organization}`" @click="openBackground('experience', role)">
-                            <span class="timeline-date">{{ role.start_date }}<br>{{ role.is_current ? 'Present' : role.end_date }}</span>
-                            <span class="timeline-entry">
-                                <span class="organization-mark" aria-hidden="true"><span>{{ initials(role.organization) }}</span><img v-if="role.logo_url" :src="role.logo_url" alt="" loading="lazy" @error="$event.currentTarget.remove()"></span>
-                                <span class="timeline-copy"><span class="meta-line"><span>{{ role.organization }}</span></span><strong class="timeline-heading">{{ role.position }}</strong><span class="timeline-summary">{{ role.summary }}</span><span class="tag-row"><span v-for="item in role.responsibilities" :key="item">{{ item }}</span></span></span>
-                            </span>
-                            <Maximize2 class="timeline-expand" :size="15" aria-hidden="true" />
-                        </button>
-                    </div>
-                    <div class="timeline-group">
-                        <div class="timeline-title"><GraduationCap :size="18" /><span>Education</span></div>
-                        <button v-for="item in education" :key="item.id" class="timeline-row timeline-trigger education-row" type="button" :aria-label="`View details for ${item.program} at ${item.institution}`" @click="openBackground('education', item)">
-                            <span class="timeline-date">{{ item.start_date ? item.start_date + ' – ' : '' }}{{ item.end_date }}</span>
-                            <span class="timeline-entry">
-                                <span class="organization-mark" aria-hidden="true"><span>{{ initials(item.institution) }}</span><img v-if="item.logo_url" :src="item.logo_url" alt="" loading="lazy" @error="$event.currentTarget.remove()"></span>
-                                <span class="timeline-copy"><span class="meta-line"><span>{{ item.level }}</span></span><strong class="timeline-heading">{{ item.program }}</strong><span class="school-name">{{ item.institution }}</span><span v-if="item.description" class="timeline-summary">{{ item.description }}</span></span>
-                            </span>
-                            <Maximize2 class="timeline-expand" :size="15" aria-hidden="true" />
-                        </button>
-                    </div>
-                </div>
-
-                <div v-if="profile.skills?.length" class="skills-index">
-                    <span class="folio-label">Core competencies</span>
-                    <div><span v-for="skill in profile.skills" :key="skill">{{ skill }}</span></div>
-                </div>
-            </section>
-
-            <section v-if="portfolioTools.length" id="tools" class="content-band section-wrap tools-band">
-                <div class="section-head">
-                    <div><span class="folio-label">09 / toolkit</span><h2>Tools & technologies</h2></div>
-                    <p>Frameworks, cloud environments, data platforms, and productivity suites.</p>
-                </div>
-
-                <div class="tool-groups">
-                    <section v-for="category in groupedPortfolioTools" :key="category.key" class="tool-category">
-                        <header class="tool-category-head">
-                            <component :is="category.icon" :size="17" />
-                            <h3>{{ category.label }}</h3>
-                        </header>
-                        <div class="tool-list">
-                            <component
-                                :is="tool.external_url ? 'a' : 'div'"
-                                v-for="tool in category.tools"
-                                :key="tool.id"
-                                class="tool-entry"
-                                :href="tool.external_url || undefined"
-                                :target="tool.external_url ? '_blank' : undefined"
-                                :rel="tool.external_url ? 'noreferrer' : undefined"
-                            >
-                                <span class="tool-mark">
-                                    <img v-if="tool.icon_url" :src="tool.icon_url" :alt="tool.name" loading="lazy">
-                                    <component :is="toolFallbackIcon(tool)" v-else :size="17" />
-                                </span>
-                                <div class="tool-copy">
-                                    <strong>{{ tool.name }}</strong>
-                                    <span v-if="tool.description">{{ tool.description }}</span>
-                                </div>
-                                <ArrowUpRight v-if="tool.external_url" :size="13" />
+                <div class="recognition-window">
+                    <div class="recognition-track" :class="{ 'is-moving': achievements.length > 1 }">
+                        <div v-for="copy in (achievements.length > 1 ? 2 : 1)" :key="copy" class="recognition-group" :aria-hidden="copy === 2 ? 'true' : undefined">
+                            <component :is="recognitionPreviewUrl(achievement) ? 'button' : recognitionUrl(achievement) ? 'a' : 'article'" v-for="achievement in achievements" :key="achievement.id" class="achievement-item" :class="{ 'achievement-preview': recognitionPreviewUrl(achievement) }" :type="recognitionPreviewUrl(achievement) ? 'button' : undefined" :href="!recognitionPreviewUrl(achievement) ? recognitionUrl(achievement) || undefined : undefined" :target="!recognitionPreviewUrl(achievement) && recognitionUrl(achievement) ? '_blank' : undefined" :rel="!recognitionPreviewUrl(achievement) && recognitionUrl(achievement) ? 'noopener noreferrer' : undefined" :aria-label="recognitionPreviewUrl(achievement) ? 'View ' + achievement.title + ' certificate' : undefined" :tabindex="copy === 2 && (recognitionPreviewUrl(achievement) || recognitionUrl(achievement)) ? -1 : undefined" @click="recognitionPreviewUrl(achievement) && openRecognition(achievement, copy)">
+                                <img v-if="achievementLogoUrl(achievement)" :src="achievementLogoUrl(achievement)" :alt="achievement.issuer || achievement.title" loading="lazy" class="achievement-logo" :class="{ 'achievement-programme-logo': recognitionPreviewUrl(achievement) }" @error="$event.target.style.display = 'none'">
+                                <Award v-else :size="32" aria-hidden="true" />
+                                <span class="achievement-copy"><strong>{{ achievement.title }}</strong><span>{{ achievement.issuer }}</span></span>
+                                <ArrowUpRight v-if="!recognitionPreviewUrl(achievement) && recognitionUrl(achievement)" :size="16" class="recognition-arrow" aria-hidden="true" />
                             </component>
                         </div>
-                    </section>
+                    </div>
                 </div>
             </section>
 
-            <section class="collaboration-bridge section-wrap" aria-labelledby="collaboration-title">
-                <div>
-                    <span class="folio-label">10 / collaboration</span>
-                    <h2 id="collaboration-title">Open to innovative projects & research.</h2>
-                    <p>Available for technical systems development, data solutions, IT consulting, and academic collaborations.</p>
+            <section id="work" class="section-container" aria-labelledby="work-heading">
+                <div class="section-header"><h2 id="work-heading">Technology built around people.</h2><p>Web applications, health informatics and practical tools for everyday work.</p></div>
+                <div class="filter-tabs" role="group" aria-label="Filter projects">
+                    <button v-for="category in projectCategories" :key="category.key" type="button" :aria-pressed="activeProjectCategory === category.key" @click="activeProjectCategory = category.key">{{ category.label }}</button>
                 </div>
-                <div class="collaboration-actions">
-                    <Link href="/services">View services catalog<ArrowUpRight :size="15" /></Link>
-                    <a
-                        :href="gmailComposeUrl(profile.email, { subject: 'Project inquiry' })"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >Request a quote<ArrowUpRight :size="15" /></a>
+                <div v-if="activeProjectCategory === 'all'" class="project-index">
+                    <button v-for="project in filteredProjects" :key="project.id" type="button" class="project-index-entry" @click="openProject(project)">
+                        <span class="project-index-heading">
+                            <span class="project-title-line">
+                                <span class="project-mark" :class="{ 'project-mark--white': isAmplifierProject(project) }" aria-hidden="true"><img v-if="projectMarkUrl(project) && !failedProjectMarks.has(project.id)" :src="projectMarkUrl(project)" :class="{ 'is-loaded': loadedProjectMarks.has(project.id) }" alt="" loading="lazy" @load="loadedProjectMarks.add(project.id)" @error="failedProjectMarks.add(project.id)"><span v-if="!loadedProjectMarks.has(project.id) || failedProjectMarks.has(project.id)">{{ projectInitials(project.title) }}</span></span>
+                                <span class="project-title-content"><span class="project-index-meta"><span v-if="project.category">{{ project.category }}</span><span v-if="project.year">{{ project.year }}</span></span><strong>{{ project.title }}</strong></span>
+                            </span>
+                        </span>
+                        <span class="project-index-details">
+                            <span v-if="project.summary" class="project-index-summary">{{ project.summary }}</span>
+                            <span class="project-index-action">View project <ArrowUpRight :size="18" aria-hidden="true" /></span>
+                        </span>
+                    </button>
+                </div>
+                <div v-else class="projects-grid">
+                    <button v-for="project in filteredProjects" :key="project.id" type="button" class="project-card" @click="openProject(project)">
+                        <div class="project-copy"><div class="project-title-line"><span class="project-mark" :class="{ 'project-mark--white': isAmplifierProject(project) }" aria-hidden="true"><img v-if="projectMarkUrl(project) && !failedProjectMarks.has(project.id)" :src="projectMarkUrl(project)" :class="{ 'is-loaded': loadedProjectMarks.has(project.id) }" alt="" loading="lazy" @load="loadedProjectMarks.add(project.id)" @error="failedProjectMarks.add(project.id)"><span v-if="!loadedProjectMarks.has(project.id) || failedProjectMarks.has(project.id)">{{ projectInitials(project.title) }}</span></span><div class="project-title-content"><span class="content-category">{{ project.category }}</span><h3>{{ project.title }}</h3></div></div><p>{{ project.summary }}</p><span class="text-link">Project details <ArrowUpRight :size="16" aria-hidden="true" /></span></div>
+                    </button>
+                </div>
+                <p v-if="!filteredProjects.length" class="empty-state">No projects in this category yet. Choose another category to keep exploring.</p>
+            </section>
+
+            <section id="services" class="section-container" aria-labelledby="services-heading">
+                <div class="section-header"><h2 id="services-heading">Technology Solutions Built for Real-World Challenges.</h2><p>Practical technology solutions that help organizations strengthen security, modernize infrastructure, automate workflows, and turn information into better decisions.</p></div>
+                <div class="services-grid">
+                    <article class="service-item" @pointerenter="(event) => event.pointerType === 'mouse' && scheduleConnection()" @pointerleave="hideConnection" @focusin="scheduleConnection" @focusout="hideConnection">
+                        <ShieldCheck :size="32" aria-hidden="true" /><h3>Cybersecurity assessments</h3>
+                        <div class="connection-copy">
+                            <p :class="{ 'connection-copy-hidden': connectionOpen }" :aria-hidden="connectionOpen">Identify security vulnerabilities, evaluate risks, and strengthen digital defenses through practical security assessments and actionable recommendations, backed by expertise as a DICT-registered Cybersecurity Professional.</p>
+                            <div v-if="connectionOpen" id="connection-details" class="connection-preview">
+                                <p>Your digital footprint offers a glimpse into Every time you visit a website, your connection and browser can expose information about your digital identity including:</p>
+                                <div v-if="connectionLoading" class="connection-skeleton" role="status" aria-label="Checking your connection"><span v-for="line in 4" :key="line" aria-hidden="true"></span></div>
+                                <p v-else class="connection-details" role="status" :aria-label="connectionResult || 'Checking your connection'"><span aria-hidden="true">{{ connectionText }}</span></p>
+                                <p>These data are shared in your browser.</p>
+                            </div>
+                            <span v-else id="connection-details" hidden></span>
+                        </div>
+                        <Link href="/services#network-consulting" class="text-link">Strengthen your security <ArrowUpRight :size="16" aria-hidden="true" /></Link>
+                        <button type="button" class="connection-toggle" :aria-expanded="connectionOpen" aria-controls="connection-details" @click="toggleConnection">{{ connectionPinned ? 'Hide connection details' : 'Hover to inspect your connection' }}</button>
+                    </article>
+                    <article class="service-item network-service" @pointerenter="(event) => event.pointerType === 'mouse' && scheduleNetwork()" @pointerleave="hideNetwork" @focusin="scheduleNetwork" @focusout="hideNetwork">
+                        <Network :size="32" aria-hidden="true" /><h3>Network consulting</h3>
+                        <div class="connection-copy">
+                            <p :class="{ 'connection-copy-hidden': networkOpen }" :aria-hidden="networkOpen">Design, configure, and optimize secure, reliable networks using MikroTik and Cisco technologies, specializing in VLAN segmentation, routing, firewall configuration, WAN failover, and network troubleshooting.</p>
+                            <div v-if="networkOpen" id="network-preview" class="network-details"><ul class="network-checklist" :aria-label="networkDescription.replaceAll('\n', ', ')"><li v-for="(item, index) in networkText.split('\n').filter(Boolean)" :key="index" aria-hidden="true"><span class="network-check" aria-hidden="true">✓</span>{{ item }}</li></ul><a href="https://mikrotik.com/consultants?category=consultants&amp;f%5B0%5D=cert%3AMTCNA&amp;f%5B1%5D=cert%3AMTCRE&amp;f%5B2%5D=cert%3AMTCUME&amp;region=Philippines" target="_blank" rel="noopener noreferrer">Verify in MikroTik consultant directory <ArrowUpRight :size="14" aria-hidden="true" /></a></div><span v-else id="network-preview" hidden></span>
+                        </div>
+                        <Link href="/services#network-consulting" class="text-link">Explore network services <ArrowUpRight :size="16" aria-hidden="true" /></Link>
+                        <button type="button" class="connection-toggle" :aria-expanded="networkOpen" aria-controls="network-preview" @click="toggleNetwork">{{ networkPinned ? 'Hide network details' : 'Explore network capabilities' }}</button>
+                    </article>
+                    <article class="service-item web-service" @pointerenter="(event) => event.pointerType === 'mouse' && scheduleWeb()" @pointerleave="hideWeb" @focusin="scheduleWeb" @focusout="hideWeb">
+                        <Code2 :size="32" aria-hidden="true" /><h3>Web &amp; information systems</h3>
+                        <div class="connection-copy">
+                            <p :class="{ 'connection-copy-hidden': webOpen }" :aria-hidden="webOpen">Develop scalable, user-centered web applications and information systems using Laravel, Vue, and Inertia, transforming complex business processes into efficient, accessible digital solutions.</p>
+                            <div v-if="webOpen" id="web-preview" class="web-technologies"><p>Languages and technologies I work with:</p><ul aria-label="Development languages and technologies"><li v-for="technology in webTechnologies.slice(0, webVisibleCount)" :key="technology"><img :src="getIconifyLogoUrl(technology)" alt="" width="24" height="24"><span>{{ technology }}</span></li></ul></div><span v-else id="web-preview" hidden></span>
+                        </div>
+                        <Link href="/services#web-systems" class="text-link">Web systems <ArrowUpRight :size="16" aria-hidden="true" /></Link>
+                        <button type="button" class="connection-toggle" :aria-expanded="webOpen" aria-controls="web-preview" @click="toggleWeb">{{ webPinned ? 'Hide technologies' : 'Explore technologies' }}</button>
+                    </article>
+                    <article class="service-item data-service" @pointerenter="(event) => event.pointerType === 'mouse' && scheduleData()" @pointerleave="hideData" @focusin="scheduleData" @focusout="hideData">
+                        <BarChart3 :size="32" aria-hidden="true" /><h3>Data &amp; decision support</h3>
+                        <div class="connection-copy">
+                            <p :class="{ 'connection-copy-hidden': dataOpen }" :aria-hidden="dataOpen">Transform complex data into meaningful insights through interactive Power BI dashboards, data analytics, reporting systems, and predictive models that support informed, evidence-based decisions.</p>
+                            <div v-if="dataOpen" id="data-preview" class="data-preview">
+                                <p class="data-title">Profile views (adjusted)</p>
+                                <template v-if="weeklyViews.length">
+                                    <p v-if="visitStats.weekly && Number.isFinite(visitStats.weekly.count)" class="data-week">{{ adjustedWeeklyViews.toLocaleString() }} this week <span>(from {{ visitStats.weekly.start }})</span></p>
+                                    <p v-else class="data-week">Weekly count unavailable</p>
+                                    <svg class="data-line-chart" viewBox="0 0 300 112" role="img" :aria-label="weeklyViews.map(item => `${item.label} ${item.date}: ${item.count === null ? 'no data' : `${item.count} adjusted page views`}`).join('; ')">
+                                        <path d="M20 90H280" class="data-axis" />
+                                        <path :d="chartPath" class="data-line" />
+                                        <g v-for="point in chartPoints" :key="point.date"><g v-if="point.y !== null" class="data-point-group" tabindex="0" :aria-label="`${point.label}: ${point.count} adjusted page views`"><circle :cx="point.x" :cy="point.y" r="10" class="data-hit-area"/><circle :cx="point.x" :cy="point.y" r="3" class="data-point"/><text :x="point.x" :y="point.y - 9" text-anchor="middle" class="data-point-value">{{ point.count }}</text></g><text :x="point.x" y="107" text-anchor="middle" class="data-label">{{ point.label }}</text></g>
+                                    </svg>
+                                </template>
+                                <p v-else class="data-note">Page-view data is unavailable.</p>
+                            </div>
+                            <span v-else id="data-preview" hidden></span>
+                        </div>
+                        <Link href="/services#data-analytics" class="text-link">Data analytics <ArrowUpRight :size="16" aria-hidden="true" /></Link>
+                        <button type="button" class="connection-toggle" :aria-expanded="dataOpen" aria-controls="data-preview" @click="toggleData">{{ dataPinned ? 'Hide page-view chart' : 'View page-view chart' }}</button>
+                    </article>
+                    <article class="service-item" @pointerenter="(event) => event.pointerType === 'mouse' && scheduleExtra('health')" @pointerleave="hideExtra('health', $event)" @focusin="scheduleExtra('health')" @focusout="hideExtra('health', $event)">
+                        <HeartPulse :size="32" aria-hidden="true" /><h3>Health information systems</h3>
+                        <div class="connection-copy"><p :class="{ 'connection-copy-hidden': extraOpen.health }" :aria-hidden="extraOpen.health">Support hospitals and healthcare facilities in adopting and improving electronic medical records, clinical information systems, and digital health workflows through implementation guidance, training, and technical support.</p><ul v-if="extraOpen.health" id="health-preview" class="network-checklist" :aria-label="healthDetails.join(', ')"><li v-for="item in healthDetails.slice(0, extraVisible.health)" :key="item" aria-hidden="true"><span class="network-check" aria-hidden="true">✓</span>{{ item }}</li></ul><span v-else id="health-preview" hidden></span></div>
+                        <Link href="/services#health-information-systems" class="text-link">Health systems <ArrowUpRight :size="16" aria-hidden="true" /></Link><button type="button" class="connection-toggle" :aria-expanded="extraOpen.health" aria-controls="health-preview" @click="toggleExtra('health')">{{ extraPinned.health ? 'Hide health services' : 'Explore health services' }}</button>
+                    </article>
+                    <article class="service-item" @pointerenter="(event) => event.pointerType === 'mouse' && scheduleExtra('ai')" @pointerleave="hideExtra('ai', $event)" @focusin="scheduleExtra('ai')" @focusout="hideExtra('ai', $event)">
+                        <Bot :size="32" aria-hidden="true" /><h3>AI &amp; workflow automation</h3>
+                        <div class="connection-copy"><p :class="{ 'connection-copy-hidden': extraOpen.ai }" :aria-hidden="extraOpen.ai">Streamline operations through AI-powered solutions, intelligent workflow automation, and integrated systems using tools such as n8n and local AI models, reducing repetitive tasks while maintaining human oversight.</p><div v-if="extraOpen.ai" id="ai-preview" class="web-technologies"><p>AI and automation tools I work with:</p><ul :aria-label="`AI and automation tools: ${automationTools.join(', ')}`"><li v-for="tool in automationTools.slice(0, extraVisible.ai)" :key="tool" aria-hidden="true"><img :src="getIconifyLogoUrl(tool)" alt="" width="24" height="24" @error="(event) => event.target.style.visibility = 'hidden'"><span>{{ tool }}</span></li></ul></div><span v-else id="ai-preview" hidden></span></div>
+                        <Link href="/services#ai-automation" class="text-link">AI &amp; automation <ArrowUpRight :size="16" aria-hidden="true" /></Link><button type="button" class="connection-toggle" :aria-expanded="extraOpen.ai" aria-controls="ai-preview" @click="toggleExtra('ai')">{{ extraPinned.ai ? 'Hide automation details' : 'Explore automation services' }}</button>
+                    </article>
+                </div>
+                <div class="services-action"><Link href="/services" class="primary-btn">Explore all services <ArrowUpRight :size="18" aria-hidden="true" /></Link></div>
+            </section>
+
+            <section id="designs" class="section-container" aria-labelledby="designs-heading">
+                <div class="section-header"><h2 id="designs-heading">Creative Portfolio</h2><p>A selection of my creative works featuring graphic designs, a magazine, and a video production.</p></div>
+                <div class="design-grid">
+                    <button type="button" class="design-card" @click="openCreativeMagazine"><div class="design-image creative-cover"><img :src="'/creative-assets/magazine/page-0001.jpg'" alt="" loading="lazy"></div><span class="creative-label">Digital magazine</span></button>
+                    <button v-if="graphicSamples.length" type="button" class="design-card" @click="openGraphicGallery"><div class="creative-fan" aria-hidden="true"><img v-for="(media, index) in graphicSamples" :key="media.id" :class="`creative-fan-${index}`" :src="media.preview_url || media.thumbnail_url || media.media_url" alt="" loading="lazy"></div><span class="creative-label">Graphic design</span></button>
+                    <button v-if="creativeVideo" type="button" class="design-card design-video-card" @click="openDesign(creativeVideo)"><div class="design-image creative-video"><img :src="'/creative-assets/palakasan-preview.png'" alt="" loading="lazy"></div><span class="creative-label">Video production</span></button>
+                </div>
+                <div class="creative-actions">
+                    <h3>Have a Creative Project in Mind?</h3>
+                    <p>Let's bring your ideas to life through compelling designs, digital publications, and video content.</p>
+                    <a href="/services#digital-publications" class="primary-btn">Let's Work Together <ArrowUpRight :size="16" aria-hidden="true" /></a>
                 </div>
             </section>
 
-            <footer class="section-wrap footer">
-                <div><span class="folio-label">End / index</span><h2>Let the work speak.<br>Then let&#39;s talk.</h2></div>
-                <div class="footer-links">
-                    <a v-if="profile.email" :href="gmailComposeUrl(profile.email)" target="_blank" rel="noreferrer">{{ profile.email }}<ArrowUpRight :size="14" /></a>
-                    <a v-for="link in profile.external_links" :key="link.url" :href="link.url" target="_blank" rel="noreferrer">{{ link.label }}<ArrowUpRight :size="14" /></a>
+            <section id="credentials" class="section-container" aria-labelledby="credentials-heading">
+                <div class="section-header"><h2 id="credentials-heading">Expertise Backed by Credentials.</h2><p>Explore my professional certifications, verified digital badges, and continuous learning across technology, networking, cybersecurity, and information systems.</p></div>
+                <div class="credentials-layout">
+                    <div class="credentials-grid">
+                        <div v-for="badge in visibleBadges" :key="badge.id" class="credential-slot"><button type="button" class="credential-card" :aria-label="`${badge.name}, ${badge.issuer}. View badge details`" @click="openBadge(badge)">
+                            <img :src="badge.image_url" alt="" loading="lazy" width="100" height="100" @error="$event.target.style.visibility = 'hidden'">
+                            <span class="credential-copy"><strong>{{ badge.name }}</strong><span>{{ badge.issuer }}</span></span>
+                        </button></div>
+                    </div>
                 </div>
-            </footer>
+                <div class="archive-actions"><Link href="/badges" class="secondary-btn">Browse all certifications and badges <ArrowUpRight :size="18" aria-hidden="true" /></Link></div>
+            </section>
+
+            <section id="publications" class="section-container" aria-labelledby="publications-heading">
+                <div class="section-header"><h2 id="publications-heading">Research &amp; Published Works.</h2><p>Explore my published research, scholarly contributions, and digital publications spanning information technology, innovation, and creative communication.</p></div>
+                <div class="publication-controls"><label for="publication-search">Find a publication<input id="publication-search" v-model="publicationSearch" type="search" placeholder="Search by title or topic"></label><div class="filter-tabs" role="group" aria-label="Filter publications"><button v-for="type in workTypes" :key="type.key" type="button" :aria-pressed="activeWorkType === type.key" @click="activeWorkType = type.key">{{ type.label }}</button></div></div>
+                <div v-if="publishedWorks.length" class="research-book" aria-label="Research and publication pages" :style="workBookHeight ? { '--research-book-height': `${workBookHeight}px` } : null">
+                    <div ref="workMeasurements" class="research-measurements" aria-hidden="true" inert>
+                        <PublicationSpread v-for="work in publishedWorks" :key="work.id" :work="work" @media-load="scheduleWorkBookMeasure" />
+                    </div>
+                    <div v-if="currentWork" :key="workBookRevision" class="research-book-viewport" :class="{ 'is-measured': workBookHeight > 0 }" :aria-busy="workTurning">
+                    <Transition :name="workTurnDirection > 0 ? 'book-next' : workTurnDirection < 0 ? 'book-previous' : 'book-reset'" :duration="workTurnDirection && !reducedMotion ? 560 : 0" @before-leave="retireWorkPage" @after-enter="workTurning = false" @enter-cancelled="workTurning = false">
+                        <PublicationSpread :key="currentWork.id" :work="currentWork" @media-load="scheduleWorkBookMeasure" />
+                    </Transition>
+                    </div>
+                    <div v-if="currentWork" class="research-navigation" aria-label="Publication navigation">
+                        <button type="button" :disabled="workPage === 0" :aria-disabled="workTurning || workPage === 0" @click="turnWorkPage(-1)">Previous</button>
+                        <span aria-live="polite">{{ workPage + 1 }} / {{ filteredWorks.length }}</span>
+                        <button type="button" :disabled="workPage >= filteredWorks.length - 1" :aria-disabled="workTurning || workPage >= filteredWorks.length - 1" @click="turnWorkPage(1)">Next</button>
+                    </div>
+                </div>
+                <p v-if="!filteredWorks.length" class="empty-state">No publications match this search. Try another title or topic.</p>
+            </section>
+
+            <section id="github-activity" class="section-container" aria-labelledby="github-activity-heading">
+                <div class="github-heading"><div><h2 id="github-activity-heading">GitHub activity.</h2><p>Public contributions over time.</p></div><a v-if="githubProfileUrl" :href="githubProfileUrl" class="text-link" target="_blank" rel="noopener noreferrer"><span class="profile-link-logo" style="mask-image: url(https://api.iconify.design/simple-icons/github.svg)" aria-hidden="true"></span>View GitHub profile <ArrowUpRight :size="16" aria-hidden="true" /></a></div>
+                <template v-if="githubActivity && githubActivity.source !== 'empty' && githubWeeks.length">
+                    <p class="github-summary"><strong v-if="githubActivity.total !== null && githubActivity.total !== undefined">{{ githubActivity.total.toLocaleString() }} contributions</strong><span v-else>Contribution activity</span><span v-if="githubActivity.source === 'snapshot'"> · Historical snapshot</span></p>
+                    <div class="github-scroll" tabindex="0" aria-label="GitHub contribution calendar; scroll horizontally to see all dates">
+                        <div class="github-calendar" aria-label="Daily GitHub contribution activity">
+                            <div v-for="week in githubWeeks" :key="week.start_date" class="github-week"><span class="github-month" aria-hidden="true">{{ week.monthLabel }}</span><span v-for="day in week.days" :key="day.date" class="github-day" :class="`github-level-${day.level}`" :style="{ gridRow: new Date(`${day.date}T00:00:00Z`).getUTCDay() + 2 }" role="img" :aria-label="githubDayLabel(day)" :title="githubDayLabel(day)"></span></div>
+                        </div>
+                    </div>
+                    <div class="github-legend" aria-hidden="true"><span>Less</span><i v-for="level in 5" :key="level" class="github-day" :class="`github-level-${level - 1}`"></i><span>More</span></div>
+                </template>
+                <p v-else class="github-unavailable">GitHub activity is currently unavailable.</p>
+            </section>
+
+            <section id="experience" class="section-container" aria-labelledby="experience-heading">
+                <div id="background" class="anchor-alias" aria-hidden="true"></div>
+                <div class="section-header"><h2 id="experience-heading">Experience &amp; education.</h2><p>A journey of professional experience and academic growth across information technology, systems development, cybersecurity, research, and digital innovation.</p></div>
+                <div class="experience-grid">
+                    <div class="experience-column" aria-labelledby="work-experience-heading">
+                        <h3 id="work-experience-heading" class="column-heading">Work experience</h3>
+                        <div v-for="group in experienceGroups" :key="group.id" class="employer-group" :class="{ 'employer-group--progression': group.roles.length > 1 }">
+                            <div v-if="group.roles.length > 1" class="employer-heading">
+                                <img v-if="group.logoUrl" :src="group.logoUrl" alt="" class="organization-logo" width="40" height="40" loading="lazy" @error="$event.target.style.display = 'none'">
+                                <BriefcaseBusiness v-else-if="isFreelanceExperience(group.roles[0])" class="organization-logo" :size="40" :stroke-width="1.5" aria-hidden="true" />
+                                <h4>{{ group.organization }}</h4>
+                            </div>
+                            <article v-for="experience in group.roles" :key="experience.id" class="career-role">
+                                <div class="career-heading">
+                                    <img v-if="group.roles.length === 1 && experience.logo_url" :src="experience.logo_url" alt="" class="organization-logo" width="40" height="40" loading="lazy" @error="$event.target.style.display = 'none'">
+                                    <BriefcaseBusiness v-else-if="group.roles.length === 1 && isFreelanceExperience(experience)" class="organization-logo" :size="40" :stroke-width="1.5" aria-hidden="true" />
+                                    <div class="career-identity">
+                                        <component :is="group.roles.length > 1 ? 'h5' : 'h4'" class="role-title">{{ experience.position }}</component>
+                                        <p v-if="group.roles.length === 1" class="career-organization">{{ experience.organization }}</p>
+                                        <p v-if="experienceDates(experience)" class="career-dates">{{ experienceDates(experience) }}</p>
+                                        <button type="button" class="job-description-btn text-link" aria-haspopup="dialog" :aria-label="'View job description for ' + experience.position + ' at ' + experience.organization" @click="openJobDescription(experience)">View job description <ArrowUpRight :size="16" aria-hidden="true" /></button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        <p v-if="!workExperiences.length" class="empty-state">Work experience will be added here.</p>
+                    </div>
+                    <div class="education-column" aria-labelledby="education-heading">
+                        <h3 id="education-heading" class="column-heading">Education</h3>
+                        <article v-for="item in education" :key="item.id" class="education-entry">
+                            <img v-if="item.logo_url" :src="item.logo_url" alt="" class="organization-logo" width="200" loading="lazy" @error="$event.target.style.display = 'none'">
+                            <div class="education-identity">
+                                <h4>{{ item.program }}</h4>
+                                <p class="education-institution">{{ item.institution }}</p>
+                                <p v-if="item.end_date || item.level" class="education-date">{{ item.end_date ? `Graduated: ${item.end_date}` : item.level }}</p>
+                                <p v-if="item.description" class="education-description">{{ item.description }}</p>
+                            </div>
+                        </article>
+                        <p v-if="!education.length" class="empty-state">Education details will be added here.</p>
+                    </div>
+                </div>
+            </section>
+
+
+
+            <section id="tools" class="section-container" aria-labelledby="tools-heading">
+                <div class="section-header"><h2 id="tools-heading">The tools behind the work.</h2><p>Technologies I use across development, data, design and infrastructure.</p></div>
+                <div class="tools-grid"><article v-for="category in groupedPortfolioTools" :key="category.key" class="tool-category"><h3>{{ category.label }}</h3><ul><li v-for="tool in category.tools" :key="tool.id"><img v-if="toolIconUrl(tool)" :src="toolIconUrl(tool)" alt="" width="24" height="24" loading="lazy" @error="$event.target.style.display = 'none'"><span>{{ tool.name }}</span></li></ul></article></div>
+            </section>
+
+            <section id="contact" class="section-container contact-section" aria-labelledby="contact-heading">
+                <div class="contact-intro">
+                    <p class="contact-kicker">LET'S CONNECT</p>
+                    <h2 id="contact-heading">Have an idea? Let's make it work.</h2>
+                    <p>From digital transformation and infrastructure to custom software and research, I'd love to hear what you're building.</p>
+                    <div class="contact-options" aria-label="Contact options">
+                        <a v-if="profile.email" :href="gmailComposeUrl(profile.email, { subject: 'Portfolio Inquiry', body: collaborationMessage })" target="_blank" rel="noopener noreferrer" class="contact-icon contact-gmail" aria-label="Compose a message in Gmail" title="Compose a message in Gmail"><span aria-hidden="true"></span><img src="https://api.iconify.design/logos/google-gmail.svg" alt="" aria-hidden="true"></a>
+                        <a v-if="profile.email" :href="`mailto:${profile.email}?subject=${encodeURIComponent('Portfolio Inquiry')}&body=${encodeURIComponent(collaborationMessage)}`" class="contact-icon" aria-label="Compose a message in your email app" title="Compose a message in your email app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m3 6 9 7 9-7"/></svg></a>
+                        <a v-if="linkedinProfileUrl" :href="linkedinProfileUrl" target="_blank" rel="noopener noreferrer" class="contact-icon contact-linkedin" aria-label="Visit LinkedIn profile" title="Visit LinkedIn profile"><span aria-hidden="true"></span></a>
+                    </div>
+                    <div v-if="profile.email" class="contact-email-row"><a :href="`mailto:${profile.email}`" class="contact-email">{{ profile.email }}</a>
+                    <button type="button" class="copy-email" aria-label="Copy email address" title="Copy email address" @click="copyContactEmail"><Copy :size="14" aria-hidden="true" /></button></div><span class="copy-status" role="status">{{ copyEmailStatus }}</span>
+                </div>
+                <div v-if="profile.email" class="inquiry-card">
+                    <h3>Start a conversation</h3>
+                    <p>Tell me about your project and I'll get back to you.</p>
+                    <form class="guestbook-form" @submit.prevent="submitInquiry" :aria-busy="inquiry.processing">
+                        <div v-if="inquiry.errors.inquiry" class="form-errors" role="alert">{{ inquiry.errors.inquiry }}</div>
+                        <div class="form-row">
+                            <label for="inquiry-name">Your name<input id="inquiry-name" v-model="inquiry.name" type="text" autocomplete="name" maxlength="120" required :aria-invalid="Boolean(inquiry.errors.name)" :aria-describedby="inquiry.errors.name ? 'inquiry-name-error' : undefined"><span v-if="inquiry.errors.name" id="inquiry-name-error" class="field-error">{{ inquiry.errors.name }}</span></label>
+                            <label for="inquiry-email">Email address<input id="inquiry-email" v-model="inquiry.email" type="email" autocomplete="email" maxlength="255" required :aria-invalid="Boolean(inquiry.errors.email)" :aria-describedby="inquiry.errors.email ? 'inquiry-email-error' : undefined"><span v-if="inquiry.errors.email" id="inquiry-email-error" class="field-error">{{ inquiry.errors.email }}</span></label>
+                        </div>
+                        <label for="inquiry-category">What can I help you with?<select id="inquiry-category" v-model="inquiry.category" name="inquiry-category" :aria-invalid="Boolean(inquiry.errors.category)" :aria-describedby="inquiry.errors.category ? 'inquiry-category-error' : undefined"><option v-for="category in inquiryCategories" :key="category" :value="category">{{ category }}</option></select><span v-if="inquiry.errors.category" id="inquiry-category-error" class="field-error">{{ inquiry.errors.category }}</span></label>
+                        <label for="inquiry-message">Tell me about your project<textarea id="inquiry-message" v-model="inquiry.message" rows="4" maxlength="1500" required placeholder="A little about what you're building or the challenge you're facing..." :aria-invalid="Boolean(inquiry.errors.message)" :aria-describedby="inquiry.errors.message ? 'inquiry-message-error' : undefined"></textarea><span v-if="inquiry.errors.message" id="inquiry-message-error" class="field-error">{{ inquiry.errors.message }}</span></label>
+                        <div class="honeypot" aria-hidden="true"><label for="inquiry-website">Website<input id="inquiry-website" v-model="inquiry.website" type="text" tabindex="-1" autocomplete="off"></label></div>
+                        <button type="submit" :disabled="inquiry.processing" class="primary-btn inquiry-submit">{{ inquiry.processing ? 'Sending...' : 'Send message' }} <ArrowUpRight :size="16" aria-hidden="true" /></button>
+                        <p v-if="inquirySuccess" class="success-message" role="status">{{ inquirySuccess }}</p>
+                    </form>
+                </div>
+
+            </section>
         </main>
 
-        <Transition name="modal">
-            <div v-if="selectedBadge" class="modal-backdrop" role="presentation" @click.self="closeBadge">
-                <article class="badge-modal" role="dialog" aria-modal="true" :aria-labelledby="`badge-title-${selectedBadge.id}`">
-                    <button class="icon-button modal-close" type="button" title="Close" aria-label="Close" @click="closeBadge"><X :size="17" /></button>
-                    <div class="modal-badge">
-                        <img
-                            v-if="selectedBadge.image_url"
-                            :src="selectedBadge.image_url"
-                            :alt="selectedBadge.name"
-                            @error="onBadgeImageError($event)"
-                        >
-                        <span class="badge-fallback" :class="{ 'is-active': !selectedBadge.image_url }">{{ initials(selectedBadge.name) }}</span>
-                    </div>
-                    <span class="folio-label">{{ selectedBadge.issuer || 'Verified credential' }}</span>
-                    <h2 :id="`badge-title-${selectedBadge.id}`">{{ selectedBadge.name }}</h2>
-                    <p>{{ selectedBadge.description }}</p>
-                    <dl><div><dt>Issued</dt><dd>{{ selectedBadge.issued_at || 'Public profile' }}</dd></div><div v-if="selectedBadge.expires_at"><dt>Expires</dt><dd>{{ selectedBadge.expires_at }}</dd></div></dl>
-                    <div class="tag-row"><span v-for="skill in selectedBadge.skills" :key="skill">{{ skill }}</span></div>
-                    <div class="modal-actions"><a v-if="selectedBadge.certificate_url" :href="selectedBadge.certificate_url" target="_blank" rel="noreferrer">Open certificate<ExternalLink :size="14" /></a><a v-if="selectedBadge.criteria_url" :href="selectedBadge.criteria_url" target="_blank" rel="noreferrer">Criteria<ArrowUpRight :size="14" /></a></div>
-                </article>
-            </div>
-        </Transition>
-
-        <Transition name="modal">
-            <div v-if="selectedCertificate" class="modal-backdrop" role="presentation" @click.self="closeCertificate">
-                <article class="badge-modal certificate-modal" role="dialog" aria-modal="true" :aria-labelledby="'certificate-title-' + selectedCertificate.id">
-                    <button class="icon-button modal-close" type="button" title="Close" aria-label="Close" @click="closeCertificate"><X :size="17" /></button>
-                    <div class="modal-badge certificate-provider-mark">
-                        <img v-if="selectedCertificate.thumbnail_url" :src="selectedCertificate.thumbnail_url" :alt="selectedCertificate.provider_name + ' logo'">
-                        <span v-else>{{ selectedCertificate.provider_initials }}</span>
-                    </div>
-                    <span class="folio-label">{{ selectedCertificate.provider_name || selectedCertificate.issuer || 'Certificate' }}</span>
-                    <h2 :id="'certificate-title-' + selectedCertificate.id">{{ selectedCertificate.title }}</h2>
-                    <p v-if="selectedCertificate.description">{{ selectedCertificate.description }}</p>
-                    <dl v-if="selectedCertificate.issued_on || selectedCertificate.verification_code"><div v-if="selectedCertificate.issued_on"><dt>Issued</dt><dd>{{ selectedCertificate.issued_on }}</dd></div><div v-if="selectedCertificate.verification_code"><dt>Verification code</dt><dd>{{ selectedCertificate.verification_code }}</dd></div></dl>
-                    <div v-if="selectedCertificate.tags?.length" class="tag-row"><span v-for="tag in selectedCertificate.tags" :key="tag">{{ tag }}</span></div>
-                    <div class="modal-actions">
-                        <a v-if="selectedCertificate.file_url" :href="selectedCertificate.file_url" target="_blank" rel="noreferrer">Verify credential<ArrowUpRight :size="14" /></a>
-                        <span v-else class="certificate-privacy-note">Original document withheld for privacy</span>
-                    </div>
-                </article>
-            </div>
-        </Transition>
-
-        <Transition name="modal">
-            <div v-if="selectedBackground" class="modal-backdrop" role="presentation" @click.self="closeBackground">
-                <article class="badge-modal background-modal" role="dialog" aria-modal="true" :aria-labelledby="`background-title-${selectedBackground.type}-${selectedBackground.item.id}`">
-                    <button class="icon-button modal-close" type="button" title="Close" aria-label="Close" @click="closeBackground"><X :size="17" /></button>
-                    <div class="modal-badge background-organization-mark">
-                        <img v-if="selectedBackground.item.logo_url" :src="selectedBackground.item.logo_url" :alt="`${selectedBackground.type === 'education' ? selectedBackground.item.institution : selectedBackground.item.organization} logo`">
-                        <span v-else>{{ initials(selectedBackground.type === 'education' ? selectedBackground.item.institution : selectedBackground.item.organization) }}</span>
-                    </div>
-                    <span class="folio-label">{{ selectedBackground.type === 'education' ? 'Education' : 'Experience' }}</span>
-                    <h2 :id="`background-title-${selectedBackground.type}-${selectedBackground.item.id}`">{{ selectedBackground.type === 'education' ? selectedBackground.item.program : selectedBackground.item.position }}</h2>
-                    <p class="background-modal-organization">{{ selectedBackground.type === 'education' ? selectedBackground.item.institution : selectedBackground.item.organization }}</p>
-                    <p v-if="selectedBackground.type === 'education' && selectedBackground.item.level" class="background-modal-level">{{ selectedBackground.item.level }}</p>
-                    <p v-if="selectedBackground.type === 'experience' && selectedBackground.item.summary" class="background-modal-summary">{{ selectedBackground.item.summary }}</p>
-                    <dl>
-                        <div><dt>Started</dt><dd>{{ selectedBackground.item.start_date }}</dd></div>
-                        <div><dt>{{ selectedBackground.type === 'experience' && selectedBackground.item.is_current ? 'Status' : 'Completed' }}</dt><dd>{{ selectedBackground.type === 'experience' && selectedBackground.item.is_current ? 'Present' : selectedBackground.item.end_date }}</dd></div>
-                    </dl>
-                    <div v-if="(selectedBackground.type === 'education' ? selectedBackground.item.activities : selectedBackground.item.responsibilities)?.length" class="background-detail-list">
-                        <span class="folio-label">{{ selectedBackground.type === 'education' ? 'Activities and distinctions' : 'Responsibilities' }}</span>
-                        <ul><li v-for="detail in (selectedBackground.type === 'education' ? selectedBackground.item.activities : selectedBackground.item.responsibilities)" :key="detail">{{ detail }}</li></ul>
-                    </div>
-                </article>
-            </div>
-        </Transition>
-
-        <Transition name="modal">
-            <div v-if="selectedDesign" class="modal-backdrop" role="presentation" @click.self="closeDesign">
-                <article class="design-modal" role="dialog" aria-modal="true" :aria-labelledby="`design-title-${selectedDesign.id}`">
-                    <button class="icon-button modal-close" type="button" title="Close" aria-label="Close" @click="closeDesign"><X :size="17" /></button>
-                    <div class="design-modal-media">
-                        <video v-if="selectedDesign.media_type === 'video'" controls autoplay playsinline :poster="selectedDesign.thumbnail_url || undefined"><source :src="selectedDesign.media_url"></video>
-                        <iframe v-else-if="selectedDesign.media_type === 'pdf'" :src="`${selectedDesign.media_url}#page=1&toolbar=0&navpanes=0`" :title="selectedDesign.title"></iframe>
-                        <img v-else :src="selectedDesign.media_url" :alt="selectedDesign.title">
-                    </div>
-                    <div class="design-modal-copy">
-                        <span class="folio-label">{{ selectedDesign.type_label }} / {{ selectedDesign.year || 'Portfolio' }}</span>
-                        <h2 :id="`design-title-${selectedDesign.id}`">{{ selectedDesign.title }}</h2>
-                        <p v-if="selectedDesign.description">{{ selectedDesign.description }}</p>
-                        <a v-if="selectedDesign.external_url" class="inline-link" :href="selectedDesign.external_url" target="_blank" rel="noreferrer">View source<ArrowUpRight :size="14" /></a>
-                    </div>
-                </article>
-            </div>
-        </Transition>
-
-        <Transition name="modal">
-            <div v-if="selectedProject" class="modal-backdrop" role="presentation" @click.self="closeProject">
-                <article class="project-modal" role="dialog" aria-modal="true" :aria-labelledby="`project-title-${selectedProject.id}`">
-                    <button class="icon-button modal-close" type="button" title="Close" aria-label="Close" @click="closeProject"><X :size="17" /></button>
-                    <div class="project-modal-media">
-                        <iframe
-                            v-if="isPowerBiProject(selectedProject)"
-                            :src="selectedProject.url"
-                            :title="`${selectedProject.title} interactive Power BI report`"
-                            allow="fullscreen"
-                        />
-                        <img v-else-if="selectedProject.thumbnail_url" :src="selectedProject.thumbnail_url" :alt="`${selectedProject.title} screenshot`">
-                        <div v-else class="project-modal-placeholder" aria-hidden="true">
-                            <component :is="projectIcon(selectedProject.category)" :size="48" />
+        <Transition name="dialog">
+            <div v-if="dialogOpen" class="modal-overlay" :class="{ 'video-overlay': selectedDesign?.media_type === 'video', 'magazine-overlay': selectedDesign?.media_type === 'magazine', 'gallery-overlay': selectedDesign?.media_type === 'gallery' }" @click.self="closeDialog">
+                <section class="modal-card" :class="{ 'project-modal': selectedProject, 'recognition-modal': selectedRecognition, 'experience-modal': selectedExperience, 'video-modal': selectedDesign?.media_type === 'video', 'magazine-modal': selectedDesign?.media_type === 'magazine', 'gallery-modal': selectedDesign?.media_type === 'gallery' }" role="dialog" aria-modal="true" aria-labelledby="detail-title" tabindex="-1">
+                    <button type="button" class="close-btn" @click="closeDialog" aria-label="Close details"><X :size="22" aria-hidden="true" /></button>
+                    <template v-if="selectedExperience">
+                        <img v-if="selectedExperience.logo_url" :src="selectedExperience.logo_url" alt="" class="experience-modal-logo" @error="$event.target.style.display = 'none'">
+                        <BriefcaseBusiness v-else-if="isFreelanceExperience(selectedExperience)" class="experience-modal-logo experience-modal-freelance" :size="64" :stroke-width="1.5" aria-hidden="true" />
+                        <h2 id="detail-title">{{ selectedExperience.position }}</h2>
+                        <p class="content-category">{{ selectedExperience.organization }}</p>
+                        <p v-if="experienceDates(selectedExperience)" class="career-dates">{{ experienceDates(selectedExperience) }}</p>
+                        <h3 v-if="isFreelanceExperience(selectedExperience) && selectedExperience.summary">Job Description</h3>
+                        <p v-if="selectedExperience.summary" class="job-description-summary">{{ selectedExperience.summary }}</p>
+                        <div v-if="experienceContributions(selectedExperience).length" class="job-description-details">
+                            <h3>{{ isFreelanceExperience(selectedExperience) ? 'Key Responsibilities' : 'Responsibilities' }}</h3>
+                            <template v-if="isFreelanceExperience(selectedExperience)">
+                                <div v-for="(group, index) in freelanceResponsibilityGroups(selectedExperience)" :key="index" class="freelance-responsibility-group">
+                                    <h4 v-if="group.heading">{{ group.heading }}</h4>
+                                    <ul v-if="group.heading && group.items.length">
+                                        <li v-for="(item, itemIndex) in group.items" :key="itemIndex">{{ item }}</li>
+                                    </ul>
+                                    <p v-else-if="!group.heading">{{ group.items[0] }}</p>
+                                </div>
+                            </template>
+                            <ol v-else>
+                                <li v-for="(contribution, index) in experienceContributions(selectedExperience)" :key="index">{{ contribution }}</li>
+                            </ol>
                         </div>
-                    </div>
-                    <div class="project-modal-copy">
-                        <span class="folio-label">{{ selectedProject.category || 'Selected project' }} / {{ selectedProject.year || 'Portfolio' }}</span>
-                        <h2 :id="`project-title-${selectedProject.id}`">{{ selectedProject.title }}</h2>
-                        <p>{{ selectedProject.summary }}</p>
-                        <dl>
-                            <div><dt>Format</dt><dd>{{ isPowerBiProject(selectedProject) ? 'Interactive dashboard' : selectedProject.category || 'Digital project' }}</dd></div>
-                            <div v-if="selectedProject.year"><dt>Year</dt><dd>{{ selectedProject.year }}</dd></div>
-                        </dl>
-                        <div class="tag-row"><span v-for="tag in selectedProject.tags" :key="tag">{{ tag }}</span></div>
-                        <div class="modal-actions">
-                            <a v-if="selectedProject.url" :href="selectedProject.url" target="_blank" rel="noreferrer">{{ isPowerBiProject(selectedProject) ? 'Open dashboard' : 'Open project' }}<ArrowUpRight :size="14" /></a>
-                            <a v-if="selectedProject.repo_url" :href="selectedProject.repo_url" target="_blank" rel="noreferrer"><Code2 :size="14" />Repository</a>
+                    </template>
+                    <template v-else-if="selectedRecognition">
+                        <h2 id="detail-title">{{ selectedRecognition.title }}</h2>
+                        <p class="content-category">{{ selectedRecognition.issuer }}</p>
+                        <p v-if="selectedRecognition.summary">{{ selectedRecognition.summary }}</p>
+                        <img :src="recognitionPreviewUrl(selectedRecognition)" :alt="selectedRecognition.title + ' certificate for ' + profile.display_name" class="recognition-certificate-image" width="3840" height="2136">
+                        <a :href="recognitionPreviewUrl(selectedRecognition)" target="_blank" rel="noopener noreferrer" class="primary-btn">Open full-size certificate image <ArrowUpRight :size="18" aria-hidden="true" /></a>
+                    </template>
+                    <template v-else-if="selectedBadge"><img :src="selectedBadge.image_url" :alt="selectedBadge.name" class="modal-badge-image"><p class="content-category">{{ selectedBadge.category_label }}</p><h2 id="detail-title">{{ selectedBadge.name }}</h2><p class="content-category">{{ selectedBadge.issuer }}</p><p>{{ selectedBadge.description }}</p><div v-if="selectedBadge.skills?.length"><h3>Skills</h3><ul class="text-tags"><li v-for="skill in selectedBadge.skills" :key="skill">{{ skill }}</li></ul></div><a v-if="selectedBadge.certificate_url" :href="selectedBadge.certificate_url" target="_blank" rel="noopener noreferrer" class="primary-btn">Verify credential <ArrowUpRight :size="18" aria-hidden="true" /></a></template>
+                    <template v-else-if="selectedProject">
+                        <div class="project-modal-layout">
+                            <div class="project-gallery">
+                                <div class="project-gallery-frame" :class="{ 'project-gallery-logo-frame': projectSlides[projectSlideIndex] === projectFallbackLogo || ((!projectSlides.length || projectImageFailed) && projectFallbackLogo && !projectFallbackFailed) }">
+                                    <img v-if="projectSlides.length && !projectImageFailed" :key="projectSlides[projectSlideIndex]" :class="{ 'project-gallery-logo': projectSlides[projectSlideIndex] === projectFallbackLogo }" :src="projectSlides[projectSlideIndex]" :alt="selectedProject.title + ' project image ' + (projectSlideIndex + 1)" @error="projectImageFailed = true">
+                                    <img v-else-if="projectFallbackLogo && !projectFallbackFailed && projectSlides[projectSlideIndex] !== projectFallbackLogo" class="project-gallery-logo" :src="projectFallbackLogo" :alt="selectedProject.title + ' logo'" @error="projectFallbackFailed = true">
+                                    <p v-else class="project-image-fallback">Project image unavailable</p>
+                                </div>
+                                <div v-if="projectSlides.length > 1" class="project-pagination" role="group" aria-label="Project images">
+                                    <button v-for="(slide, index) in projectSlides" :key="slide" type="button" :aria-label="'Show image ' + (index + 1) + ' of ' + projectSlides.length" :aria-pressed="index === projectSlideIndex" @click="selectProjectSlide(index)"><span aria-hidden="true"></span></button>
+                                </div>
+                            </div>
+                            <div class="project-modal-copy">
+                                <img v-if="isAmplifierProject(selectedProject) || selectedProject.title?.trim().toLowerCase() === 'health information systems implementation'" class="project-modal-logo" :class="{ 'project-modal-logo--amplifier': isAmplifierProject(selectedProject) }" :src="projectMarkUrl(selectedProject)" alt="" @error="$event.target.style.display = 'none'"><p class="content-category">{{ selectedProject.category }}</p><h2 id="detail-title">{{ selectedProject.title }}</h2>
+                                <p v-if="selectedProject.year" class="project-year">{{ selectedProject.year }}</p>
+                                <p v-if="selectedProject.summary" class="project-description">{{ selectedProject.summary }}</p>
+                                <ul v-if="projectTechnologies.length" class="project-tech-logos" aria-label="Technologies">
+                                    <li v-for="technology in projectTechnologies" :key="technology.key">
+                                        <span class="project-tech-icon" tabindex="0" role="img" :aria-label="technology.label">
+                                            <img v-if="technology.logo && !failedProjectLogos.has(technology.key)" :src="technology.logo" alt="" width="28" height="28" @error="failedProjectLogos.add(technology.key)">
+                                            <Code2 v-else :size="24" aria-hidden="true" />
+                                            <span class="project-tech-tooltip" aria-hidden="true">{{ technology.label }}</span>
+                                        </span>
+                                    </li>
+                                </ul>
+                                <div class="modal-actions"><a v-if="selectedProject.url" :href="selectedProject.url" target="_blank" rel="noopener noreferrer" class="primary-btn">Visit project <ArrowUpRight :size="18" aria-hidden="true" /></a><a v-if="selectedProject.repo_url" :href="selectedProject.repo_url" target="_blank" rel="noopener noreferrer" class="secondary-btn">View GitHub repository</a></div>
+                            </div>
                         </div>
-                    </div>
-                </article>
+                    </template>
+                <template v-else-if="selectedDesign"><h2 id="detail-title" class="sr-only">{{ selectedDesign.media_type === 'gallery' ? 'Graphic designs' : selectedDesign.media_type === 'magazine' ? 'Digital magazine' : 'Video production' }}</h2>
+                    <div v-if="selectedDesign.media_type === 'gallery' && graphicDesigns.length" class="gallery-viewer" @keydown.left.prevent="moveGraphic(1)" @keydown.right.prevent="moveGraphic(-1)"><div class="gallery-stage"><div class="gallery-side gallery-side-previous" aria-hidden="true"><img :src="graphicDesigns[(designIndex + 1) % graphicDesigns.length].media_url" alt=""></div><img :key="designIndex" class="gallery-current" :class="graphicDirection < 0 ? 'gallery-flip-previous' : 'gallery-flip-next'" :src="graphicDesigns[designIndex].media_url" :alt="graphicDesigns[designIndex].title"><div class="gallery-side gallery-side-next" aria-hidden="true"><img :src="graphicDesigns[(designIndex + graphicDesigns.length - 1) % graphicDesigns.length].media_url" alt=""></div></div><button type="button" class="gallery-arrow gallery-arrow-previous" aria-label="Next design" @click="moveGraphic(1)">‹</button><button type="button" class="gallery-arrow gallery-arrow-next" aria-label="Previous design" @click="moveGraphic(-1)">›</button><span class="sr-only" aria-live="polite">{{ designIndex + 1 }} of {{ graphicDesigns.length }}</span></div>
+                    <CreativeFlipbook v-else-if="selectedDesign.media_type === 'magazine'" />
+                    <template v-else-if="selectedDesign.media_type === 'video' && selectedDesign.media_url"><video ref="creativeVideoElement" :src="selectedDesign.media_url" class="modal-design-image" controls autoplay playsinline preload="metadata" @error="creativeVideoError = true">Your browser cannot play this video.</video><p v-if="creativeVideoError" role="status">Video playback is unavailable. <a :href="selectedDesign.media_url" target="_blank" rel="noopener noreferrer">Open the video</a></p></template><iframe v-else-if="selectedDesign.media_type === 'pdf' && selectedDesign.media_url" :src="selectedDesign.media_url" :title="selectedDesign.title" class="modal-design-image modal-design-document"></iframe><img v-else-if="selectedDesign.media_type === 'image' && selectedDesign.media_url" :src="selectedDesign.media_url" :alt="selectedDesign.title" class="modal-design-image"><p v-if="selectedDesign.description">{{ selectedDesign.description }}</p></template>
+                </section>
             </div>
         </Transition>
+        <footer class="folio-footer" :inert="dialogOpen"><div><Link href="/">{{ profile.display_name }}</Link><nav aria-label="More portfolio sections"><a href="#achievements">Recognition</a><a href="#publications">Publications</a><a href="#designs">Design media</a><a href="#tools">Tools</a></nav><p>&copy; {{ new Date().getFullYear() }} {{ profile.display_name }}. All rights reserved.</p></div></footer>
     </div>
 </template>
 
 <style scoped>
-.portfolio-shell { position: relative; min-height: 100vh; overflow-x: hidden; background: var(--profile-bg); color: var(--profile-ink); --gradient-x: 50%; --gradient-y: 18%; --gradient-counter-x: 50%; --gradient-counter-y: 54%; }
-.gemini-wash { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.85; background: radial-gradient(circle at var(--gradient-x) var(--gradient-y), color-mix(in srgb, var(--profile-blue-light) 12%, transparent), transparent 38%), radial-gradient(circle at var(--gradient-counter-x) var(--gradient-counter-y), color-mix(in srgb, var(--profile-blue) 9%, transparent), transparent 42%); transition: opacity 500ms ease; }
-:global(:root[data-theme='dark']) .gemini-wash { opacity: 0.95; background: radial-gradient(circle at var(--gradient-x) var(--gradient-y), color-mix(in srgb, #3b82f6 18%, transparent), transparent 40%), radial-gradient(circle at var(--gradient-counter-x) var(--gradient-counter-y), color-mix(in srgb, #8b5cf6 14%, transparent), transparent 46%); }
-.section-wrap { width: min(100% - clamp(2rem, 6vw, 6rem), 82rem); margin-inline: auto; position: relative; z-index: 1; }
-.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; border-bottom: 1px solid color-mix(in srgb, var(--profile-ink) 12%, transparent); background: color-mix(in srgb, var(--profile-bg) 84%, transparent); padding: 0.9rem clamp(1rem, 3.5vw, 2.5rem); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: border-color 300ms ease, background-color 300ms ease; }
-.brand { display: inline-flex; align-items: center; gap: 0.75rem; color: var(--profile-ink); font-weight: 700; text-decoration: none; }
-.brand-mark { position: relative; display: grid; width: 2.25rem; aspect-ratio: 1; flex: 0 0 auto; place-items: center; overflow: hidden; border-radius: 50%; background: var(--profile-ink); color: var(--profile-bg); font-family: var(--font-mono); font-size: 0.62rem; }
-.brand-mark img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-.brand strong { font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 0.02em; text-transform: uppercase; }
-.nav-links { display: flex; flex-wrap: wrap; gap: clamp(0.6rem, 1.8vw, 1.5rem); }
-.nav-links a { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-decoration: none; text-transform: uppercase; transition: color 180ms ease; }
-.nav-links a:hover, .nav-links a:focus-visible { color: var(--profile-ink); }
-.theme-switch { display: inline-flex; border: 1px solid color-mix(in srgb, var(--profile-ink) 18%, transparent); border-radius: 999px; background: var(--profile-50); padding: 2px; }
-.theme-switch button { display: grid; width: 1.85rem; height: 1.85rem; place-items: center; border: 0; border-radius: 999px; background: transparent; color: var(--profile-400); cursor: pointer; transition: color 180ms ease, background-color 180ms ease; }
-.theme-switch button.active { background: var(--profile-ink); color: var(--profile-bg); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
-.live-viewers { position: fixed; right: clamp(1rem, 2.5vw, 1.8rem); bottom: clamp(1rem, 2.5vw, 1.8rem); z-index: 25; display: inline-flex; align-items: center; gap: 0.65rem; border: 1px solid color-mix(in srgb, var(--profile-ink) 16%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--profile-bg) 88%, transparent); padding: 0.45rem 0.95rem; box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.18); backdrop-filter: blur(16px); }
-.live-viewers-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgb(22 163 74 / 65%); animation: viewer-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-.live-viewers-copy { display: grid; line-height: 1.15; font-family: var(--font-mono); }
-.live-viewers-copy small { color: var(--profile-500); font-size: 0.55rem; text-transform: uppercase; }
-.live-viewers-copy strong { font-size: 0.72rem; }
-@keyframes viewer-pulse { 70%, 100% { box-shadow: 0 0 0 0.42rem rgb(22 163 74 / 0%); } }
-@media (prefers-reduced-motion: reduce) { .live-viewers-dot { animation: none; } }
-.hero-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.65fr); column-gap: clamp(2rem, 8vw, 7rem); row-gap: 1.3rem; align-items: start; margin-top: 1.5rem; }
-.hero-copy { grid-column: 1; grid-row: 2; padding-bottom: clamp(0.75rem, 2vw, 1.75rem); }
-.hero-role { grid-column: 1; grid-row: 1; max-width: 43rem; margin: 0; color: var(--profile-700); font-size: clamp(1rem, 2vw, 1.35rem); font-weight: 500; }
-h1 { max-width: 15ch; margin: 0; font-family: var(--font-mono); font-size: clamp(3.1rem, 8vw, 7.2rem); font-weight: 700; line-height: 0.91; overflow-wrap: anywhere; letter-spacing: -0.02em; }
-.hero-bio { max-width: 43rem; margin: 1.8rem 0 0; color: var(--profile-700); font-family: var(--font-serif); font-size: clamp(1.05rem, 2vw, 1.28rem); line-height: 1.7; }
-.location-line { display: flex; flex-wrap: wrap; gap: 0.7rem 1.2rem; margin-top: 1.25rem; color: var(--profile-500); font-size: 0.7rem; text-transform: uppercase; font-family: var(--font-mono); }
-.location-line span { display: inline-flex; align-items: center; gap: 0.35rem; }
-.hero-links { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.7rem; }
-.hero-links a, .link-row a, .section-link, .inline-link, .modal-actions a, .badge-preview button, .preview-action { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; text-decoration: none; transition: transform 180ms ease, color 180ms ease; }
-.hero-links a { border: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); border-radius: 4px; padding: 0.4rem 0.75rem; background: var(--profile-50); }
-.hero-links a:hover { border-color: var(--profile-ink); transform: translateY(-1px); }
-.portrait-block { grid-column: 2; grid-row: 2; margin: 0; }
-.portrait-block > img, .portrait-video-stage, .portrait-fallback { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 6px 6px 0 0; }
-.portrait-block > img, .portrait-fallback { border: 1px solid var(--profile-ink); }
-.portrait-video-stage { position: relative; overflow: hidden; background: var(--profile-ink); pointer-events: none; border: 1px solid color-mix(in srgb, var(--profile-ink) 30%, transparent); }
-.portrait-video-stage video { position: absolute; inset: 1px; display: block; width: calc(100% - 2px); height: calc(100% - 2px); object-fit: cover; object-position: center 12%; opacity: 0; visibility: hidden; pointer-events: none; }
-.portrait-video-stage video.is-active { opacity: 1; visibility: visible; }
-.portrait-fallback { display: grid; place-items: center; background: var(--profile-ink); color: var(--profile-bg); font-family: var(--font-mono); font-size: 4rem; }
-.portrait-block figcaption { display: flex; justify-content: space-between; gap: 0.75rem; border: 1px solid var(--profile-ink); border-top: 0; border-radius: 0 0 6px 6px; padding: 0.6rem 0.75rem; background: var(--profile-50); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; color: var(--profile-500); }
-.stat-line { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--profile-ink) 20%, transparent); margin-top: clamp(2rem, 4vw, 3.5rem); background: var(--profile-50); border-radius: 6px; overflow: hidden; }
-.stat-line div { display: flex; align-items: baseline; gap: 0.75rem; border-right: 1px solid color-mix(in srgb, var(--profile-ink) 12%, transparent); padding: 1.25rem; }
-.stat-line div:last-child { border-right: 0; }
-.stat-line strong { font-family: var(--font-mono); font-size: 2.1rem; font-weight: 700; }
-.stat-line span { color: var(--profile-500); font-size: 0.68rem; text-transform: uppercase; font-family: var(--font-mono); }
-.content-band { content-visibility: auto; contain-intrinsic-size: auto 50rem; scroll-margin-top: 2rem; border-bottom: 1px solid var(--profile-200); padding: clamp(3rem, 6vw, 5rem) 0; }
-.section-head { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.75rem; }
-.folio-label { display: inline-block; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; }
-.section-head h2, .footer h2 { margin: 0.4rem 0 0; font-size: clamp(2.1rem, 5vw, 4rem); line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
-.section-head > p { max-width: 32rem; margin: 0; color: var(--profile-700); font-family: var(--font-serif); font-size: 1.05rem; line-height: 1.6; }
-.section-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.8rem; }
-.section-link { padding: 0.35rem 0.65rem; border: 1px solid color-mix(in srgb, var(--profile-ink) 18%, transparent); border-radius: 4px; background: var(--profile-50); }
-.section-link:hover { border-color: var(--profile-ink); transform: translateY(-1px); }
-.filter-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.35rem; }
-.filter-row button { border: 1px solid var(--profile-300); border-radius: 999px; background: var(--profile-50); padding: 0.4rem 0.75rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; cursor: pointer; transition: all 180ms ease; }
-.filter-row button.active, .filter-row button:hover { border-color: var(--profile-ink); background: var(--profile-ink); color: var(--profile-bg); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
-.project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
-.project-card { position: relative; display: grid; min-width: 0; min-height: 19rem; grid-template-columns: 3.5rem minmax(0, 1fr); border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease; overflow: hidden; }
-.project-card:hover { border-color: var(--profile-ink); transform: translateY(-3px); box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.15); }
-.project-card:last-child:nth-child(odd) { width: 100%; grid-column: 1 / -1; }
-.project-index { border-right: 1px solid var(--profile-200); padding: 1.25rem 0; color: var(--profile-400); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-align: center; background: color-mix(in srgb, var(--profile-bg) 50%, var(--profile-50)); }
-.project-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; padding: 1.35rem; }
-.project-copy h3 { line-height: 1.25; margin: 0.5rem 0 0.6rem; font-size: 1.25rem; font-weight: 700; }
-.project-copy > p { margin: 0; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.6; }
-.project-copy .tag-row { margin: 0.9rem 0 1.2rem; }
-.project-more { display: inline-flex; align-items: center; gap: 0.35rem; border: 0; border-bottom: 1.5px solid var(--profile-ink); margin-top: auto; background: transparent; padding: 0 0 0.2rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: color 180ms ease, border-color 180ms ease; }
-.project-more:hover, .project-more:focus-visible { color: var(--profile-blue); border-color: var(--profile-blue); }
-.design-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; align-items: stretch; }
-.design-card { position: relative; display: grid; height: 100%; min-width: 0; grid-template-rows: auto 1fr; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease; }
-.design-card:hover, .design-card:focus-within { border-color: var(--profile-ink); transform: translateY(-3px); box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.15); }
-.design-media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-bottom: 1px solid var(--profile-200); background: #111513; }
-.design-media img, .design-media video, .design-media iframe { display: block; width: 100%; height: 100%; }
-.design-media img, .design-media video { object-fit: contain; transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
-.design-media iframe { border: 0; pointer-events: none; }
-.pdf-card-preview { display: grid; width: 100%; height: 100%; place-content: center; justify-items: center; gap: 0.65rem; color: #f7f1e7; font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; }
-.design-card:hover .design-media img, .design-card:hover .design-media video, .design-card:focus-within .design-media img, .design-card:focus-within .design-media video { transform: scale(1.03); }
-.design-expand { position: absolute; right: 0.65rem; bottom: 0.65rem; display: grid; width: 2.1rem; height: 2.1rem; place-items: center; border: 1px solid #fff; border-radius: 50%; background: color-mix(in srgb, #000 65%, transparent); color: #fff; backdrop-filter: blur(6px); }
-.design-copy { display: grid; min-height: 5.5rem; align-content: start; padding: 1rem; }
-.design-copy h3 { display: -webkit-box; overflow: hidden; margin: 0.6rem 0 0; font-size: 1.05rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.design-card-trigger { position: absolute; inset: 0; z-index: 2; border: 0; border-radius: inherit; outline-offset: -3px; background: transparent; cursor: zoom-in; }
-.design-card-trigger:focus-visible { outline: 2px solid var(--profile-ink); }
-.design-empty { display: flex; min-height: 15rem; align-items: center; justify-content: center; gap: 0.9rem; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); color: var(--profile-500); }
-.design-empty div { display: grid; gap: 0.25rem; }
-.design-empty strong { color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; }
-.design-empty p { margin: 0; font-family: var(--font-serif); }
-.meta-line { display: flex; justify-content: space-between; gap: 1rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; }
-.tag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.tag-row span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.22rem 0.55rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; background: color-mix(in srgb, var(--profile-bg) 60%, transparent); }
-.search-box { display: flex; min-width: min(100%, 18rem); align-items: center; gap: 0.55rem; border: 1px solid var(--profile-300); border-radius: 6px; padding: 0 0.75rem; background: var(--profile-50); }
-.search-box input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; padding: 0.65rem 0; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; }
-.publication-list { border-top: 1px solid var(--profile-200); }
-.publication-row { display: grid; grid-template-columns: 6rem minmax(0, 1fr) auto; gap: 1.35rem; align-items: start; border-bottom: 1px solid var(--profile-200); padding: 1.35rem 0; transition: background-color 180ms ease; }
-.publication-cover { display: grid; width: 6rem; aspect-ratio: 4 / 5; place-items: center; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-100); overflow: hidden; }
-.publication-cover img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-.publication-main h3 { margin: 0.4rem 0 0.3rem; font-size: 1.15rem; font-weight: 700; line-height: 1.35; }
-.publication-main > p { max-width: 54rem; margin: 0 0 0.6rem; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.6; }
-.publication-name { margin: 0.2rem 0 0.5rem !important; color: var(--profile-ink) !important; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; font-weight: 600; }
-.publication-action a { display: inline-grid; width: 2.6rem; height: 2.6rem; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; background: var(--profile-50); color: var(--profile-ink); transition: all 180ms ease; }
-.publication-action a:hover { border-color: var(--profile-ink); background: var(--profile-ink); color: var(--profile-bg); transform: scale(1.08); }
-.contribution-panel { border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: clamp(1rem, 3vw, 1.6rem); }
-.contribution-summary { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1rem; }
-.contribution-summary strong { font-family: var(--font-mono); font-size: 2.6rem; font-weight: 700; }
-.contribution-summary span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; }
-.contribution-scroll { overflow-x: auto; padding-bottom: 0.5rem; }
-.contribution-grid { display: flex; width: max-content; gap: 3px; margin-inline: auto; }
-.contribution-week { display: grid; grid-template-rows: repeat(7, 10px); gap: 3px; }
-.contribution-day, .contribution-legend i { display: block; width: 10px; height: 10px; border: 1px solid color-mix(in srgb, var(--profile-ink) 8%, transparent); border-radius: 2px; background: var(--profile-100); }
-.level-1 { background: #9be9a8 !important; }
-.level-2 { background: #40c463 !important; }
-.level-3 { background: #30a14e !important; }
-.level-4 { background: #216e39 !important; }
-.contribution-legend { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 0.75rem; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
-.contribution-legend div { display: flex; gap: 0.3rem; }
-.achievement-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--profile-200); border-radius: 6px; overflow: hidden; background: var(--profile-50); }
-.achievement-item { position: relative; min-height: 16rem; border-right: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); padding: 1.4rem; transition: background-color 180ms ease; }
-.achievement-item:nth-child(2n) { border-right: 0; }
-.achievement-item:hover { background: color-mix(in srgb, var(--profile-ink) 2%, var(--profile-50)); }
-.achievement-mark { display: grid; width: 7.5rem; height: 3.2rem; place-items: center; border: 1px solid var(--profile-200); border-radius: 4px; margin-bottom: 1.5rem; overflow: hidden; background: #ffffff; padding: 0.35rem; }
-.achievement-mark img { display: block; width: auto; height: auto; max-width: 6.5rem; max-height: 2.4rem; object-fit: contain; }
-.achievement-item h3 { margin: 0.5rem 0 0.4rem; font-size: 1.2rem; font-weight: 700; line-height: 1.3; }
-.achievement-item p { margin: 0 0 1rem; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.6; }
-.badge-layout { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 1.25rem; align-items: start; }
-.badge-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
-.badge-card { display: grid; min-height: 14.5rem; grid-template-rows: 7rem 1fr; gap: 0.8rem; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: 0.9rem; color: var(--profile-ink); text-align: left; cursor: pointer; transition: all 200ms ease; }
-.badge-card:hover, .badge-card:focus-visible { border-color: var(--profile-ink); transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.14); }
-.badge-image { position: relative; display: grid; width: 7rem; height: 7rem; place-items: center; justify-self: center; font-family: var(--font-mono); }
-.badge-image img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1)); }
-.badge-fallback { display: none; width: 100%; height: 100%; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; background: var(--profile-100); font-size: 1.5rem; font-weight: 700; color: var(--profile-700); }
-.badge-fallback.is-active { display: grid; }
-.badge-copy { display: grid; align-content: end; gap: 0.25rem; }
-.badge-copy small, .badge-copy > span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; }
-.badge-copy strong { font-size: 0.85rem; line-height: 1.35; font-weight: 600; }
-.badge-preview { position: sticky; top: 5.5rem; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: 1.25rem; box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.08); }
-.preview-badge-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
-.badge-verified-pill { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid #16a34a; border-radius: 999px; padding: 0.2rem 0.5rem; font-family: var(--font-mono); font-size: 0.6rem; color: #16a34a; text-transform: uppercase; }
-.badge-preview-art { position: relative; display: grid; width: 9.5rem; height: 9.5rem; place-items: center; margin: 1.2rem auto; }
-.badge-preview-art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15)); }
-.preview-fallback { display: none; width: 100%; height: 100%; place-items: center; border: 1px solid var(--profile-300); border-radius: 50%; background: var(--profile-100); font-family: var(--font-mono); font-size: 2.2rem; font-weight: 700; color: var(--profile-700); }
-.preview-fallback.is-active { display: grid; }
-.preview-issuer { margin: 0; color: var(--profile-500); font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; }
-.badge-preview h3 { margin: 0.4rem 0 0.9rem; font-size: 1.05rem; line-height: 1.35; font-weight: 700; }
-.preview-action { border: 0; border-bottom: 1.5px solid var(--profile-ink); background: transparent; padding: 0 0 0.2rem; cursor: pointer; font-weight: 600; }
-.preview-action:hover { color: var(--profile-blue); border-color: var(--profile-blue); }
-.archive-route { display: flex; width: fit-content; align-items: center; gap: 0.35rem; border-bottom: 1.5px solid var(--profile-ink); margin: 1.8rem auto 0; padding-bottom: 0.25rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; text-decoration: none; text-transform: uppercase; }
-.archive-route:hover { color: var(--profile-blue); border-color: var(--profile-blue); }
-.certificate-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
-.certificate-card { position: relative; display: grid; width: 100%; grid-template-columns: 5rem minmax(0, 1fr) auto; gap: 0.85rem; align-items: center; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); padding: 0.75rem; color: var(--profile-ink); font: inherit; text-align: left; cursor: pointer; transition: all 180ms ease; }
-.certificate-card:hover { border-color: var(--profile-ink); transform: translateY(-2px); box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.12); }
-.certificate-art { display: grid; width: 5rem; aspect-ratio: 4 / 5; place-items: center; border: 1px solid var(--profile-200); border-radius: 4px; background: var(--profile-bg); overflow: hidden; }
-.certificate-art img { width: 100%; height: 100%; object-fit: contain; object-position: center; padding: 0.65rem; }
-.provider-initials { font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.08em; }
-.certificate-copy { min-width: 0; display: grid; gap: 0.25rem; }
-.certificate-copy small, .certificate-copy > span { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; }
-.certificate-copy strong { display: -webkit-box; overflow: hidden; font-size: 0.8rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 3; font-weight: 600; }
-.tool-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--profile-200); border-radius: 6px; overflow: hidden; background: var(--profile-50); }
-.tool-category { min-width: 0; border-right: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); padding: clamp(1rem, 3vw, 1.4rem); }
-.tool-category:nth-child(2n) { border-right: 0; }
-.tool-category-head { display: flex; gap: 0.65rem; align-items: center; padding-bottom: 0.9rem; border-bottom: 1px solid var(--profile-200); }
-.tool-category-head h3 { margin: 0; font-family: var(--font-mono); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
-.tool-list { display: grid; }
-.tool-entry { display: grid; min-width: 0; grid-template-columns: 2.75rem minmax(0, 1fr) auto; gap: 0.85rem; align-items: center; border-top: 1px solid var(--profile-100); padding: 0.8rem 0; color: var(--profile-ink); text-decoration: none; transition: background-color 160ms ease; }
-.tool-entry:first-child { border-top: 0; }
-a.tool-entry:hover .tool-copy strong { color: var(--profile-blue); }
-.tool-mark { position: relative; display: grid; width: 2.75rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 6px; background: #ffffff; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; color: #1e293b; }
-.tool-mark img { position: absolute; inset: 0; width: 100%; height: 100%; background: #ffffff; object-fit: contain; padding: 0.35rem; }
-.tool-copy { min-width: 0; display: grid; gap: 0.2rem; }
-.tool-copy strong { font-size: 0.85rem; line-height: 1.35; font-weight: 600; }
-.tool-copy > span { color: var(--profile-500); font-family: var(--font-serif); font-size: 0.82rem; line-height: 1.45; }
-.background-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
-.timeline-title { display: flex; align-items: center; gap: 0.55rem; border-bottom: 1px solid var(--profile-ink); padding-bottom: 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; }
-.timeline-row { position: relative; display: grid; width: 100%; grid-template-columns: 8rem minmax(0, 1fr); gap: 1rem; border: 0; border-bottom: 1px solid var(--profile-200); background: transparent; padding: 1.4rem 2rem 1.4rem 0; color: var(--profile-ink); font: inherit; text-align: left; }
-.timeline-date { color: var(--profile-500); font-family: var(--font-mono); font-size: 0.62rem; line-height: 1.6; text-transform: uppercase; }
-.timeline-entry { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); gap: 0.9rem; align-items: start; min-width: 0; }
-.organization-mark { position: relative; display: grid; width: 3.25rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid var(--profile-200); border-radius: 6px; background: #fff; color: #17251e; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; }
-.organization-mark img { position: absolute; inset: 0; width: 100%; height: 100%; background: #fff; object-fit: contain; padding: 0.25rem; }
-.timeline-copy { display: grid; min-width: 0; gap: 0.55rem; align-content: start; }
-.timeline-heading { display: block; margin: 0.15rem 0 0; font-size: 1.05rem; line-height: 1.4; font-weight: 700; }
-.timeline-summary { display: block; margin: 0; color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
-.school-name { color: var(--profile-ink); font-size: 0.85rem; font-weight: 700; line-height: 1.45; }
-.timeline-trigger { cursor: pointer; transition: background-color 160ms ease, padding-left 160ms ease; }
-.timeline-trigger:hover, .timeline-trigger:focus-visible { background: var(--profile-50); padding-left: 0.65rem; border-radius: 4px; }
-.timeline-expand { position: absolute; top: 1.4rem; right: 0.35rem; color: var(--profile-500); transition: color 160ms ease, transform 160ms ease; }
-.timeline-trigger:hover .timeline-expand, .timeline-trigger:focus-visible .timeline-expand { color: var(--profile-ink); transform: scale(1.12); }
-.skills-index { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 1rem; border-top: 1px solid var(--profile-200); margin-top: 2.5rem; padding-top: 1.25rem; }
-.skills-index > div { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-.skills-index > div span { border: 1px solid var(--profile-300); border-radius: 999px; padding: 0.35rem 0.7rem; font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; background: var(--profile-50); }
-.collaboration-bridge { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(2rem, 6vw, 6rem); align-items: end; margin-top: clamp(3rem, 7vw, 6rem); margin-bottom: clamp(3rem, 7vw, 6rem); border: 1px solid var(--profile-ink); border-radius: 8px; background: linear-gradient(135deg, rgb(37 99 235 / 8%), transparent 52%), var(--profile-50); padding: clamp(1.6rem, 4vw, 2.8rem); color: var(--profile-ink); box-shadow: 10px 10px 0 var(--profile-blue); transition: all 300ms ease; }
-:global(:root[data-theme='dark']) .collaboration-bridge { border-color: var(--profile-300); background: radial-gradient(circle at 92% 8%, rgb(59 130 246 / 20%), transparent 42%), radial-gradient(circle at 68% 110%, rgb(139 92 246 / 14%), transparent 45%), var(--profile-50); box-shadow: 10px 10px 0 color-mix(in srgb, var(--profile-blue) 75%, #7c3aed); }
-.collaboration-bridge h2 { margin: 0.55rem 0 0; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 0.95; font-weight: 700; letter-spacing: -0.02em; }
-.collaboration-bridge p { max-width: 47rem; margin: 1rem 0 0; color: var(--profile-700); font-size: 1.08rem; line-height: 1.65; }
-.collaboration-actions { display: grid; gap: 0.75rem; min-width: 11.5rem; }
-.collaboration-actions a { display: inline-flex; min-height: 2.9rem; align-items: center; justify-content: space-between; gap: 0.65rem; border: 1px solid var(--profile-ink); border-radius: 4px; background: transparent; padding: 0.75rem 0.95rem; color: var(--profile-ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-decoration: none; text-transform: uppercase; transition: all 180ms ease; }
-.collaboration-actions a:first-child { background: var(--profile-ink); color: var(--profile-bg); }
-.collaboration-actions a:hover { box-shadow: 4px 4px 0 var(--profile-blue); transform: translate(-2px, -2px); }
-.footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: end; padding: clamp(3rem, 6vw, 5rem) 0 2.5rem; border-top: 1px solid var(--profile-200); }
-.footer-links { display: grid; gap: 0.6rem; justify-items: end; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; }
-.footer-links a { gap: 0.35rem; }
-.modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, #000 60%, transparent); padding: 1rem; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-.badge-modal { position: relative; width: min(100%, 34rem); max-height: calc(100vh - 2rem); overflow-y: auto; border: 1px solid var(--profile-ink); border-radius: 8px; background: var(--profile-bg); padding: clamp(1.2rem, 4vw, 2.2rem); box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.4); }
-.background-modal { width: min(100%, 40rem); }
-.background-organization-mark { width: 6.5rem; height: 6.5rem; border: 1px solid var(--profile-200); border-radius: 6px; background: #fff; }
-.background-organization-mark img { width: 100%; height: 100%; object-fit: contain; padding: 0.55rem; }
-.modal-badge { position: relative; display: grid; width: 6.5rem; height: 6.5rem; place-items: center; border: 1px solid var(--profile-200); border-radius: 6px; background: var(--profile-50); margin-bottom: 1.25rem; font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; }
-.modal-badge img { width: 100%; height: 100%; object-fit: contain; }
-.modal-badge .badge-fallback { font-size: 1.8rem; }
-.certificate-provider-mark { width: 5.5rem; height: 5.5rem; padding: 0.45rem; }
-.modal-close { position: absolute; top: 1rem; right: 1rem; display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 1px solid var(--profile-200); border-radius: 50%; background: var(--profile-50); color: var(--profile-ink); cursor: pointer; transition: all 180ms ease; }
-.modal-close:hover { border-color: var(--profile-ink); transform: scale(1.08); }
-.badge-modal h2 { margin: 0.4rem 0 0.6rem; font-size: 1.5rem; line-height: 1.25; font-weight: 700; }
-.badge-modal p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
-.badge-modal dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); margin: 1.2rem 0; padding: 0.9rem 0; font-family: var(--font-mono); font-size: 0.72rem; }
-.badge-modal dt { color: var(--profile-500); text-transform: uppercase; font-size: 0.64rem; }
-.badge-modal dd { margin: 0.2rem 0 0; font-weight: 600; }
-.modal-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.4rem; }
-.modal-actions a { border: 1px solid var(--profile-ink); border-radius: 4px; padding: 0.55rem 0.85rem; background: var(--profile-50); font-weight: 600; }
-.modal-actions a:hover { background: var(--profile-ink); color: var(--profile-bg); }
-.design-modal, .project-modal { position: relative; width: min(100%, 54rem); max-height: calc(100vh - 2rem); overflow-y: auto; border: 1px solid var(--profile-ink); border-radius: 8px; background: var(--profile-bg); box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.4); }
-.design-modal-media, .project-modal-media { position: relative; aspect-ratio: 16 / 10; border-bottom: 1px solid var(--profile-200); background: #0c0f0d; overflow: hidden; }
-.design-modal-media img, .design-modal-media video, .design-modal-media iframe, .project-modal-media img, .project-modal-media iframe { width: 100%; height: 100%; object-fit: contain; }
-.project-modal-placeholder { display: grid; width: 100%; height: 100%; place-items: center; color: var(--profile-400); }
-.design-modal-copy, .project-modal-copy { padding: clamp(1.2rem, 3.5vw, 2rem); }
-.design-modal-copy h2, .project-modal-copy h2 { margin: 0.4rem 0 0.6rem; font-size: 1.6rem; font-weight: 700; }
-.design-modal-copy p, .project-modal-copy p { color: var(--profile-700); font-family: var(--font-serif); line-height: 1.65; }
-.project-modal dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: 1px solid var(--profile-200); border-bottom: 1px solid var(--profile-200); margin: 1.2rem 0; padding: 0.85rem 0; font-family: var(--font-mono); font-size: 0.72rem; }
-.project-modal dt { color: var(--profile-500); font-size: 0.64rem; text-transform: uppercase; }
-.project-modal dd { margin: 0.2rem 0 0; font-weight: 600; }
-
-@media (max-width: 1024px) {
-    .hero-grid { grid-template-columns: 1fr; }
-    .portrait-block { grid-column: 1; grid-row: 3; max-width: 22rem; }
-    .badge-layout { grid-template-columns: 1fr; }
-    .badge-preview { display: none; }
-    .design-grid, .certificate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .background-grid { grid-template-columns: 1fr; }
-    .tool-groups { grid-template-columns: 1fr; }
-    .tool-category { border-right: 0; }
+.folio-root { overflow-x: clip; background: var(--profile-bg); color: var(--profile-ink); }
+.folio-header { position: sticky; top: 0; z-index: 40; background: linear-gradient(110deg, var(--blend-0), var(--blend-2) 48%, var(--blend-1)); border-bottom: 1px solid var(--border-hairline); }
+.header-content { max-width: 1440px; min-height: 88px; margin: 0 auto; padding: 16px 5%; display: flex; align-items: center; gap: 36px; }
+.header-nav { display: flex; align-items: center; gap: 26px; margin-right: auto; }
+.header-nav a { font-size: 15px; padding: 10px 0; color: var(--profile-ink); }
+.header-nav a:hover, .folio-footer a:hover { color: var(--accent-primary); }
+.theme-controls { position: relative; display: flex; padding: 2px; border: 1px solid var(--border-hairline); border-radius: 999px; background: var(--surface-elevated); }
+.theme-controls::before { content: ''; position: absolute; top: 2px; left: 2px; width: 44px; height: 44px; border-radius: 50%; background: #ffd84d; transition: transform 220ms var(--ease-out-cubic), background-color 220ms var(--ease-out-cubic); pointer-events: none; }
+.theme-controls.is-dark::before { transform: translateX(44px); background: var(--accent-primary); }
+.theme-controls button, .menu-toggle, .close-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border: 0; background: transparent; color: var(--profile-ink); border-radius: 50%; cursor: pointer; transition: background-color var(--motion-fast), color var(--motion-fast); }
+.theme-controls button { position: relative; z-index: 1; }
+.theme-controls button[aria-pressed='true'] { color: #1c2b33; }
+.theme-controls.is-dark button[aria-pressed='true'] { color: var(--surface-elevated); }
+.theme-controls button:focus-visible { outline: 2px solid var(--profile-ink); outline-offset: -4px; }
+.close-btn:hover { background: var(--surface-elevated); }
+@media (prefers-reduced-motion: reduce) { .theme-controls::before, .theme-controls button { transition: none; } }
+.menu-toggle { display: none; gap: 8px; border-radius: 0; }
+.folio-main { max-width: 1240px; padding: 0 48px; margin: 0 auto; }
+.hero-section { display: grid; grid-template-columns: 1.12fr 1fr; align-items: center; gap: 7%; padding: 88px 0 96px; }
+.hero-intro { min-width: 0; container-type: inline-size; }
+h1 { font-size: clamp(48px, 5.7vw, 76px); font-weight: 400; line-height: 1.04; letter-spacing: -.055em; margin: 0 0 26px; text-wrap: balance; }
+.hero-role { max-width: 100%; margin-bottom: 24px; font-size: clamp(12px, 3.9cqw, 18px); font-style: italic; line-height: 1.4; letter-spacing: -.05em; white-space: nowrap; }
+.hero-bio { font-size: 17px; line-height: 1.65; color: var(--profile-500); max-width: 510px; text-align: justify; text-align-last: left; }
+.hero-link-group { width: fit-content; max-width: 100%; }
+.hero-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 30px; }
+.hero-external-links { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-top: 32px; }
+.hero-external-links a { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--profile-500); padding: 6px 0; }
+.profile-link-logo { display: inline-block; width: 16px; height: 16px; margin-right: 3px; flex: none; background: currentColor; mask-size: contain; mask-position: center; mask-repeat: no-repeat; }
+.hero-external-links a:hover { color: var(--accent-primary); }
+.hero-external-links a[data-brand='credly']:is(:hover, :focus-visible) { color: #a43f00; }
+.hero-external-links a[data-brand='credly']:is(:hover, :focus-visible) .profile-link-logo { background: #ff6b00; }
+.hero-external-links a[data-brand='github']:is(:hover, :focus-visible) { color: #181717; }
+.hero-external-links a[data-brand='linkedin']:is(:hover, :focus-visible) { color: #0a66c2; }
+:global([data-theme='dark'] .hero-external-links a[data-brand='credly']:is(:hover, :focus-visible)) { color: #ffab70; }
+:global([data-theme='dark'] .hero-external-links a[data-brand='github']:is(:hover, :focus-visible)) { color: #fff; }
+:global([data-theme='dark'] .hero-external-links a[data-brand='linkedin']:is(:hover, :focus-visible)) { color: #8cc8ff; }
+.hero-external-links a[data-brand='linkedin']:is(:hover, :focus-visible) .profile-link-logo { background: #0a66c2; }
+.hero-portrait { position: relative; min-width: 0; margin: 0; }
+.hero-portrait > img { width: 100%; height: auto; aspect-ratio: 1 / 1.12; object-fit: cover; object-position: center 20%; border-radius: 30px; background: var(--surface-elevated); display: block; }
+.portrait-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; border-radius: 30px; opacity: 0; pointer-events: none; }
+.portrait-video.is-active { opacity: 1; }
+.primary-btn, .secondary-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; padding: 12px 23px; border-radius: 999px; font-size: 15px; line-height: 1.35; font-weight: 500; text-decoration: none; cursor: pointer; transition: background-color var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast); }
+.primary-btn { background: var(--accent-primary); color: var(--on-accent, #fff); border: 1px solid transparent; }
+.primary-btn:hover { background: var(--accent-primary-hover); }
+.primary-btn:disabled { opacity: .55; cursor: wait; }
+.secondary-btn { background: transparent; color: var(--profile-ink); border: 1px solid var(--border-hairline-strong); }
+.secondary-btn:hover { background: var(--surface-elevated); border-color: var(--profile-500); }
+.text-link { display: inline-flex; gap: 7px; align-items: center; color: var(--accent-primary); font-size: 15px; font-weight: 500; min-height: 36px; }
+.text-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.section-container { padding: 80px 0; scroll-margin-top: 106px; }
+.folio-main > section { position: relative; isolation: isolate; }
+.folio-main > section::before { content: ''; position: absolute; z-index: -1; inset-block: 0; left: 50%; width: 100vw; transform: translateX(-50%); background: linear-gradient(to bottom, var(--blend-from), var(--blend-to)); pointer-events: none; }
+.hero-section { --blend-from: var(--blend-0); --blend-to: var(--blend-1); }
+#achievements { --blend-from: var(--blend-1); --blend-to: var(--blend-2); }
+#work { --blend-from: var(--blend-1); --blend-to: var(--blend-3); }
+#achievements + #work { --blend-from: var(--blend-2); }
+#services { --blend-from: var(--blend-3); --blend-to: var(--blend-4); }
+#credentials { --blend-from: var(--blend-4); --blend-to: var(--blend-5); }
+#publications { --blend-from: var(--blend-5); --blend-to: var(--blend-6); }
+#github-activity { --blend-from: var(--blend-6); --blend-to: var(--blend-6); }
+#experience { --blend-from: var(--blend-6); --blend-to: var(--blend-7); }
+#designs { --blend-from: var(--blend-4); --blend-to: var(--blend-4); }
+#tools { --blend-from: var(--blend-7); --blend-to: var(--blend-9); }
+#contact { --blend-from: var(--blend-9); --blend-to: var(--blend-10); }
+#services.section-container { padding-top: 0; }
+#credentials.section-container { padding-top: clamp(16px, 2vw, 24px); }
+#github-activity.section-container { padding-block: 48px; }
+.github-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; }
+.github-heading p, .github-summary, .github-unavailable { color: var(--profile-500); margin-top: 12px; }
+.github-summary { margin-top: 28px; }
+.github-summary strong { color: var(--profile-ink); font-weight: 600; }
+.github-scroll { margin-top: 20px; overflow-x: auto; padding: 4px 0 12px; }
+.github-scroll:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 4px; }
+.github-calendar { display: flex; gap: 4px; width: max-content; }
+.github-week { display: grid; grid-template-rows: 20px repeat(7, 12px); grid-template-columns: 12px; gap: 4px; }
+.github-month { font-size: 11px; color: var(--profile-500); white-space: nowrap; }
+.github-day { display: block; width: 12px; height: 12px; border-radius: 2px; background: #dce5df; }
+.github-level-1 { background: #9be9a8; } .github-level-2 { background: #40c463; } .github-level-3 { background: #30a14e; } .github-level-4 { background: #216e39; }
+:global([data-theme='dark'] .github-level-0) { background: #26332b; }
+.github-legend { display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: var(--profile-500); font-size: 12px; }
+.github-legend span:first-child { margin-right: 4px; } .github-legend span:last-child { margin-left: 4px; }
+#designs.section-container { padding-top: 0; }
+.anchor-alias { scroll-margin-top: 106px; }
+.section-header { margin-bottom: 40px; max-width: 760px; }
+h2 { font-size: clamp(34px, 4vw, 48px); line-height: 1.13; font-weight: 400; letter-spacing: -.035em; text-wrap: balance; }
+.section-header > p { margin-top: 20px; max-width: 640px; color: var(--profile-500); font-size: 18px; line-height: 1.6; }
+#designs .section-header, #designs .section-header > p { max-width: none; }
+#designs .section-header { text-align: center; }
+#credentials .section-header { margin-inline: auto; text-align: center; }
+#credentials .section-header > p { margin-inline: auto; }
+h3 { font-size: 24px; line-height: 1.25; font-weight: 400; letter-spacing: -.02em; }
+h4 { font-size: 19px; line-height: 1.35; font-weight: 500; letter-spacing: -.015em; }
+.content-category { color: var(--profile-500); font-size: 13px; line-height: 1.5; }
+.filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 32px; }
+.filter-tabs button { border: 1px solid var(--border-hairline); padding: 10px 18px; min-height: 44px; border-radius: 999px; background: transparent; color: var(--profile-500); font: inherit; font-size: 14px; cursor: pointer; transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast); }
+.filter-tabs button:hover { background: var(--surface-elevated); }
+.filter-tabs button[aria-pressed='true'] { background: var(--profile-ink); border-color: var(--profile-ink); color: var(--profile-bg); }
+.featured-project { display: grid; grid-template-columns: 1.1fr 1fr; background: var(--surface-elevated); border-radius: 28px; overflow: hidden; margin-bottom: 44px; }
+.featured-project-image { min-width: 0; padding: 0; border: 0; background: var(--surface-muted); cursor: pointer; overflow: hidden; }
+.featured-project-image img { display: block; width: 100%; height: 100%; min-height: 380px; object-fit: cover; object-position: center; }
+.featured-project-copy { padding: 48px 36px; align-self: center; min-width: 0; }
+.featured-project-copy h3 { font-size: 38px; margin: 12px 0 20px; }
+.featured-project-copy > p:not(.content-category) { font-size: 16px; line-height: 1.65; color: var(--profile-500); }
+.text-tags { list-style: none; display: flex; gap: 8px 14px; flex-wrap: wrap; margin: 22px 0; padding: 0; }
+.text-tags li { color: var(--profile-500); font-size: 13px; }
+.project-actions, .archive-actions, .modal-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 28px; }
+#credentials .archive-actions { justify-content: center; }
+.project-index { border-top: 1px solid var(--border-hairline); }
+.project-index-entry { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); align-items: start; gap: clamp(24px, 4vw, 56px); width: 100%; padding: 32px 0; border: 0; border-bottom: 1px solid var(--border-hairline); background: transparent; color: var(--profile-ink); text-align: left; font: inherit; cursor: pointer; }
+.project-index-entry::before { content: ''; position: absolute; z-index: -1; inset-block: 0; left: 50%; width: 100vw; transform: translateX(-50%); background: transparent; transition: background-color 180ms ease; pointer-events: none; }
+.project-index-entry:hover::before, .project-index-entry:focus-visible::before { background: color-mix(in srgb, var(--accent-primary) 8%, transparent); }
+.project-index-heading { display: grid; align-content: start; gap: 10px; min-width: 0; }
+.project-title-line { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.project-title-content { display: grid; gap: 8px; min-width: 0; }
+.project-mark { position: relative; display: grid; flex: 0 0 56px; place-items: center; width: 56px; height: 56px; border: 0; background: transparent; color: var(--profile-ink); font-size: 17px; font-weight: 600; letter-spacing: 0; }
+.project-mark--white { background: #fff; border-radius: 10px; }
+.project-modal-logo { display: block; width: 64px; height: 64px; object-fit: contain; margin-bottom: 16px; }
+.project-modal-logo--amplifier { width: 120px; padding: 8px; background: #fff; border-radius: 10px; }
+.project-mark img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; padding: 7px; object-fit: contain; filter: drop-shadow(0 5px 8px rgba(0, 0, 0, .18)); opacity: 0; }
+.project-mark img.is-loaded { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+    .project-mark { transition: transform 420ms cubic-bezier(.22, 1.35, .36, 1); }
+    .project-index-entry:hover .project-mark, .project-index-entry:focus-visible .project-mark,
+    .project-card:hover .project-mark, .project-card:focus-visible .project-mark { transform: scale(1.16); }
 }
+.project-index-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--profile-500); font-size: 13px; line-height: 1.5; }
+.project-index-heading strong { font-size: clamp(20px, 2vw, 25px); font-weight: 500; line-height: 1.25; letter-spacing: -.025em; }
+.project-index-details { display: grid; justify-items: start; min-width: 0; gap: 8px; }
+.project-index-summary { color: var(--profile-500); font-size: 15px; line-height: 1.65; }
+.project-index-action { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--accent-primary); font-size: 14px; white-space: nowrap; }
+.projects-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px 30px; }
+.project-card, .design-card { text-align: left; color: inherit; font: inherit; padding: 0; border: 0; background: transparent; cursor: pointer; min-width: 0; }
+.project-image { border-radius: 22px; overflow: hidden; background: var(--surface-elevated); margin-bottom: 24px; }
+.project-image img { display: block; width: 100%; height: auto; aspect-ratio: 1.55; object-fit: cover; transition: transform var(--motion-slow) var(--ease-out-cubic); }
+.project-card:hover .project-image img, .design-card:hover .design-image img { transform: scale(1.025); }
+.project-copy { padding-right: 24px; }
+.project-copy h3 { margin: 0; }
+.project-copy > .project-title-line { margin-bottom: 18px; }
+.project-copy > p { font-size: 16px; line-height: 1.6; color: var(--profile-500); margin-bottom: 14px; }
+.project-card:hover .text-link, .design-card:hover .text-link { text-decoration: underline; text-underline-offset: 4px; }
+.services-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; }
+.service-item { display: flex; flex-direction: column; align-items: flex-start; grid-column: span 2; min-width: 0; padding: 28px; border: 1px solid var(--border-hairline); border-radius: 18px; background: var(--surface-elevated); }
+@media (prefers-reduced-motion: no-preference) {
+    .service-item { transition: transform 200ms var(--ease-out-cubic); }
+    .service-item:hover, .service-item:focus-within { transform: scale(1.02); }
+}
+.service-item > svg { color: var(--profile-700); margin-bottom: 28px; }
+.service-item h3 { max-width: 290px; margin-bottom: 18px; }
+.service-item p { color: var(--profile-500); line-height: 1.65; font-size: 16px; margin-bottom: 18px; }
+.service-item .text-link { margin-top: auto; }
+.service-item:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }
+.service-item p { text-align: justify; }
+.network-details a { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border: 1px solid var(--border-hairline); border-radius: 999px; color: var(--profile-500); font-size: 13px; line-height: 1.4; text-decoration: none; }
+.network-details a:hover, .network-details a:focus-visible { color: var(--profile-ink); text-decoration: underline; }
+.network-checklist { display: grid; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; color: var(--profile-500); font-size: 15px; line-height: 1.5; }
+.network-checklist li { display: flex; gap: 8px; align-items: baseline; }
+.network-check { color: var(--accent-primary); }
+.web-technologies p { margin-bottom: 12px; }
+.web-technologies ul { display: flex; flex-wrap: wrap; gap: 12px 16px; margin: 0 0 18px; padding: 0; list-style: none; }
+.web-technologies li { display: inline-flex; align-items: center; gap: 6px; color: var(--profile-500); font-size: 13px; }
+.web-technologies img { object-fit: contain; }
+.connection-copy { align-self: stretch; display: grid; }
+.connection-copy > * { grid-area: 1 / 1; }
+.connection-copy-hidden { visibility: hidden; }
+.service-preview-list { margin: 0 0 18px; padding-left: 1.2em; color: var(--profile-500); font-size: 15px; line-height: 1.65; }
+.data-preview { min-width: 0; }
+.service-item .data-title { margin-bottom: 4px; color: var(--profile-ink); font-weight: 400; text-align: left; }
+.service-item .data-week { margin-bottom: 10px; font-size: 13px; text-align: left; }
+.data-week span { font-size: 11px; }
+.data-line-chart { display: block; width: 100%; height: auto; overflow: visible; }
+.data-axis { fill: none; stroke: var(--border-hairline); stroke-width: 1; }
+.data-line { fill: none; stroke: var(--accent-primary); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.data-point { fill: var(--accent-primary); }
+.data-hit-area { fill: transparent; }
+.data-point-value { fill: var(--profile-ink); font-size: 11px; font-weight: 600; opacity: 0; pointer-events: none; }
+.data-point-group:hover .data-point-value, .data-point-group:focus .data-point-value { opacity: 1; }
+.data-point-group:focus-visible .data-point { stroke: var(--profile-ink); stroke-width: 2; }
+.data-label { fill: var(--profile-500); font-size: 10px; }
+@media (prefers-reduced-motion: no-preference) {
+    .data-line { stroke-dasharray: 500; animation: data-line-draw 800ms ease-out both; }
+    @keyframes data-line-draw { from { stroke-dashoffset: 500; } to { stroke-dashoffset: 0; } }
+}
+.service-item .data-note { margin: 10px 0; font-size: 12px; line-height: 1.4; text-align: left; }
+.connection-preview p { margin-bottom: 12px; font-size: 14px; }
+.connection-skeleton { display: grid; gap: 9px; margin: 12px 0; }
+.connection-skeleton span { display: block; width: 85%; height: 12px; border-radius: 6px; background: var(--border-hairline); }
+.connection-skeleton span:nth-child(even) { width: 68%; }
+@media (prefers-reduced-motion: no-preference) {
+    .connection-skeleton span { animation: skeleton-pulse 1.2s ease-in-out infinite alternate; }
+    .section-arrived > .section-header, .section-arrived > .recognition-heading, .section-arrived > .contact-intro { animation: section-entrance 500ms ease-out both; }
+    @keyframes skeleton-pulse { from { opacity: .45; } to { opacity: 1; } }
+    @keyframes section-entrance { from { transform: translateY(12px); } to { transform: translateY(0); } }
+}
+.service-item .connection-details { color: var(--profile-500); white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
+.connection-toggle { min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--profile-500); font: inherit; font-size: 12px; font-style: italic; text-align: left; cursor: pointer; }
+.connection-toggle:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }
+.connection-contact { display: inline-flex; gap: 6px; align-items: center; margin-top: 14px; color: var(--accent-primary); font-size: 14px; }
+.section-action { margin-top: 36px; }
+.services-action { display: flex; justify-content: center; margin-top: 36px; }
+.recognition-carousel { width: 100%; margin: 0; padding-bottom: 40px; }
+.recognition-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.recognition-heading h2 { font-size: clamp(24px, 2.4vw, 32px); font-weight: 500; letter-spacing: -.025em; }
+.recognition-window { overflow: hidden; }
+.recognition-track { display: flex; width: max-content; }
+.recognition-track.is-moving { animation: recognition-loop 35s linear infinite; }
+.recognition-carousel:hover .recognition-track, .recognition-carousel:focus-within .recognition-track, .recognition-carousel.is-paused .recognition-track { animation-play-state: paused; }
+.recognition-group { display: flex; flex: none; gap: 12px; padding-right: 12px; }
+.achievement-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; width: 250px; min-height: 190px; padding: 16px; color: var(--profile-ink); background: transparent; text-align: center; }
+.achievement-item[href]:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.achievement-preview { border: 0; font: inherit; cursor: pointer; }
+.achievement-preview:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.achievement-logo, .achievement-item > svg:first-child { flex: none; width: 80px; height: 80px; object-fit: contain; }
+.achievement-programme-logo { width: 160px; height: 80px; }
+.achievement-copy { display: grid; gap: 5px; min-width: 0; }
+.achievement-copy strong { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.achievement-copy > span { color: var(--profile-500); font-size: 12px; line-height: 1.35; }
+.recognition-arrow { position: absolute; top: 16px; right: 16px; color: var(--profile-500); }
+@keyframes recognition-loop { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+    .recognition-track.is-moving { animation: none; width: 100%; }
+    .recognition-group { flex-wrap: wrap; width: 100%; padding-right: 0; }
+    .recognition-group[aria-hidden='true'] { display: none; }
+    .achievement-item { flex: 1 1 220px; }
+}
+.credentials-layout { display: block; padding: 32px 0; }
+.credentials-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 80px 12px; }
+.credential-slot { position: relative; min-width: 0; }
+.credential-slot:hover, .credential-slot:focus-within { z-index: 2; }
+.credential-card { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 100%; min-width: 0; padding: 16px 10px; background: var(--surface-elevated); border: 1px solid transparent; border-radius: 16px; color: inherit; text-align: center; cursor: pointer; font: inherit; }
+.credential-slot:hover .credential-card, .credential-slot:focus-within .credential-card { position: absolute; top: 50%; left: 50%; width: min(100%, 240px); height: auto; min-height: 0; aspect-ratio: 1; overflow: auto; transform: translate(-50%, -50%); box-shadow: 0 12px 30px rgba(0, 0, 0, .2); }
+.credential-card:focus-visible { outline: 2px solid var(--profile-ink); outline-offset: 2px; }
+.credential-card > img { width: 72px; height: 72px; object-fit: contain; }
+.credential-copy { display: grid; gap: 4px; min-width: 0; }
+.credential-copy strong { font-size: 13px; font-weight: 500; line-height: 1.3; overflow-wrap: anywhere; }
+.credential-copy > span:last-child { font-size: 11px; color: var(--profile-500); line-height: 1.3; }
+@media (prefers-reduced-motion: no-preference) {
+    .credential-slot:hover .credential-card, .credential-slot:focus-within .credential-card { animation: badge-zoom-in 220ms ease-out both; }
+    @keyframes badge-zoom-in { from { transform: translate(-50%, -50%) scale(.92); } to { transform: translate(-50%, -50%) scale(1); } }
+}
+.publication-controls { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 36px; }
+.publication-controls label { min-width: min(100%, 300px); flex: 1; max-width: 430px; }
+.publication-controls .filter-tabs { margin-bottom: 0; }
+.research-book { position: relative; max-width: 1080px; margin: 0 auto; }
+.research-measurements { position: absolute; top: 0; inset-inline: 1px; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
+.research-book-viewport { --book-cover-spine: right center; --book-page-spine: left center; --book-next-out: rotateY(-90deg); --book-next-in: rotateY(90deg); --book-previous-out: rotateY(90deg); --book-previous-in: rotateY(-90deg); position: relative; height: var(--research-book-height, auto); overflow: hidden; isolation: isolate; perspective: 1600px; border: 1px solid var(--border-hairline); border-radius: 18px; background: var(--profile-bg); box-shadow: 0 18px 42px rgba(0, 0, 0, .1); }
+.research-book-viewport.is-measured > .research-spread { position: absolute; inset: 0; }
+.research-navigation { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 24px; color: var(--profile-500); font-size: 14px; }
+.research-navigation button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-hairline); border-radius: 999px; color: var(--profile-ink); background: transparent; font: inherit; cursor: pointer; }
+.research-navigation button:disabled { opacity: .45; cursor: default; }
+.research-navigation button:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+    .book-next-leave-active, .book-previous-leave-active { z-index: 2; pointer-events: none; }
+    .book-next-enter-active, .book-previous-enter-active { z-index: 1; }
+    .book-next-leave-active :deep(.research-page) { transform-origin: var(--book-page-spine); animation: book-next-out 560ms cubic-bezier(.2, 0, 0, 1) both; }
+    .book-next-leave-active :deep(.research-cover), .book-previous-leave-active :deep(.research-page) { animation: book-resting-page-out 560ms linear both; }
+    .book-next-enter-active :deep(.research-cover) { transform-origin: var(--book-cover-spine); animation: book-next-in 560ms cubic-bezier(.2, 0, 0, 1) both; }
+    .book-previous-leave-active :deep(.research-cover) { transform-origin: var(--book-cover-spine); animation: book-previous-out 560ms cubic-bezier(.2, 0, 0, 1) both; }
+    .book-previous-enter-active :deep(.research-page) { transform-origin: var(--book-page-spine); animation: book-previous-in 560ms cubic-bezier(.2, 0, 0, 1) both; }
+}
+@keyframes book-next-out { 0% { transform: rotateY(0); opacity: 1; } 49% { transform: var(--book-next-out); opacity: 1; } 50%, 100% { transform: var(--book-next-out); opacity: 0; } }
+@keyframes book-next-in { 0%, 49% { transform: var(--book-next-in); opacity: 0; } 50% { transform: var(--book-next-in); opacity: 1; } 100% { transform: rotateY(0); opacity: 1; } }
+@keyframes book-previous-out { 0% { transform: rotateY(0); opacity: 1; } 49% { transform: var(--book-previous-out); opacity: 1; } 50%, 100% { transform: var(--book-previous-out); opacity: 0; } }
+@keyframes book-previous-in { 0%, 49% { transform: var(--book-previous-in); opacity: 0; } 50% { transform: var(--book-previous-in); opacity: 1; } 100% { transform: rotateY(0); opacity: 1; } }
+@keyframes book-resting-page-out { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@media (max-width: 700px) {
+    .research-book-viewport { --book-cover-spine: center bottom; --book-page-spine: center top; --book-next-out: rotateX(90deg); --book-next-in: rotateX(-90deg); --book-previous-out: rotateX(-90deg); --book-previous-in: rotateX(90deg); }
+}
+.works-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
+.work-item { padding: 28px 0 0; border-top: 1px solid var(--border-hairline); }
+.work-meta { display: flex; gap: 14px; flex-wrap: wrap; color: var(--profile-500); font-size: 13px; margin-bottom: 18px; }
+.work-item h3 { font-size: 25px; margin-bottom: 18px; }
+.work-item > p { color: var(--profile-500); line-height: 1.65; font-size: 16px; margin-bottom: 16px; }
+.experience-grid { display: grid; grid-template-columns: minmax(0, 13fr) minmax(0, 7fr); align-items: start; gap: 64px; }
+.experience-column, .education-column, .career-identity, .education-identity { min-width: 0; }
+.column-heading { font-size: 20px; font-weight: 500; padding-bottom: 24px; }
+.employer-group { padding: 30px 0; border-top: 1px solid var(--border-hairline); }
+.career-heading, .employer-heading { display: flex; align-items: flex-start; gap: 16px; }
+.organization-logo { width: 40px; height: 40px; flex-shrink: 0; object-fit: contain; }
+.role-title { font-size: clamp(22px, 2.2vw, 28px); font-weight: 500; line-height: 1.25; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.career-organization { margin-top: 8px; font-size: 16px; line-height: 1.5; }
+.career-dates, .education-date { margin-top: 8px; color: var(--profile-500); font-size: 14px; line-height: 1.6; }
+.job-description-btn { min-height: 44px; margin-top: 20px; border: 0; background: transparent; padding: 0; font-family: inherit; cursor: pointer; }
+.employer-heading { align-items: center; margin-bottom: 24px; }
+.employer-heading h4 { font-size: 18px; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.employer-group--progression .career-role { margin-left: 19px; padding-left: 36px; border-left: 1px solid var(--border-hairline-strong); }
+.employer-group--progression .career-role + .career-role { padding-top: 30px; }
+.education-column { padding-left: 32px; border-left: 1px solid var(--border-hairline); }
+.education-entry { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; padding: 30px 0; border-top: 1px solid var(--border-hairline); }
+.education-entry .organization-logo { width: min(100%, 200px); height: auto; max-height: 100px; object-fit: contain; object-position: left; }
+.education-entry h4 { font-size: 20px; font-weight: 500; line-height: 1.35; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.education-institution { margin-top: 10px; font-size: 16px; line-height: 1.5; }
+.education-description { margin-top: 16px; color: var(--profile-500); font-size: 16px; line-height: 1.65; }
+@media (max-width: 900px) {
+    .experience-grid { grid-template-columns: 1fr; }
+    .education-column { padding-left: 0; border-left: 0; }
+}
+.design-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 28px; }
+.creative-cover img { object-fit: contain !important; }
+.creative-fan { position: relative; height: 0; padding-bottom: 80%; margin-bottom: 20px; overflow: hidden; border-radius: 20px; background: var(--surface-elevated); }
+.creative-fan img { position: absolute; top: 15%; left: 28%; width: 44%; height: 70%; object-fit: cover; border: 3px solid var(--surface-elevated); border-radius: 8px; box-shadow: 0 8px 24px #0003; }
+.creative-fan-0 { transform: translateX(-42%) rotate(-12deg); }
+.creative-fan-1 { z-index: 2; }
+.creative-fan-2 { transform: translateX(42%) rotate(12deg); }
+.creative-video { position: relative; }
+.creative-video .media-preview-fallback { min-height: 220px; }
+.creative-controls { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.creative-actions { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; margin: 48px auto 0; padding: 40px 24px; border-radius: 24px; background: var(--surface-elevated); }
+.creative-actions h3 { font-size: clamp(24px, 3vw, 34px); line-height: 1.2; }
+.creative-actions p { max-width: 100%; color: var(--profile-500); line-height: 1.6; }
+.creative-actions .primary-btn:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 4px; }
+.creative-controls button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border-hairline); border-radius: 999px; background: var(--surface-elevated); color: var(--profile-ink); cursor: pointer; }
+.design-image { border-radius: 20px; overflow: hidden; background: var(--surface-elevated); margin-bottom: 20px; }
+.design-image img { display: block; width: 100%; height: auto; aspect-ratio: 1.25; object-fit: cover; transition: transform var(--motion-slow) var(--ease-out-cubic); }
+.design-card h3 { font-size: 22px; margin: 9px 0 14px; }
+.design-card .creative-label { display: block; margin-top: 14px; text-align: center; color: var(--profile-500); font-size: 19px; line-height: 1.5; }
+.tools-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
+.tool-category { border-top: 1px solid var(--border-hairline); padding-top: 24px; }
+.tool-category h3 { font-size: 21px; margin-bottom: 20px; }
+.tool-category ul { list-style: none; display: grid; gap: 15px; }
+.tool-category li { display: flex; align-items: center; gap: 12px; color: var(--profile-500); font-size: 15px; }
+.tool-category img { width: 23px; height: 23px; object-fit: contain; }
 
-@media (max-width: 768px) {
-    .nav-links { display: none; }
-    .topbar { padding: 0.75rem 1rem; }
-    .project-grid { grid-template-columns: 1fr; }
-    .project-card:last-child:nth-child(odd) { width: 100%; }
-    .design-grid, .certificate-grid, .badge-grid { grid-template-columns: 1fr; }
-    .achievement-grid { grid-template-columns: 1fr; }
-    .achievement-item { border-right: 0; }
-    .publication-row { grid-template-columns: 1fr; }
-    .publication-cover { width: 100%; max-width: 10rem; }
-    .stat-line { grid-template-columns: 1fr; }
-    .stat-line div { border-right: 0; border-bottom: 1px solid var(--profile-200); }
-    .stat-line div:last-child { border-bottom: 0; }
-    .collaboration-bridge { grid-template-columns: 1fr; }
-    .footer { grid-template-columns: 1fr; justify-items: start; }
-    .footer-links { justify-items: start; }
+.contact-intro .contact-kicker { margin: 0 0 18px; color: var(--accent-primary); font-size: 13px; font-weight: 700; letter-spacing: .12em; }
+.inquiry-card { padding: 32px; background: var(--surface-elevated); border-radius: 24px; min-width: 0; }
+.inquiry-card > p { color: var(--profile-500); line-height: 1.6; margin-top: 10px; }
+.contact-email-row { display: flex; align-items: center; gap: 0; margin-top: -4px; min-width: 0; }
+.copy-email { display: inline-grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--accent-primary); cursor: pointer; }
+.copy-email svg { transform: translate(-5px, 5px); }
+.copy-email:hover { background: var(--surface-elevated); }
+.copy-email:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+.copy-status { display: block; color: var(--profile-500); font-size: 14px; }
+.guestbook-form > .inquiry-submit { justify-self: center; }
+.inquiry-note { color: var(--profile-500); font-size: 14px; line-height: 1.5; }
+.guestbook-secondary { grid-column: 1 / -1; }
+.guestbook-secondary summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.guestbook-secondary summary::-webkit-details-marker { display: none; }
+.guestbook-secondary summary::after { content: '+'; margin-left: auto; font-size: 24px; }
+.guestbook-secondary[open] summary::after { content: '-'; }
+.guestbook-secondary summary span { color: var(--profile-500); }
+.guestbook-secondary[open] > h3 { margin-top: 28px; }
+@media (max-width: 600px) { .inquiry-card { padding: 24px 20px; border-radius: 20px; } }
+
+.contact-section { display: grid; grid-template-columns: .85fr 1.15fr; align-items: start; gap: 80px; padding-bottom: 112px; }
+.contact-intro { padding-top: 32px; }
+.contact-intro > p { margin: 24px 0 28px; font-size: 18px; line-height: 1.6; color: var(--profile-500); }
+.contact-options { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.contact-icon { display: inline-grid; position: relative; place-items: center; width: 48px; height: 48px; color: var(--profile-ink); border-radius: 50%; transition: color 180ms ease, background-color 180ms ease; }
+.contact-icon:hover { background: var(--surface-elevated); }
+.contact-icon:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }
+.contact-icon svg, .contact-icon span, .contact-icon img { width: 24px; height: 24px; }
+.contact-icon span { background: currentColor; mask-position: center; mask-size: contain; mask-repeat: no-repeat; }
+.contact-gmail span { mask-image: url(https://api.iconify.design/simple-icons/gmail.svg); }
+.contact-gmail img { position: absolute; opacity: 0; }
+.contact-gmail:hover img, .contact-gmail:focus-visible img { opacity: 1; }
+.contact-linkedin span { mask-image: url(https://api.iconify.design/simple-icons/linkedin.svg); }
+.contact-linkedin:hover, .contact-linkedin:focus-visible { color: #0a66c2; }
+.contact-email { min-width: 0; font-size: 15px; overflow-wrap: anywhere; color: var(--profile-500); }
+.guestbook-card { padding: 32px; background: var(--surface-elevated); border-radius: 24px; min-width: 0; }
+.guestbook-card > h3 { margin-bottom: 12px; }
+.guestbook-card > p { color: var(--profile-500); font-size: 14px; line-height: 1.6; }
+.guestbook-form { display: grid; gap: 20px; margin-top: 24px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+label { display: grid; gap: 8px; font-size: 14px; font-weight: 500; min-width: 0; }
+input, textarea, select { display: block; width: 100%; min-width: 0; border: 1px solid var(--profile-400); border-radius: 8px; background: var(--profile-bg); color: var(--profile-ink); padding: 12px 14px; font: inherit; font-size: 16px; font-weight: 400; line-height: 1.5; }
+select { cursor: pointer; }
+select:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+textarea { resize: vertical; min-height: 130px; }
+input[aria-invalid='true'], textarea[aria-invalid='true'] { border-color: var(--profile-ink); border-width: 2px; }
+.optional-label { display: contents; color: var(--profile-500); font-weight: 400; }
+.form-hint { font-size: 12px; font-weight: 400; color: var(--profile-500); }
+.field-error { font-weight: 500; color: var(--profile-ink); font-size: 13px; }
+.form-errors { padding: 16px; border: 1px solid var(--profile-ink); border-radius: 8px; font-size: 14px; }
+.form-errors ul { margin: 8px 0 0 18px; }
+.form-errors a { text-decoration: underline; text-underline-offset: 3px; }
+.honeypot { display: none; }
+.guestbook-form > button { justify-self: start; }
+.success-message { color: var(--profile-ink); font-size: 15px; }
+.guestbook-entries { margin-top: 36px; }
+.guestbook-entries article { padding: 22px 0 0; border-top: 1px solid var(--border-hairline-strong); margin-top: 22px; }
+.guestbook-entries h4 { font-size: 16px; margin-bottom: 4px; }
+.guestbook-entries article > p { font-size: 15px; color: var(--profile-500); line-height: 1.6; margin-top: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.empty-state { padding: 24px 0; color: var(--profile-500); font-size: 16px; }
+.modal-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 6vh 24px; background: rgba(15, 27, 36, .6); }
+.modal-overlay.magazine-overlay { padding: 8px; background: rgba(0, 0, 0, .9); }
+.modal-overlay.gallery-overlay { background: rgba(0, 0, 0, .9); }
+.modal-overlay.video-overlay { padding: 0; background: #000; }
+.modal-card.video-modal { display: flex; align-items: center; justify-content: center; width: 100%; max-width: none; min-height: 100dvh; padding: 64px 20px 20px; border-radius: 0; background: #000; color: #fff; }
+.video-modal .modal-design-image { width: 100%; height: calc(100dvh - 100px); max-height: none; margin: 0; background: #000; }
+.video-modal .close-btn { z-index: 2; color: #fff; background: #333; }
+.video-modal .close-btn:hover, .video-modal .close-btn:focus-visible { background: #555; }
+.modal-card { position: relative; width: 100%; max-width: 760px; border-radius: 26px; background: var(--profile-bg); color: var(--profile-ink); padding: 48px; margin: auto; overflow-wrap: anywhere; }
+.modal-card.magazine-modal { width: 100%; max-width: none; padding: 48px 0 20px; background: transparent; border: 0; box-shadow: none; color: #fff; }
+.magazine-modal .close-btn { color: #fff; background: #333; }
+.magazine-modal .close-btn:hover, .magazine-modal .close-btn:focus-visible { background: #555; }
+.modal-card.gallery-modal { max-width: 1600px; padding: 54px 0 12px; background: transparent; border: 0; box-shadow: none; color: #fff; }
+.gallery-modal .close-btn { color: #fff; background: #333; }
+.gallery-modal .close-btn:hover, .gallery-modal .close-btn:focus-visible { background: #555; }
+.gallery-stage { display: flex; justify-content: center; align-items: center; gap: 4px; overflow: hidden; perspective: 1400px; }
+.gallery-viewer { position: relative; }
+.gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #222d; color: #fff; font: inherit; font-size: 32px; line-height: 1; cursor: pointer; }
+.gallery-arrow-previous { left: 8px; }
+.gallery-arrow-next { right: 8px; }
+.gallery-arrow:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+@keyframes gallery-flip-next { from { opacity: 0; transform: translateX(-18%) rotateY(-55deg); } to { opacity: 1; transform: translateX(0) rotateY(0); } }
+@keyframes gallery-flip-previous { from { opacity: 0; transform: translateX(18%) rotateY(55deg); } to { opacity: 1; transform: translateX(0) rotateY(0); } }
+.gallery-stage .gallery-current { display: block; flex: 0 1 auto; width: auto; height: auto; max-width: calc(100% - 2 * min(8vw, 76px) - 8px); max-height: min(82dvh, 1000px); backface-visibility: hidden; }
+.gallery-current.gallery-flip-next { animation: gallery-flip-next 800ms cubic-bezier(.2, 0, 0, 1); }
+.gallery-current.gallery-flip-previous { animation: gallery-flip-previous 800ms cubic-bezier(.2, 0, 0, 1); }
+.gallery-side { position: relative; flex: 0 0 min(8vw, 76px); align-self: stretch; overflow: hidden; opacity: .5; }
+.gallery-side img { position: absolute; top: 0; width: auto; max-width: none; height: 100%; }
+.gallery-side-previous img { right: 0; }
+.gallery-side-next img { left: 0; }
+@media (prefers-reduced-motion: reduce) { .gallery-current.gallery-flip-next, .gallery-current.gallery-flip-previous { animation: none; } }
+.gallery-count { margin: 12px 0 0; text-align: center; }
+.gallery-modal .creative-controls { justify-content: center; }
+.close-btn { position: absolute; right: 16px; top: 16px; }
+.modal-card h2 { font-size: 34px; margin: 12px 24px 20px 0; }
+.modal-card h3 { font-size: 21px; margin-top: 24px; }
+.modal-card > p:not(.content-category) { font-size: 16px; line-height: 1.7; color: var(--profile-500); margin: 20px 0; }
+.modal-badge-image { display: block; width: 120px; height: 120px; object-fit: contain; margin-bottom: 24px; }
+.recognition-modal { max-width: 1120px; }
+.experience-modal { max-width: 860px; max-height: 88vh; max-height: calc(100dvh - 12vh); overflow-y: auto; }
+.experience-modal-logo { display: block; width: auto; height: auto; max-width: min(100%, 200px); max-height: 90px; margin-bottom: 20px; object-fit: contain; object-position: left; }
+:global([data-theme='dark'] .education-entry .organization-logo),
+:global([data-theme='dark'] img.experience-modal-logo) { box-sizing: border-box; padding: 8px; border-radius: 8px; background: #fff; }
+.experience-modal-freelance { width: 64px; height: 64px; }
+.job-description-summary, .job-description-details li { text-align: justify; text-align-last: left; }
+.job-description-details { font-size: 16px; line-height: 1.7; color: var(--profile-500); }
+.job-description-details h3 { color: var(--profile-ink); }
+.job-description-details ol { display: grid; gap: 12px; margin-top: 16px; padding-left: 24px; list-style: decimal; }
+.job-description-details li { padding-left: 4px; }
+.freelance-responsibility-group { margin-top: 20px; }
+.freelance-responsibility-group h4 { color: var(--profile-ink); font-size: 16px; font-weight: 600; line-height: 1.5; }
+.freelance-responsibility-group ul { display: grid; gap: 12px; margin-top: 10px; padding-left: 24px; list-style: disc; }
+.freelance-responsibility-group p { text-align: justify; text-align-last: left; }
+.recognition-certificate-image { display: block; width: 100%; height: auto; margin-top: 24px; border-radius: 12px; }
+.project-modal { max-width: 1120px; padding: 28px; }
+.project-modal .close-btn { z-index: 1; }
+.project-modal-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 40px; align-items: center; }
+.project-gallery { min-width: 0; }
+.project-gallery-frame { display: grid; place-items: center; min-height: 300px; aspect-ratio: 1.45; overflow: hidden; border-radius: 18px; background: var(--surface-elevated); }
+.project-gallery-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.project-gallery-frame.project-gallery-logo-frame { background: #fff; padding: 32px; }
+.project-gallery-frame .project-gallery-logo { width: min(100%, 380px); max-height: 220px; object-fit: contain; }
+.project-image-fallback { padding: 24px; color: var(--profile-500); text-align: center; }
+.project-pagination { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+.project-pagination button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; }
+.project-pagination button span { width: 9px; height: 9px; border-radius: 50%; background: var(--profile-500); opacity: .45; }
+.project-pagination button[aria-pressed="true"] span { background: var(--profile-ink); opacity: 1; }
+.project-modal-copy { padding: 32px 24px 32px 0; min-width: 0; }
+.project-modal-copy h2 { margin-top: 12px; }
+.project-year, .project-description { color: var(--profile-500); line-height: 1.7; }
+.project-description { margin: 20px 0; }
+.project-tech-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 0; margin: 22px 0; list-style: none; }
+.project-tech-logos li { position: relative; }
+.project-tech-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 9px; background: #fff; color: #344854; }
+.project-tech-logos img { display: block; width: 28px; height: 28px; object-fit: contain; }
+.project-tech-tooltip { position: absolute; z-index: 2; left: 50%; bottom: calc(100% + 8px); width: max-content; max-width: 150px; padding: 6px 9px; border-radius: 6px; background: var(--profile-ink); color: var(--profile-bg); font-size: 12px; line-height: 1.35; text-align: center; opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(-50%); }
+.project-tech-logos li:hover .project-tech-tooltip, .project-tech-icon:focus-visible .project-tech-tooltip { opacity: 1; visibility: visible; }
+.project-tech-logos li:last-child .project-tech-tooltip { right: 0; left: auto; transform: none; }
+.project-modal-copy .modal-actions { margin-top: 28px; }
+@media (max-width: 760px) {
+    .project-modal { padding: 20px; }
+    .project-modal-layout { grid-template-columns: 1fr; gap: 8px; }
+    .project-gallery { padding-top: 40px; }
+    .project-gallery-frame { min-height: 180px; }
+    .project-modal-copy { padding: 16px 0 8px; }
+}
+@media (max-width: 760px) {
+    .project-index-entry { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 26px 0; }
+}
+.modal-design-image { display: block; width: 100%; max-height: 60vh; object-fit: contain; margin: 24px 0; background: var(--surface-elevated); border-radius: 14px; }
+.modal-design-document { height: 60vh; border: 0; }
+.media-preview-fallback { display: grid; place-items: center; width: 100%; height: 100%; color: var(--profile-500); }
+.modal-card > .primary-btn { margin-top: 24px; }
+.dialog-enter-active, .dialog-leave-active { transition: opacity var(--motion-fast) var(--ease-out-cubic); }
+.dialog-enter-active .modal-card { transition: transform var(--motion-base) var(--ease-out-cubic); }
+.dialog-enter-from, .dialog-leave-to { opacity: 0; }
+.dialog-enter-from .modal-card { transform: translateY(12px); }
+.folio-footer { background: var(--surface-elevated); padding: 48px; }
+.folio-footer > div { max-width: 1144px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 24px; }
+.folio-footer > div > a { font-size: 20px; letter-spacing: -.5px; }
+.folio-footer nav { display: flex; gap: 22px; flex-wrap: wrap; margin-left: auto; }
+.folio-footer nav a { color: var(--profile-500); font-size: 14px; padding: 8px 0; }
+.folio-footer p { width: 100%; color: var(--profile-500); font-size: 12px; margin-top: 24px; }
+:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 5px; }
+@media (min-width: 1500px) { .hero-section { padding-top: 104px; padding-bottom: 112px; } }
+@media (max-width: 1100px) {
+    .header-content { gap: 20px; padding-inline: 32px; }
+    .header-nav { gap: 18px; }
+    .folio-main { padding-inline: 36px; }
+    .hero-section { gap: 6%; padding: 72px 0; }
+    .hero-bio { font-size: 16px; }
+    .featured-project-copy { padding: 32px; }
+    .contact-section { gap: 44px; }
+}
+@media (max-width: 850px) {
+    .header-content { min-height: 76px; flex-wrap: wrap; gap: 12px; padding: 12px 24px; }
+    .menu-toggle { display: inline-flex; font-size: 14px; }
+    .theme-controls { order: 0; margin-left: auto; }
+    .header-nav { display: none; order: 3; flex-basis: 100%; padding: 12px 0 8px; flex-wrap: wrap; gap: 8px 28px; }
+    .header-nav.is-open { display: flex; }
+    .header-nav a { min-height: 44px; }
+    .hero-section { padding: 56px 0 64px; grid-template-columns: 1.12fr 1fr; gap: 36px; }
+    h1 { font-size: 54px; }
+    .hero-portrait > img { aspect-ratio: .8; border-radius: 24px; }
+    .portrait-video { border-radius: 24px; }
+    .hero-actions { gap: 10px; }
+    .primary-btn, .secondary-btn { font-size: 14px; padding: 12px 20px; }
+    .section-container { padding: 60px 0; }
+    .section-header { margin-bottom: 32px; }
+    h2 { font-size: 38px; }
+    .featured-project { grid-template-columns: 1fr; }
+    .featured-project-image img { min-height: 0; max-height: 450px; height: auto; aspect-ratio: 1.6; }
+    .featured-project-copy { padding: 36px; }
+    .services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .service-item { grid-column: auto; }
+    .service-item h3 { font-size: 21px; }
+    .service-item p { font-size: 15px; }
+    .experience-grid { gap: 36px; }
+    .design-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .design-video-card:last-child:nth-child(odd) { grid-column: 1 / -1; width: calc((100% - 28px) / 2); justify-self: center; }
+    .tools-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .contact-section { grid-template-columns: 1fr; gap: 44px; }
+    .contact-intro { max-width: 600px; padding-top: 0; }
+    .folio-footer { padding: 36px; }
+    .folio-footer nav { margin-left: 0; }
+}
+@media (max-width: 600px) {
+    .header-content { padding-inline: 20px; gap: 8px; }
+    .menu-toggle { gap: 4px; }
+    .menu-toggle span { font-size: 0; }
+    .folio-main { padding-inline: 24px; }
+    .hero-section { grid-template-columns: 1fr; gap: 36px; padding: 48px 0 40px; }
+    .hero-portrait { order: -1; }
+    h1 { font-size: clamp(40px, 11.5vw, 48px); margin-bottom: 22px; }
+    .hero-role { margin-bottom: 20px; }
+    .hero-bio { font-size: 16px; }
+    .hero-actions { margin-top: 26px; }
+    .hero-external-links { margin-top: 24px; gap: 22px; }
+    .hero-portrait > img { aspect-ratio: 1.1; object-position: center 25%; border-radius: 22px; }
+    .portrait-video { border-radius: 22px; }
+    .section-container { padding: 48px 0; scroll-margin-top: 96px; }
+    h2 { font-size: 34px; }
+    .section-header > p { margin-top: 16px; font-size: 16px; }
+    .filter-tabs { margin-bottom: 24px; gap: 8px; }
+    .filter-tabs button { padding: 10px 15px; font-size: 13px; }
+    .featured-project { border-radius: 22px; margin-bottom: 36px; }
+    .featured-project-image img { aspect-ratio: 1.25; }
+    .featured-project-copy { padding: 28px 24px; }
+    .featured-project-copy h3 { font-size: 34px; }
+    .project-actions { gap: 16px; }
+    .projects-grid, .services-grid, .works-list, .experience-grid { grid-template-columns: 1fr; }
+    .projects-grid { gap: 36px; }
+    .project-copy { padding-right: 0; }
+    .project-image { margin-bottom: 20px; }
+    .services-grid { gap: 28px; }
+    .service-item > svg { margin-bottom: 20px; }
+    .service-item h3 { font-size: 24px; max-width: 100%; }
+    .service-item p { font-size: 16px; }
+    .credential-card { gap: 8px; padding: 12px 6px; }
+    .credential-card > img { width: 54px; height: 54px; }
+    .credential-copy strong { font-size: 12px; }
+    .archive-actions { gap: 12px; }
+    .publication-controls { display: grid; gap: 20px; }
+    .publication-controls label { max-width: none; }
+    .works-list { gap: 16px; }
+    .work-item h3 { font-size: 24px; }
+    .experience-grid { gap: 40px; }
+    .column-heading { padding-bottom: 16px; }
+    .employer-group, .education-entry { padding-block: 24px; }
+    .employer-group--progression .career-role { margin-left: 0; padding-left: 18px; }
+    .design-grid { grid-template-columns: 1fr; gap: 28px 16px; }
+    .design-video-card:last-child:nth-child(odd) { grid-column: auto; width: 100%; }
+    .design-image { border-radius: 14px; margin-bottom: 14px; }
+    .design-image img { aspect-ratio: .9; }
+    .design-card h3 { font-size: 18px; }
+    .design-card .text-link { font-size: 13px; }
+    .tools-grid { gap: 28px 20px; }
+    .tool-category h3 { font-size: 18px; }
+    .tool-category li { font-size: 13px; gap: 8px; }
+    .tool-category img { width: 20px; height: 20px; }
+    .contact-intro > p { font-size: 16px; }
+    .guestbook-card { padding: 24px 20px; border-radius: 20px; }
+    .form-row { grid-template-columns: 1fr; gap: 20px; }
+    .modal-overlay { padding: 20px 12px; }
+    .modal-card { padding: 64px 24px 32px; border-radius: 20px; }
+    .modal-card.project-modal { padding: 20px; }
+    .modal-card.experience-modal { max-height: calc(100dvh - 40px); }
+    .modal-card h2 { font-size: 29px; margin-right: 0; }
+    .folio-footer { padding: 36px 24px; }
+    .folio-footer > div { gap: 20px; }
+    .folio-footer nav { gap: 8px 20px; }
+    .folio-footer p { margin-top: 12px; }
+}
+@media (max-width: 700px) {
+    .hero-section { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+    .project-card:hover .project-image img, .design-card:hover .design-image img { transform: none; }
 }
 </style>

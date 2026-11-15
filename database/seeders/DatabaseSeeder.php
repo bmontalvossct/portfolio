@@ -25,12 +25,12 @@ class DatabaseSeeder extends Seeder
             ['slug' => 'britt-m'],
             [
                 'display_name' => 'Britt Kristoff B. Montalvo, MSIT',
-                'headline' => 'Lead Digitalization Expert, information systems analyst, researcher, and multidisciplinary digital maker.',
-                'availability' => 'Open to research, systems integration, systems development, and digital publication collaborations.',
+                'headline' => 'Registered Cybersecurity Professional (DICT Intermediate Level 2) | Systems Analyst, Researcher, & Developer',
+                'availability' => 'Open to systems integration, cybersecurity consulting, research, and digital services.',
                 'location' => 'Surigao del Norte, Philippines',
                 'email' => 'inquiries@brittmontalvo.dev',
-                'bio' => 'I work across information systems, health technology implementation, data operations, research, and visual publishing. I also provide MikroTik network consulting and serve as a GPTZero Ambassador, promoting responsible and transparent AI use.',
-                'avatar_url' => 'https://avatars.githubusercontent.com/u/52160082?v=4',
+                'bio' => 'Specializing in full-stack web development, cybersecurity, network infrastructure, AI-powered solutions, data analytics, and workflow automation. Helping businesses, educational institutions, and organizations build secure, scalable, and user-friendly digital solutions that streamline operations, improve efficiency, and support digital transformation.',
+                'avatar_url' => '/images/profile-avatar.jpg',
                 'credly_username' => 'brittm',
                 'github_username' => 'bmontalvossct',
                 'external_links' => [
@@ -39,14 +39,13 @@ class DatabaseSeeder extends Seeder
                     ['label' => 'LinkedIn', 'url' => 'https://www.linkedin.com/in/britt-kristoff-montalvo/'],
                 ],
                 'highlights' => [
-                    'Information Systems Analyst I at Surigao del Norte State University',
-                    'MikroTik Consultant for network design, configuration, and troubleshooting',
+                    'DICT Registered Cybersecurity Professional - Intermediate Level 2',
+                    'MikroTik Consultant for network design, routing, and security',
                     'GPTZero Ambassador promoting responsible AI use and academic integrity',
-                    'Civil Service Eligibility: CSE Professional',
-                    'Experienced in electronic medical record implementation and health facility systems support',
-                    'Languages: English, Tagalog, and Visayan',
                 ],
                 'skills' => [
+                    'Cybersecurity',
+                    'Vulnerability Assessment',
                     'Systems analysis',
                     'Data management',
                     'Electronic medical records',
@@ -54,9 +53,8 @@ class DatabaseSeeder extends Seeder
                     'Network administration',
                     'MikroTik consulting',
                     'Research and reporting',
-                    'Hugging Face',
-                    'Google Workspace',
                     'Laravel and PHP',
+                    'Vue.js & Inertia.js',
                     'Adobe Creative Suite',
                 ],
             ],
@@ -65,6 +63,20 @@ class DatabaseSeeder extends Seeder
         $this->call(PortfolioToolSeeder::class);
 
         $this->call(CompleteCredentialBadgeSeeder::class);
+
+        Achievement::query()->updateOrCreate(
+            ['title' => 'DICT Registered Cybersecurity Professional - Intermediate Level 2'],
+            [
+                'issuer' => 'Department of Information and Communications Technology (DICT)',
+                'summary' => 'Registered Cybersecurity Professional under the DICT Cybersecurity Competency Framework at Intermediate Level 2.',
+                'achieved_on' => '2026-01-15',
+                'image_url' => '/storage/portfolio/organizations/dict.svg',
+                'external_url' => 'https://dict.gov.ph',
+                'tags' => ['DICT', 'Cybersecurity Professional', 'Intermediate Level 2', 'Information Security'],
+                'sort_order' => 0,
+                'is_featured' => true,
+            ],
+        );
 
         Achievement::query()->updateOrCreate(
             ['title' => 'Civil Service Eligibility - Professional'],
@@ -120,13 +132,26 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
+        Achievement::query()->firstOrCreate(
+            ['title' => 'Scam Ready ASEAN Master Trainer', 'issuer' => 'SmartCT / ASEAN Foundation'],
+            [
+                'summary' => 'Recognized and authorized as a Master Trainer for the Scam Ready ASEAN Programme under SmartCT, delivering digital literacy and safety training and Be Scam Ready gameplay activities. Valid until December 2027.',
+                'achieved_on' => null,
+                'image_url' => '/images/recognitions/scam-ready-asean-logo.png',
+                'external_url' => 'https://aseanfoundation.org/programme/scam-ready-asean/',
+                'tags' => ['Master Trainer', 'Digital literacy', 'Online safety'],
+                'sort_order' => 5,
+                'is_featured' => true,
+            ],
+        );
+
         Education::query()->updateOrCreate(
             ['institution' => 'Caraga State University', 'program' => 'Master of Science in Information Technology'],
             [
                 'logo_url' => '/storage/portfolio/organizations/caraga-state-university.png',
                 'level' => 'Master\'s degree',
                 'end_date' => 'June 2026',
-                'description' => 'Graduated in June 2026.',
+                'description' => null,
                 'sort_order' => 1,
             ],
         );
@@ -148,30 +173,55 @@ class DatabaseSeeder extends Seeder
 
         WorkExperience::query()
             ->where('organization', 'TMB Tax Bureau')
-            ->where('position', 'Virtual Assistant (Part-time)')
-            ->update(['position' => 'Virtual Assistant']);
+            ->delete();
 
         $experiences = [
+            [
+                'organization' => 'Self-employed',
+                'position' => 'Freelancer',
+                'start_date' => '2026',
+                'end_date' => null,
+                'summary' => 'Provide freelance services specializing in graphic design, video editing, AI-powered automation, and Customer Relationship Management (CRM) solutions. Help businesses, entrepreneurs, and organizations improve their digital presence, streamline operations, optimize workflows, and enhance productivity through creative content and technology-driven solutions.',
+                'responsibilities' => [
+                    '1. Graphic Design and Digital Content Creation',
+                    'Design professional graphics, social media materials, marketing assets, presentations, and digital promotional content.',
+                    'Develop visually engaging materials aligned with client branding, communication goals, and target audiences.',
+                    '2. Video Editing and Multimedia Production',
+                    'Edit and produce videos for social media, promotional campaigns, educational materials, and other digital platforms.',
+                    'Enhance multimedia content through transitions, captions, audio editing, visual effects, and storytelling techniques.',
+                    '3. AI Automation and Workflow Development',
+                    'Design and implement AI-powered workflows to automate repetitive business tasks and improve operational efficiency.',
+                    'Integrate AI tools, third-party applications, APIs, and automation platforms to streamline business processes.',
+                    'Develop automated systems for data processing, notifications, document management, and information retrieval.',
+                    '4. CRM Management and Business Process Optimization',
+                    'Organize, maintain, and update customer records, contact databases, and CRM workflows.',
+                    'Configure automated lead tracking, customer follow-ups, task assignments, and communication processes.',
+                    'Improve customer engagement and operational efficiency through structured data management and workflow automation.',
+                    '5. Client Collaboration and Technical Support',
+                    'Collaborate with clients to understand project requirements and develop tailored creative and technical solutions.',
+                    'Manage project deliverables, implement revisions, troubleshoot workflow issues, and provide ongoing technical assistance.',
+                    'Ensure the quality, consistency, and timely delivery of freelance projects.',
+                ],
+                'sort_order' => 0,
+                'is_current' => true,
+            ],
             [
                 'organization' => 'Surigao del Norte State University',
                 'logo_url' => '/storage/portfolio/organizations/snsu.png',
                 'position' => 'Information Systems Analyst I',
                 'start_date' => 'November 25, 2024',
-                'end_date' => '2026',
+                'end_date' => 'June 18, 2026',
                 'summary' => 'Systems analysis, data operations, technical support, network administration, documentation, and user training for university services.',
-                'responsibilities' => ['Systems analysis and design', 'Data management and reporting', 'Technical and network support', 'User training and documentation'],
+                'responsibilities' => [
+                    'Systems Analysis and Design: Analyze existing information systems to identify areas for improvement and assist in designing new IT solutions or modifying existing systems to enhance user experience and operational efficiency.',
+                    'Data Management and Analysis: Gather, validate, and document system information and needs; identify and interpret data patterns and trends; and analyze results using statistical techniques or tools.',
+                    'Technical Support: Provide technical assistance to business owners and end-users of information systems, including troubleshooting hardware and software issues, and ensuring smooth operation of various information systems.',
+                    'Network Administration: Understand network concepts and be capable of administering and operating various information systems, including system administration and infrastructure development towards digitalization.',
+                    'Documentation and Reporting: Prepare and maintain technical documents, user manuals, and system processes; document system changes and enhancements; and produce accomplishment reports periodically.',
+                    'User Training: Conduct user training sessions to ensure proper utilization of information systems and best practices.',
+                    'Research and Market Analysis: Conduct research and market analysis to stay updated with industry trends and advancements in information systems.',
+                ],
                 'sort_order' => 1,
-                'is_current' => false,
-            ],
-            [
-                'organization' => 'TMB Tax Bureau',
-                'logo_url' => '/storage/portfolio/organizations/tmb-tax-bureau.png',
-                'position' => 'Virtual Assistant',
-                'start_date' => '2024',
-                'end_date' => '2026',
-                'summary' => 'Created courses, e-books, and visual assets while managing GoHighLevel and supporting a range of graphic design requirements.',
-                'responsibilities' => ['Course creation', 'Graphic design', 'GoHighLevel management', 'E-book creation', 'Other graphic design work'],
-                'sort_order' => 2,
                 'is_current' => false,
             ],
             [
@@ -181,8 +231,27 @@ class DatabaseSeeder extends Seeder
                 'start_date' => 'April 30, 2024',
                 'end_date' => 'November 25, 2024',
                 'summary' => 'Implemented and supported electronic medical record systems across health facilities, including readiness assessment, training, monitoring, and technical reporting.',
-                'responsibilities' => ['EMR implementation', 'Health facility readiness assessment', 'Training and technical support', 'Compliance monitoring and reporting'],
-                'sort_order' => 3,
+                'responsibilities' => [
+                    'Oversee the overall implementation of EMR Records.',
+                    'Assist in Assessment of hospital readiness for system implementation.',
+                    'Orient and train personnel of local health facilities on how to use DOH implement systems.',
+                    'Install Relevant systems needed in respective health facilities.',
+                    'Conduct regular visits, troubleshooting, and monitoring in all health facilities.',
+                    'Validate request for username and password for particular systems.',
+                    'Monitor health facility systems for proper compliance.',
+                    'Answer phone calls and update FAQs encountered during system implementation.',
+                    'Submit monthly reports/transcriptions/summaries of all queries and actions made to the regional office.',
+                    'Generate service statistics or other relevant reports requested by relevant and authorized offices.',
+                    'Provide other forms of technical assistance connected to the implemented systems.',
+                    'Perform other tasks that may be assigned related to EMR implementation.',
+                    'Conduct training regarding ICLINICSYS to Surigao del Norte Health Facilities.',
+                    'Create Statistics/Analytical reports.',
+                    'Create Formulated Excels.',
+                    'Attend meetings if necessary.',
+                    'Handle and provide troubleshooting assistance to health facilities regarding DOH-implemented websites.',
+                    'Email advisories/administrative orders to health facilities.',
+                ],
+                'sort_order' => 2,
                 'is_current' => false,
             ],
             [
@@ -192,8 +261,27 @@ class DatabaseSeeder extends Seeder
                 'start_date' => 'February 18, 2021',
                 'end_date' => 'April 30, 2024',
                 'summary' => 'Supported health information systems, user accounts, data reports, facility visits, and troubleshooting for regional health programs.',
-                'responsibilities' => ['Health information system support', 'Data and service statistics', 'User account validation', 'Facility monitoring and troubleshooting'],
-                'sort_order' => 4,
+                'responsibilities' => [
+                    'Oversee the overall implementation of EMR Records.',
+                    'Assist in Assessment of hospital readiness for system implementation.',
+                    'Orient and train personnel of local health facilities on how to use DOH implement systems.',
+                    'Install Relevant systems needed in respective health facilities.',
+                    'Conduct regular visits, troubleshooting, and monitoring in all health facilities.',
+                    'Validate request for username and password for particular systems.',
+                    'Monitor health facility systems for proper compliance.',
+                    'Answer phone calls and update FAQs encountered during system implementation.',
+                    'Submit monthly reports/transcriptions/summaries of all queries and actions made to the regional office.',
+                    'Generate service statistics or other relevant reports requested by relevant and authorized offices.',
+                    'Provide other forms of technical assistance connected to the implemented systems.',
+                    'Perform other tasks that may be assigned related to EMR implementation.',
+                    'Conduct training regarding ICLINICSYS to Surigao del Norte Health Facilities.',
+                    'Create Statistics/Analytical reports.',
+                    'Create Formulated Excels.',
+                    'Attend meetings if necessary.',
+                    'Handle and provide troubleshooting assistance to health facilities regarding DOH-implemented websites.',
+                    'Email advisories/administrative orders to health facilities.',
+                ],
+                'sort_order' => 3,
                 'is_current' => false,
             ],
             [
@@ -203,8 +291,16 @@ class DatabaseSeeder extends Seeder
                 'start_date' => 'March 2018',
                 'end_date' => 'June 2018',
                 'summary' => 'Supported database updates, administrative work, image editing, documentation, and ICT equipment setup.',
-                'responsibilities' => ['Excel database updates', 'Photo editing and enhancement', 'Administrative support', 'ICT equipment assistance'],
-                'sort_order' => 5,
+                'responsibilities' => [
+                    'Assist in updating and maintaining Excel databases, ensuring accurate and organized data storage for operational needs.',
+                    'Provide administrative assistance to supervisors, including scheduling appointments, organizing documents, and handling correspondence to support daily office operations.',
+                    'Participate in coordinating and conducting photo ops for company units, assisting with setup, image capture, and post-production editing as directed by supervisors.',
+                    'Support supervisors in editing and enhancing photos using editing software, following provided guidelines and instructions to maintain consistency and quality.',
+                    'Assist in processing and issuing checks when required, ensuring accurate documentation and adherence to financial procedures under supervision.',
+                    'Attend company meetings as directed, actively observing and contributing as appropriate, gaining insights into organizational processes and decision-making.',
+                    'Provide technical assistance for company ICT equipment under supervision, learning troubleshooting techniques and maintenance procedures to ensure equipment functionality.',
+                ],
+                'sort_order' => 4,
                 'is_current' => false,
             ],
         ];
@@ -229,7 +325,23 @@ class DatabaseSeeder extends Seeder
                 'cover_url' => '/storage/portfolio/publications/sure-health-cover.webp',
                 'external_url' => 'https://online.fliphtml5.com/utpit/pzyy/',
                 'tags' => ['Digital magazine', 'Health communication', 'Editorial design', 'Public health'],
-                'sort_order' => 2,
+                'sort_order' => 3,
+                'is_featured' => true,
+            ],
+        );
+
+        PublishedWork::query()->updateOrCreate(
+            [
+                'type' => 'scopus_paper',
+                'title' => 'Forecasting Child Immunization Coverage and Predicting Underperformance Risk Using a Hybrid Time-Series Framework: Evidence from FHSIS Data',
+            ],
+            [
+                'publication' => 'Accepted by IDAP (International Data & Analytics Proceedings)',
+                'external_url' => 'https://ieeexplore.ieee.org/document/11727904',
+                'role' => 'Author / Primary Researcher',
+                'summary' => 'Fully Immunized Child (FIC) coverage among children in the Philippines is an essential public health indicator, but the routinely utilized health information systems in the Philippines do not have prospective forecasting capabilities to inform public health decision-making. This paper introduces a temporally evaluated adaptive framework for forecasting and underperformance risk prediction of FIC coverage using quarterly Field Health Services Information System (FHSIS) data from Surigao del Norte, Philippines. Historical data (2021-2024) was used for expanding window cross-validation model selection, with 2025 held out for temporal evaluation. Models evaluated include ARIMA, Holt-Winters, Prophet, Moving Average, Naïve, Seasonal Naïve, Annual Profile, and Random Forest classifier (sensitivity = 1.0000, ROC-AUC = 0.9753).',
+                'tags' => ['Scopus Paper', 'Accepted by IDAP', 'FHSIS', 'Child Immunization', 'Time-Series Forecasting', 'Random Forest'],
+                'sort_order' => 1,
                 'is_featured' => true,
             ],
         );
@@ -243,8 +355,8 @@ class DatabaseSeeder extends Seeder
                 'publication' => 'Approved for Scopus publication',
                 'role' => 'Researcher / System Developer',
                 'summary' => 'Approved for Scopus publication, with final publication date and DOI pending. The study prospectively validates a governed hybrid pipeline that selects among ARIMA, Holt-Winters ETS, and Prophet for LGU-level FIC and CIC forecasting, then identifies municipalities at risk of missing the 95% coverage target.',
-                'tags' => ['FHSIS', 'Child immunization', 'Time-series forecasting', 'Risk prediction', 'Scopus approved'],
-                'sort_order' => 1,
+                'tags' => ['Scopus Paper', 'FHSIS', 'Child Immunization', 'Time-Series Forecasting', 'Risk Prediction'],
+                'sort_order' => 2,
                 'is_featured' => true,
             ],
         );
@@ -253,11 +365,11 @@ class DatabaseSeeder extends Seeder
             ['title' => 'Governed MCH Forecasting and Risk Prediction DSS'],
             [
                 'category' => 'Health informatics DSS',
-                'summary' => 'A working thesis decision-support system for provincial maternal and child health planning. It governs per-series model selection across ARIMA, Holt-Winters ETS, Prophet, and baseline methods, pairs forecast intervals with underperformance risk assessment, and translates projected service gaps into actionable needed counts. The local build is complete and deployment is pending.',
+                'summary' => 'A working decision-support system for provincial maternal and child health planning. It governs per-series model selection across ARIMA, Holt-Winters ETS, Prophet, and baseline methods, pairs forecast intervals with underperformance risk assessment, and translates projected service gaps into actionable needed counts.',
                 'year' => '2026',
                 'repo_url' => 'https://github.com/bmontalvossct/Forecasting-and-Risk-Prediction',
                 'thumbnail_url' => '/storage/portfolio/projects/mch-forecasting-risk-dss.png',
-                'tags' => ['Laravel', 'Vue.js', 'Python', 'FHSIS', 'Forecasting', 'Risk prediction', 'Governed DSS', 'Deployment pending'],
+                'tags' => ['Laravel', 'Vue.js', 'Python', 'DOH', 'FHSIS', 'Power BI'],
                 'sort_order' => 1,
                 'is_featured' => true,
             ],
@@ -271,7 +383,8 @@ class DatabaseSeeder extends Seeder
                 'year' => '2026',
                 'url' => 'https://classcheck.brittmontalvo.dev',
                 'repo_url' => 'https://github.com/bmontalvossct/classcheck',
-                'tags' => ['Laravel', 'Vue.js', 'Inertia.js', 'Tailwind CSS', 'Open Source', 'Classroom Management', 'Attendance'],
+                'gallery_urls' => ['/images/projects/classcheck-home.jpg', '/images/projects/classcheck-features.jpg'],
+                'tags' => ['Laravel', 'Vue.js', 'Inertia.js', 'Tailwind CSS', 'MySQL', 'Git'],
                 'sort_order' => 2,
                 'is_featured' => true,
             ],
@@ -284,11 +397,17 @@ class DatabaseSeeder extends Seeder
                 'summary' => 'An interactive health informatics dashboard for monitoring Surigao del Norte facilities, electronic medical record status, patient activity, accreditation, training schedules, and trained personnel.',
                 'year' => '2026',
                 'url' => 'https://app.powerbi.com/view?r=eyJrIjoiMDBmNTFkOTYtMGQ1ZC00MTUzLWIxMmEtMzgwMTUwMmE5ODUzIiwidCI6IjE5NWQzN2JlLTllMGEtNDIwNS1hZGY0LWEyNTk5ZTllMWNjYSIsImMiOjEwfQ%3D%3D&pageName=ReportSection',
-                'tags' => ['Power BI', 'Health informatics', 'Data visualization', 'Electronic medical records'],
+                'tags' => ['Power BI', 'DOH', 'Python', 'SQL', 'MySQL'],
                 'sort_order' => 3,
                 'is_featured' => true,
             ],
         );
+
+        // Supply the dashboard preview only when no custom thumbnail has been saved.
+        Project::query()
+            ->where('title', 'SDN Electronic Medical Records Dashboard')
+            ->where(fn ($query) => $query->whereNull('thumbnail_url')->orWhere('thumbnail_url', ''))
+            ->update(['thumbnail_url' => '/images/projects/sdn-emr-dashboard-preview.png']);
 
         Project::query()->updateOrCreate(
             ['title' => 'Surigao del Norte State University Public Website'],
@@ -298,20 +417,20 @@ class DatabaseSeeder extends Seeder
                 'year' => '2026',
                 'url' => 'https://gamma.snsu.edu.ph',
                 'thumbnail_url' => '/storage/portfolio/projects/snsu-gamma-home.png',
-                'tags' => ['University website', 'Public information', 'Responsive design', 'Content management'],
+                'tags' => ['Laravel', 'Vue.js', 'Inertia.js', 'Tailwind CSS', 'MySQL', 'SNSU'],
                 'sort_order' => 4,
                 'is_featured' => true,
             ],
         );
 
         Project::query()->updateOrCreate(
-            ['title' => 'Amplifier thesis project'],
+            ['title' => 'Amplifier publication & design system'],
             [
                 'category' => 'Web system',
-                'summary' => 'An undergraduate thesis project developed as a web application and preserved in the public GitHub archive.',
+                'summary' => 'A publication and design asset management web system built using CodeIgniter PHP framework, MySQL database, and Bootstrap styling.',
                 'year' => '2019',
                 'repo_url' => 'https://github.com/kristoffmontalvo218/Amplifier-repo',
-                'tags' => ['PHP', 'HTML', 'CSS', 'Thesis'],
+                'tags' => ['CodeIgniter', 'PHP', 'MySQL', 'Bootstrap'],
                 'sort_order' => 5,
                 'is_featured' => true,
             ],
@@ -323,7 +442,7 @@ class DatabaseSeeder extends Seeder
                 'category' => 'Systems practice',
                 'summary' => 'Implementation, training, monitoring, and technical support for electronic medical record systems used by health facilities.',
                 'year' => '2021-2024',
-                'tags' => ['EMR', 'Health technology', 'Training', 'Data'],
+                'tags' => ['DOH', 'FHSIS', 'Python', 'SQL'],
                 'sort_order' => 6,
                 'is_featured' => true,
             ],
