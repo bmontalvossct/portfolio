@@ -45,6 +45,18 @@ class SeoMetadataTest extends TestCase
         $this->assertStringNotContainsString('/up', $sitemap->getContent());
         $this->assertStringNotContainsString('untrusted.example', $sitemap->getContent());
 
+        foreach ([
+            '/creative-assets/magazine/page-0001.jpg',
+            '/creative-assets/graphic-io.jpg',
+            '/creative-assets/graphic-el-corso-2.jpg',
+            '/creative-assets/graphic-el-corso.jpg',
+            '/creative-assets/palakasan-preview.png',
+        ] as $image) {
+            $this->assertFileExists(public_path(ltrim($image, '/')));
+            $this->assertStringContainsString('https://brittmontalvo.dev'.$image, $sitemap->getContent());
+        }
+        $this->assertStringNotContainsString('/media/thumbnail?', $sitemap->getContent());
+
         $robots = str_replace("\r\n", "\n", (string) file_get_contents(public_path('robots.txt')));
         foreach ([
             '*',

@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Profile;
 use App\Support\Profile\GitHubContributionService;
+use App\Support\Profile\VersionedPortfolioContent;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -15,7 +15,8 @@ class SyncGitHubContributions extends Command
 {
     public function handle(GitHubContributionService $github): int
     {
-        $username = trim((string) ($this->argument('username') ?: Profile::query()->value('github_username')));
+        $profileUsername = app(VersionedPortfolioContent::class)->get('profile')['github_username'] ?? '';
+        $username = trim((string) ($this->argument('username') ?: $profileUsername));
 
         if ($username === '') {
             $this->error('Add a GitHub username to the profile before syncing contribution activity.');

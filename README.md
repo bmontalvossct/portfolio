@@ -56,38 +56,26 @@ FILESYSTEM_DISK=public
 PORTFOLIO_ADMIN_TOKEN=replace-with-a-long-random-secret
 ```
 
-Start the portfolio with persistent database and media storage, then migrate and seed the complete portfolio data:
+Start the portfolio with persistent database and media storage:
 
 ```bash
 docker run -d --name britt-profile -p 8080:80 --env-file .env.docker -v profile-storage:/var/www/html/storage britt-profile
-docker exec britt-profile php artisan migrate --force --seed
 ```
 
-The application is then available at `http://localhost:8080`. The image does not automatically run migrations, seeders, queues, or scheduled jobs during startup.
+The application is then available at `http://localhost:8080` once its database has been provisioned. The image does not automatically run migrations, seeders, queues, or scheduled jobs during startup. Review pending migrations and back up the maintained database before applying them; do not use seeders as a deployment or synchronization shortcut.
 
-## Portfolio data sync
+## Publishing portfolio content
 
-The protected admin Sync tab immediately refreshes certificates from Google Drive, badge records from Credly, and the cached GitHub contribution graph. New PDF, PNG, JPEG, JPG, and WebP certificate files are added as featured records; metadata already edited in the admin is preserved.
+Public profile content is maintained in [`resources/data/portfolio-content.json`](resources/data/portfolio-content.json), including projects, work experience, education, research, recognition, badges and certificates. The Services page uses [`config/service_catalog.php`](config/service_catalog.php). The public site reads the repository content, rather than the corresponding admin database records. Public media referenced by the snapshot is bundled under [`public/repository-media/`](public/repository-media/) where available; other public assets are in `public/`. Keep asset paths and files together when making changes.
 
-```dotenv
-GOOGLE_DRIVE_CERTIFICATE_FOLDER_ID=1DssUngCZ2C6Qa8dg-LF1M1lNo2G7vDxh
-```
+To update the site, edit the relevant versioned content and public assets locally, validate the content and links, run the applicable tests and build, then commit and deploy the reviewed changes through the existing Git and Northflank workflow. Check the deployed pages and media after deployment. Review credential records against their issuing sources and preserve the certificate verification-link policy; do not commit private certificate documents, personal data or secrets.
 
-Drive certificates can also be refreshed from the terminal with `php artisan profile:sync-drive-certificates`.
+New Credly badges and certificates do **not** automatically appear on the public site. Add or update their verified public details and permitted verification links in the repository snapshot, include any required public images, and deploy the changes. Admin editing and admin badge/certificate sync for versioned content are disabled; the old sync commands update database records and do not publish the snapshot.
 
-Background synchronization runs on these intervals:
+GitHub contributions remain live cached data, and private inquiries are processed dynamically through the configured mail transport. A delivery-capable mail service must be configured for actual email delivery. Keep mail credentials in the deployment's secret configuration, never in the repository. The admin GitHub sync remains available for an immediate refresh.
 
-- Google Drive certificates: every five minutes
-- Credly badges: hourly at minute 10
-- GitHub contribution activity: hourly at minute 20
+Laravel declares a GitHub contribution refresh hourly at minute 20. This is a schedule declaration, not evidence that a worker is running. If scheduled refresh is desired, configure the hosting scheduler to invoke Laravel's `schedule:run` each minute. Docker startup does not start the scheduler or queue workers.
 
-The same jobs can be run directly with `php artisan profile:sync-drive-certificates`, `php artisan profile:sync-credly`, and `php artisan profile:sync-github`. Running `composer dev` starts Laravel's schedule worker locally. In production, configure the server's cron once so Laravel can run scheduled tasks:
-
-```cron
-* * * * * cd /path/to/profile && php artisan schedule:run >> /dev/null 2>&1
-```
-
-The admin button remains available when an immediate refresh is needed.
 
 ## About Laravel
 

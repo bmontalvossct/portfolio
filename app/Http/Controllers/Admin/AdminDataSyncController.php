@@ -7,6 +7,7 @@ use App\Models\CredentialBadge;
 use App\Models\Profile;
 use App\Support\Profile\CredlyBadgeSyncer;
 use App\Support\Profile\GitHubContributionService;
+use App\Support\Profile\VersionedPortfolioContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Artisan;
 use Throwable;
@@ -55,7 +56,7 @@ class AdminDataSyncController extends Controller
 
     public function github(GitHubContributionService $github): RedirectResponse
     {
-        $username = Profile::query()->value('github_username');
+        $username = app(VersionedPortfolioContent::class)->get('profile')['github_username'] ?? null;
         $activity = $github->refreshForUser(is_string($username) ? $username : null);
 
         if ($activity === null) {

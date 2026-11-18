@@ -33,14 +33,14 @@ function onBookKeydown(event) {
     if (zoom.value > 1 && event.target.classList.contains('book-viewport')) return;
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     event.preventDefault();
-    turn(event.key === 'ArrowLeft' ? 1 : -1);
+    turn(event.key === 'ArrowLeft' ? -1 : 1);
 }
 onBeforeUnmount(() => window.clearTimeout(turnTimer));
 </script>
 
 <template>
     <div class="creative-book" @keydown="onBookKeydown">
-        <button type="button" class="book-arrow book-arrow-previous" aria-label="Next magazine page" :aria-disabled="firstPage + 1 >= pageCount || turning" @click="turn(1)">‹</button>
+        <button type="button" class="book-arrow book-arrow-previous" aria-label="Previous magazine page" :aria-disabled="firstPage <= 1 || turning" @click="turn(-1)">‹</button>
         <div class="book-viewport" tabindex="0" aria-label="Magazine pages, scroll to view when zoomed">
         <div class="creative-book-spread" :style="{ '--book-zoom': zoom }">
             <img :src="pageUrl(leftPage)" :alt="`Magazine page ${leftPage} of ${pageCount}`" @error="imageError = true">
@@ -51,9 +51,9 @@ onBeforeUnmount(() => window.clearTimeout(turnTimer));
             </div>
         </div>
         </div>
-        <button type="button" class="page-hit-area page-hit-left" aria-label="Turn to next magazine page" :aria-disabled="firstPage + 1 >= pageCount || turning" @click="turn(1)"></button>
-        <button type="button" class="page-hit-area page-hit-right" aria-label="Turn to previous magazine page" :aria-disabled="firstPage <= 1 || turning" @click="turn(-1)"></button>
-        <button type="button" class="book-arrow book-arrow-next" aria-label="Previous magazine page" :aria-disabled="firstPage <= 1 || turning" @click="turn(-1)">›</button>
+        <button type="button" class="page-hit-area page-hit-left" aria-label="Turn to previous magazine page" :aria-disabled="firstPage <= 1 || turning" @click="turn(-1)"></button>
+        <button type="button" class="page-hit-area page-hit-right" aria-label="Turn to next magazine page" :aria-disabled="firstPage + 1 >= pageCount || turning" @click="turn(1)"></button>
+        <button type="button" class="book-arrow book-arrow-next" aria-label="Next magazine page" :aria-disabled="firstPage + 1 >= pageCount || turning" @click="turn(1)">›</button>
         <span class="sr-only" aria-live="polite">Pages {{ firstPage }} and {{ firstPage + 1 }} of {{ pageCount }}</span>
         <p v-if="imageError" class="book-error" role="status">A page could not be loaded. Please try another page.</p>
         <div class="book-zoom" aria-label="Magazine zoom controls">

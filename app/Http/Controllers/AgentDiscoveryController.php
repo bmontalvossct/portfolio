@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Profile;
+use App\Support\Profile\VersionedPortfolioContent;
 use Illuminate\Http\Response;
 
 class AgentDiscoveryController extends Controller
 {
     public function __invoke(): Response
     {
-        $profile = Profile::query()->first();
+        $profile = (object) app(VersionedPortfolioContent::class)->get('profile');
         $baseUrl = rtrim((string) config('seo.base_url', config('app.url')), '/');
         $name = $profile?->display_name ?? 'Britt Kristoff B. Montalvo, MSIT';
         $summary = $profile?->bio

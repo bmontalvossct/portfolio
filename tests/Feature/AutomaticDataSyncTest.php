@@ -20,12 +20,12 @@ class AutomaticDataSyncTest extends TestCase
         $this->seed();
     }
 
-    public function test_all_external_sources_are_scheduled_without_overlapping(): void
+    public function test_only_live_github_activity_is_scheduled(): void
     {
         $events = collect(app(Schedule::class)->events());
 
-        $this->assertScheduled($events, 'profile:sync-drive-certificates', '*/5 * * * *');
-        $this->assertScheduled($events, 'profile:sync-credly', '10 * * * *');
+        $this->assertFalse($events->contains(fn ($event): bool => str_contains($event->command, 'profile:sync-drive-certificates')));
+        $this->assertFalse($events->contains(fn ($event): bool => str_contains($event->command, 'profile:sync-credly')));
         $this->assertScheduled($events, 'profile:sync-github', '20 * * * *');
     }
 
@@ -57,7 +57,7 @@ class AutomaticDataSyncTest extends TestCase
 
     public function test_github_command_refreshes_the_profile_contribution_cache(): void
     {
-        Profile::query()->update(['github_username' => 'scheduled-github-user']);
+        Profile::query()->update(['github_username' => 'different-database-user']);
 
         Http::fake([
             'github.com/users/*/contributions' => Http::response(<<<'HTML'
@@ -73,10 +73,20 @@ class AutomaticDataSyncTest extends TestCase
             ->expectsOutput('GitHub activity refreshed: 7 contribution(s) loaded.')
             ->assertSuccessful();
 
-        $activity = Cache::get('portfolio.github.scheduled-github-user');
+        $activity = Cache::get('portfolio.github.bmontalvossct');
 
         $this->assertSame(7, $activity['total']);
         $this->assertSame('github', $activity['source']);
+    }
+
+    public function test_github_command_accepts_an_explicit_username_override(): void
+    {
+        Http::fake(['github.com/users/*/contributions' => Http::response(
+            '<h2 id="js-contribution-activity-description">2 contributions in the last year</h2><table><td data-date="2026-07-20" data-level="1"></td></table>'
+        )]);
+
+        $this->artisan('profile:sync-github', ['username' => 'explicit-user'])->assertSuccessful();
+        $this->assertSame(2, Cache::get('portfolio.github.explicit-user')['total']);
     }
 
     private function assertScheduled($events, string $command, string $expression): void

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\PrivateInquiry;
-use App\Models\Profile;
+use App\Support\Profile\VersionedPortfolioContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -30,7 +30,7 @@ class InquiryController extends Controller
 
         $mailer = (string) config('mail.default');
         $transport = config("mail.mailers.{$mailer}.transport");
-        $recipient = Profile::query()->value('email') ?: config('portfolio.review_notification_email');
+        $recipient = (app(VersionedPortfolioContent::class)->get('profile')['email'] ?? null) ?: config('portfolio.review_notification_email');
         $sender = config('mail.from.address');
 
         if (! in_array($transport, ['smtp', 'sendmail', 'ses', 'ses-v2', 'postmark', 'resend', 'mailgun'], true)

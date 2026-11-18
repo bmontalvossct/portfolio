@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Profile;
+use App\Support\Profile\VersionedPortfolioContent;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -10,7 +10,7 @@ class ServicesController extends Controller
 {
     public function __invoke(): Response
     {
-        $profile = Profile::query()->firstOrFail();
+        $profile = (object) app(VersionedPortfolioContent::class)->get('profile');
 
         return Inertia::render('Profile/Services', [
             'profile' => [

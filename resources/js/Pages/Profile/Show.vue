@@ -14,10 +14,8 @@ const props = defineProps({
     achievements: { type: Array, default: () => [] },
     badges: { type: Array, default: () => [] },
     certificates: { type: Array, default: () => [] },
-    designMedia: { type: Array, default: () => [] },
     education: { type: Array, default: () => [] },
     githubActivity: { type: Object, default: null },
-    guestbookEntries: { type: Array, default: () => [] },
     portfolioTools: { type: Array, default: () => [] },
     projects: { type: Array, default: () => [] },
     visitStats: { type: Object, default: null },
@@ -150,8 +148,8 @@ const carouselVisible = ref(false);
 const portraitStage = ref(null);
 const portraitForward = ref(null);
 const portraitReverse = ref(null);
-const profilePortraitForwardUrl = '/storage/portfolio/Videos/Profile%20Video.mp4';
-const profilePortraitReverseUrl = '/storage/portfolio/profile/portrait-reversed.mp4';
+const profilePortraitForwardUrl = '/repository-media/portfolio/Videos/Profile%20Video.mp4';
+const profilePortraitReverseUrl = '/repository-media/portfolio/profile/portrait-reversed.mp4';
 const portraitDirection = ref(1);
 const portraitHasFrame = ref(false);
 const portraitAvailable = ref(true);
@@ -486,14 +484,14 @@ function isAmplifierProject(project) {
 function projectMarkUrl(project) {
     const title = String(project.title ?? '').trim().toLowerCase();
     if (title === 'health information systems implementation') return '/images/projects/ihomis-plus-logo.png';
-    if (title === 'governed mch forecasting and risk prediction dss') return '/storage/portfolio/organizations/department-of-health.png';
-    if (isAmplifierProject(project)) return '/storage/portfolio/organizations/university-of-san-carlos.png';
+    if (title === 'governed mch forecasting and risk prediction dss') return '/repository-media/portfolio/organizations/department-of-health.png';
+    if (isAmplifierProject(project)) return '/repository-media/portfolio/organizations/university-of-san-carlos.png';
     if (!project.url) return null;
     try {
         const site = new URL(project.url);
         if (!['http:', 'https:'].includes(site.protocol)) return null;
         if (site.hostname === 'classcheck.brittmontalvo.dev') return '/images/projects/classcheck-logo.png';
-        if (site.hostname === 'gamma.snsu.edu.ph') return '/storage/portfolio/organizations/snsu.png';
+        if (site.hostname === 'gamma.snsu.edu.ph') return '/repository-media/portfolio/organizations/snsu.png';
         if (site.hostname === 'app.powerbi.com') return getIconifyLogoUrl('Power BI');
         return `${site.origin}/favicon.ico`;
     } catch {
@@ -653,92 +651,91 @@ function getIconifyLogoUrl(nameStr) {
     if (
         name.includes('department of health') ||
         name === 'doh' ||
-        name === 'fhsis' ||
-        name.includes('emr') ||
-        name.includes('electronic medical record')
+        name === 'fhsis'
     ) {
-        return '/storage/portfolio/organizations/department-of-health.png';
+        return '/repository-media/portfolio/organizations/department-of-health.png';
     }
     if (name.includes('surigao del norte state university') || name.includes('snsu')) {
-        return '/storage/portfolio/organizations/snsu.png';
+        return '/repository-media/portfolio/organizations/snsu.png';
     }
 
     const iconMap = {
-        'linkedin': 'https://api.iconify.design/logos/linkedin-icon.svg',
-        'power bi': 'https://api.iconify.design/logos/microsoft-power-bi.svg',
-        'powerbi': 'https://api.iconify.design/logos/microsoft-power-bi.svg',
-        'microsoft power bi': 'https://api.iconify.design/logos/microsoft-power-bi.svg',
-        'microsoft': 'https://api.iconify.design/logos/microsoft-icon.svg',
-        'microsoft office': 'https://api.iconify.design/logos/microsoft-icon.svg',
-        'microsoft 365': 'https://api.iconify.design/logos/microsoft-icon.svg',
-        'microsoft excel': 'https://api.iconify.design/mdi/microsoft-excel.svg?color=%23217346',
-        'canva': 'https://api.iconify.design/devicon/canva.svg',
-        'adobe': 'https://api.iconify.design/logos/adobe-icon.svg',
-        'adobe creative cloud': 'https://api.iconify.design/cib/adobe-creative-cloud.svg?color=%23DA1F26',
-        'adobe creative suite': 'https://api.iconify.design/cib/adobe-creative-cloud.svg?color=%23DA1F26',
-        'adobe photoshop': 'https://api.iconify.design/logos/adobe-photoshop.svg',
-        'adobe illustrator': 'https://api.iconify.design/logos/adobe-illustrator.svg',
-        'adobe indesign': 'https://api.iconify.design/logos/adobe-indesign.svg',
-        'adobe premiere pro': 'https://api.iconify.design/logos/adobe-premiere.svg',
-        'laravel': 'https://api.iconify.design/logos/laravel.svg',
-        'php': 'https://api.iconify.design/logos/php.svg',
-        'vue.js': 'https://api.iconify.design/logos/vue.svg',
-        'vue': 'https://api.iconify.design/logos/vue.svg',
-        'inertia.js': 'https://api.iconify.design/simple-icons/inertia.svg',
-        'inertia': 'https://api.iconify.design/simple-icons/inertia.svg',
-        'codeigniter': 'https://api.iconify.design/simple-icons/codeigniter.svg',
-        'python': 'https://api.iconify.design/logos/python.svg',
-        'docker': 'https://api.iconify.design/logos/docker-icon.svg',
-        'tailwind css': 'https://api.iconify.design/logos/tailwindcss-icon.svg',
-        'tailwindcss': 'https://api.iconify.design/logos/tailwindcss-icon.svg',
-        'bootstrap': 'https://api.iconify.design/logos/bootstrap.svg',
-        'mysql': 'https://api.iconify.design/logos/mysql-icon.svg',
-        'postgresql': 'https://api.iconify.design/logos/postgresql.svg',
-        'sqlite': 'https://api.iconify.design/logos/sqlite.svg',
-        'sql': 'https://api.iconify.design/logos/mysql-icon.svg',
-        'sql databases': 'https://api.iconify.design/logos/mysql-icon.svg',
-        'git': 'https://api.iconify.design/logos/git-icon.svg',
-        'github': 'https://api.iconify.design/logos/github-icon.svg',
-        'gitlab': 'https://api.iconify.design/logos/gitlab.svg',
-        'figma': 'https://api.iconify.design/logos/figma.svg',
-        'mikrotik': 'https://api.iconify.design/simple-icons/mikrotik.svg',
-        'cisco': 'https://api.iconify.design/simple-icons/cisco.svg',
-        'n8n': 'https://api.iconify.design/simple-icons/n8n.svg',
-        'javascript': 'https://api.iconify.design/logos/javascript.svg',
-        'typescript': 'https://api.iconify.design/logos/typescript-icon.svg',
-        'html5': 'https://api.iconify.design/logos/html-5.svg',
-        'html': 'https://api.iconify.design/logos/html-5.svg',
-        'css3': 'https://api.iconify.design/logos/css-3.svg',
-        'css': 'https://api.iconify.design/logos/css-3.svg',
-        'vite': 'https://api.iconify.design/logos/vitejs.svg',
-        'nginx': 'https://api.iconify.design/logos/nginx.svg',
-        'apache': 'https://api.iconify.design/logos/apache.svg',
-        'linux': 'https://api.iconify.design/logos/tux.svg',
-        'ubuntu': 'https://api.iconify.design/logos/ubuntu.svg',
-        'cpanel': 'https://api.iconify.design/logos/cpanel.svg',
-        'notion': 'https://api.iconify.design/logos/notion-icon.svg',
-        'google workspace': 'https://api.iconify.design/logos/google-icon.svg',
-        'google': 'https://api.iconify.design/logos/google-icon.svg',
-        'gemini': 'https://api.iconify.design/logos/google-gemini.svg',
-        'google gemini': 'https://api.iconify.design/logos/google-gemini.svg',
-        'chatgpt': 'https://api.iconify.design/logos/openai-icon.svg',
-        'claude': 'https://api.iconify.design/simple-icons/claude.svg',
-        'zapier': 'https://api.iconify.design/logos/zapier-icon.svg',
-        'gohighlevel': 'https://autogencrm.com/wp-content/uploads/2026/05/gohighlevel-icon-dark-bg.jpg',
+        'linkedin': '/images/brands/iconify/logos--linkedin-icon.svg',
+        'power bi': '/images/brands/iconify/logos--microsoft-power-bi.svg',
+        'powerbi': '/images/brands/iconify/logos--microsoft-power-bi.svg',
+        'microsoft power bi': '/images/brands/iconify/logos--microsoft-power-bi.svg',
+        'microsoft': '/images/brands/iconify/logos--microsoft-icon.svg',
+        'microsoft office': '/images/brands/iconify/logos--microsoft-icon.svg',
+        'microsoft 365': '/images/brands/iconify/logos--microsoft-icon.svg',
+        'microsoft excel': '/images/brands/iconify/mdi--microsoft-excel--color-217346.svg',
+        'canva': '/images/brands/iconify/devicon--canva.svg',
+        'adobe': '/images/brands/iconify/logos--adobe-icon.svg',
+        'adobe creative cloud': '/images/brands/iconify/cib--adobe-creative-cloud--color-DA1F26.svg',
+        'adobe creative suite': '/images/brands/iconify/cib--adobe-creative-cloud--color-DA1F26.svg',
+        'adobe photoshop': '/images/brands/iconify/logos--adobe-photoshop.svg',
+        'adobe illustrator': '/images/brands/iconify/logos--adobe-illustrator.svg',
+        'adobe indesign': '/images/brands/iconify/logos--adobe-indesign.svg',
+        'adobe premiere pro': '/images/brands/iconify/logos--adobe-premiere.svg',
+        'laravel': '/images/brands/iconify/logos--laravel.svg',
+        'php': '/images/brands/iconify/logos--php.svg',
+        'vue.js': '/images/brands/iconify/logos--vue.svg',
+        'vue': '/images/brands/iconify/logos--vue.svg',
+        'inertia.js': '/images/brands/iconify/simple-icons--inertia.svg',
+        'inertia': '/images/brands/iconify/simple-icons--inertia.svg',
+        'codeigniter': '/images/brands/iconify/simple-icons--codeigniter.svg',
+        'python': '/images/brands/iconify/logos--python.svg',
+        'docker': '/images/brands/iconify/logos--docker-icon.svg',
+        'tailwind css': '/images/brands/iconify/logos--tailwindcss-icon.svg',
+        'tailwindcss': '/images/brands/iconify/logos--tailwindcss-icon.svg',
+        'bootstrap': '/images/brands/iconify/logos--bootstrap.svg',
+        'mysql': '/images/brands/iconify/logos--mysql-icon.svg',
+        'postgresql': '/images/brands/iconify/logos--postgresql.svg',
+        'sqlite': '/images/brands/iconify/logos--sqlite.svg',
+        'sql': '/images/brands/iconify/lucide--database.svg',
+        'sql databases': '/images/brands/iconify/lucide--database.svg',
+        'emr': '/images/brands/iconify/lucide--heart-pulse.svg',
+        'git': '/images/brands/iconify/logos--git-icon.svg',
+        'github': '/images/brands/iconify/logos--github-icon.svg',
+        'gitlab': '/images/brands/iconify/logos--gitlab.svg',
+        'figma': '/images/brands/iconify/logos--figma.svg',
+        'mikrotik': '/images/brands/iconify/simple-icons--mikrotik.svg',
+        'cisco': '/images/brands/iconify/simple-icons--cisco.svg',
+        'n8n': '/images/brands/iconify/simple-icons--n8n.svg',
+        'javascript': '/images/brands/iconify/logos--javascript.svg',
+        'typescript': '/images/brands/iconify/logos--typescript-icon.svg',
+        'html5': '/images/brands/iconify/logos--html-5.svg',
+        'html': '/images/brands/iconify/logos--html-5.svg',
+        'css3': '/images/brands/iconify/logos--css-3.svg',
+        'css': '/images/brands/iconify/logos--css-3.svg',
+        'vite': '/images/brands/iconify/logos--vitejs.svg',
+        'nginx': '/images/brands/iconify/logos--nginx.svg',
+        'apache': '/images/brands/iconify/logos--apache.svg',
+        'linux': '/images/brands/iconify/logos--tux.svg',
+        'ubuntu': '/images/brands/iconify/logos--ubuntu.svg',
+        'cpanel': '/images/brands/iconify/logos--cpanel.svg',
+        'notion': '/images/brands/iconify/logos--notion-icon.svg',
+        'google workspace': '/images/brands/iconify/logos--google-icon.svg',
+        'google': '/images/brands/iconify/logos--google-icon.svg',
+        'gemini': '/images/brands/iconify/logos--google-gemini.svg',
+        'google gemini': '/images/brands/iconify/logos--google-gemini.svg',
+        'chatgpt': '/images/brands/iconify/logos--openai-icon.svg',
+        'claude': '/images/brands/iconify/simple-icons--anthropic.svg',
+        'zapier': '/images/brands/iconify/logos--zapier-icon.svg',
+        'gohighlevel': '/images/brands/gohighlevel.png',
         'ollama': 'https://api.iconify.design/logos/ollama.svg',
         'clawdbot': 'https://openclaw.ai/favicon.svg',
         'meta': 'https://api.iconify.design/logos/meta-icon.svg',
-        'openai': 'https://api.iconify.design/logos/openai-icon.svg',
-        'gpt-4': 'https://api.iconify.design/logos/openai-icon.svg',
+        'openai': '/images/brands/iconify/logos--openai-icon.svg',
+        'gpt-4': '/images/brands/iconify/logos--openai-icon.svg',
         'gptzero': 'https://gptzero.me/favicon.ico',
-        'hugging face': 'https://api.iconify.design/logos/hugging-face-icon.svg',
-        'notebooklm': 'https://api.iconify.design/logos/google-icon.svg',
-        'postman': 'https://api.iconify.design/logos/postman-icon.svg',
-        'redis': 'https://api.iconify.design/logos/redis.svg',
-        'pandas': 'https://api.iconify.design/logos/pandas-icon.svg',
-        'numpy': 'https://api.iconify.design/logos/numpy.svg',
-        'scikit-learn': 'https://api.iconify.design/logos/scikit-learn.svg',
-        'credly': 'https://api.iconify.design/simple-icons/credly.svg',
+        'hugging face': '/images/brands/iconify/logos--hugging-face-icon.svg',
+        'notebooklm': '/images/brands/iconify/logos--google-icon.svg',
+        'postman': '/images/brands/iconify/logos--postman-icon.svg',
+        'redis': '/images/brands/iconify/logos--redis.svg',
+        'pandas': '/images/brands/iconify/logos--pandas-icon.svg',
+        'numpy': '/images/brands/iconify/logos--numpy.svg',
+        'scikit-learn': '/images/brands/iconify/simple-icons--scikitlearn.svg',
+        'credly': '/images/brands/iconify/simple-icons--credly.svg',
     };
 
     return iconMap[name] || null;
@@ -761,10 +758,10 @@ function achievementLogoUrl(achievement) {
     const issuer = String(achievement.issuer ?? '').trim().toLowerCase();
 
     if (title.includes('dict') || issuer.includes('dict') || issuer.includes('department of information')) {
-        return '/storage/portfolio/organizations/dict.svg';
+        return '/repository-media/portfolio/organizations/dict.svg';
     }
     if (title.includes('civil service') || issuer.includes('civil service')) {
-        return achievement.image_url || '/storage/portfolio/organizations/civil-service-commission.png';
+        return achievement.image_url || '/repository-media/portfolio/organizations/civil-service-commission.png';
     }
     if (achievement.image_url) {
         return achievement.image_url;
@@ -977,7 +974,7 @@ onBeforeUnmount(() => {
                             <a href="#work" class="secondary-btn">See my works <ArrowUpRight :size="18" aria-hidden="true" /></a>
                         </div>
                         <div v-if="profile.external_links?.length" class="hero-external-links" aria-label="Professional profiles">
-                            <a v-for="link in profile.external_links" :key="link.label" :href="link.url" :data-brand="link.label.toLowerCase()" target="_blank" rel="noopener noreferrer"><span v-if="['credly', 'github', 'linkedin'].includes(link.label.toLowerCase())" class="profile-link-logo" :style="{ maskImage: `url(https://api.iconify.design/simple-icons/${link.label.toLowerCase()}.svg)` }" aria-hidden="true"></span>{{ link.label }} <ArrowUpRight :size="15" aria-hidden="true" /></a>
+                            <a v-for="link in profile.external_links" :key="link.label" :href="link.url" :data-brand="link.label.toLowerCase()" target="_blank" rel="noopener noreferrer"><span v-if="['credly', 'github', 'linkedin'].includes(link.label.toLowerCase())" class="profile-link-logo" :style="{ maskImage: `url(${getIconifyLogoUrl(link.label)})` }" aria-hidden="true"></span>{{ link.label }} <ArrowUpRight :size="15" aria-hidden="true" /></a>
                         </div>
                     </div>
                 </div>
@@ -1154,7 +1151,7 @@ onBeforeUnmount(() => {
             </section>
 
             <section id="github-activity" class="section-container" aria-labelledby="github-activity-heading">
-                <div class="github-heading"><div><h2 id="github-activity-heading">GitHub activity.</h2><p>Public contributions over time.</p></div><a v-if="githubProfileUrl" :href="githubProfileUrl" class="text-link" target="_blank" rel="noopener noreferrer"><span class="profile-link-logo" style="mask-image: url(https://api.iconify.design/simple-icons/github.svg)" aria-hidden="true"></span>View GitHub profile <ArrowUpRight :size="16" aria-hidden="true" /></a></div>
+                <div class="github-heading"><div><h2 id="github-activity-heading">GitHub activity.</h2><p>Public contributions over time.</p></div><a v-if="githubProfileUrl" :href="githubProfileUrl" class="text-link" target="_blank" rel="noopener noreferrer"><span class="profile-link-logo" :style="{ maskImage: `url(${getIconifyLogoUrl('GitHub')})` }" aria-hidden="true"></span>View GitHub profile <ArrowUpRight :size="16" aria-hidden="true" /></a></div>
                 <template v-if="githubActivity && githubActivity.source !== 'empty' && githubWeeks.length">
                     <p class="github-summary"><strong v-if="githubActivity.total !== null && githubActivity.total !== undefined">{{ githubActivity.total.toLocaleString() }} contributions</strong><span v-else>Contribution activity</span><span v-if="githubActivity.source === 'snapshot'"> · Historical snapshot</span></p>
                     <div class="github-scroll" tabindex="0" aria-label="GitHub contribution calendar; scroll horizontally to see all dates">

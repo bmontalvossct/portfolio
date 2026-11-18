@@ -19,7 +19,7 @@ class ProfilePageTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_renders_database_backed_sections(): void
+    public function test_profile_page_renders_versioned_sections(): void
     {
         $this->withoutVite();
         $this->seed();
@@ -55,10 +55,10 @@ class ProfilePageTest extends TestCase
                 ->where('portfolioTools.30.name', 'Google Workspace')
                 ->where('portfolioTools.33.name', 'GitLab')
                 ->where('portfolioTools.34.name', 'Vercel')
-                ->has('designMedia', 0)
+                ->missing('designMedia')
                 ->has('achievements', 6)
                 ->where('achievements.0.title', 'DICT Registered Cybersecurity Professional - Intermediate Level 2')
-                ->where('achievements.0.image_url', '/storage/portfolio/organizations/dict.svg')
+                ->where('achievements.0.image_url', '/repository-media/portfolio/organizations/dict.svg')
                 ->where('achievements.0.external_url', 'https://dict.gov.ph')
                 ->where('achievements.1.title', 'Civil Service Eligibility - Professional')
                 ->where('achievements.2.title', 'SAP Certified - Implementation Consultant')
@@ -89,17 +89,17 @@ class ProfilePageTest extends TestCase
                 ->where('education.0.institution', 'Caraga State University')
                 ->where('education.0.program', 'Master of Science in Information Technology')
                 ->where('education.0.end_date', 'June 2026')
-                ->where('education.0.logo_url', '/storage/portfolio/organizations/caraga-state-university.png')
+                ->where('education.0.logo_url', '/repository-media/portfolio/organizations/caraga-state-university.png')
                 ->has('workExperiences', 5)
                 ->where('workExperiences.0.position', 'Freelancer')
                 ->where('workExperiences.0.is_current', true)
                 ->has('workExperiences.0.responsibilities', 18)
-                ->where('workExperiences.1.logo_url', '/storage/portfolio/organizations/snsu.png')
+                ->where('workExperiences.1.logo_url', '/repository-media/portfolio/organizations/snsu.png')
                 ->where('workExperiences.1.end_date', 'June 18, 2026')
                 ->where('workExperiences.1.is_current', false)
                 ->has('workExperiences.1.responsibilities', 7)
                 ->where('workExperiences.1.responsibilities.6', 'Research and Market Analysis: Conduct research and market analysis to stay updated with industry trends and advancements in information systems.')
-                ->where('workExperiences.2.logo_url', '/storage/portfolio/organizations/department-of-health.png')
+                ->where('workExperiences.2.logo_url', '/repository-media/portfolio/organizations/department-of-health.png')
                 ->where('workExperiences.2.position', 'Computer Programmer II')
                 ->where('workExperiences.2.end_date', 'November 25, 2024')
                 ->where('workExperiences.2.summary', 'Implemented and supported electronic medical record systems across health facilities, including readiness assessment, training, monitoring, and technical reporting.')
@@ -107,31 +107,31 @@ class ProfilePageTest extends TestCase
                 ->where('workExperiences.2.responsibilities.0', 'Oversee the overall implementation of EMR Records.')
                 ->where('workExperiences.2.responsibilities.17', 'Email advisories/administrative orders to health facilities.')
                 ->where('workExperiences.2.is_current', false)
-                ->where('workExperiences.3.logo_url', '/storage/portfolio/organizations/department-of-health.png')
+                ->where('workExperiences.3.logo_url', '/repository-media/portfolio/organizations/department-of-health.png')
                 ->has('workExperiences.3.responsibilities', 18)
                 ->where('workExperiences.3.responsibilities.17', 'Email advisories/administrative orders to health facilities.')
                 ->has('workExperiences.4.responsibilities', 7)
                 ->where('workExperiences.4.responsibilities.6', 'Provide technical assistance for company ICT equipment under supervision, learning troubleshooting techniques and maintenance procedures to ensure equipment functionality.')
-                ->has('guestbookEntries', 0)
+                ->missing('guestbookEntries')
                 ->has('publishedWorks', 3)
                 ->where('publishedWorks.0.title', 'Forecasting Child Immunization Coverage and Predicting Underperformance Risk Using a Hybrid Time-Series Framework: Evidence from FHSIS Data')
                 ->where('publishedWorks.0.publication', 'Accepted by IDAP (International Data & Analytics Proceedings)')
                 ->where('publishedWorks.1.title', 'A Hybrid Time-Series Forecasting and Underperformance Risk Prediction System for Child Immunization Coverage in Surigao del Norte, Philippines: Evidence from FHSIS Quarterly Data')
                 ->where('publishedWorks.2.title', 'SURe-Health: PDOHO-SDN Official Publication')
-                ->where('publishedWorks.2.cover_url', '/storage/portfolio/publications/sure-health-cover.webp')
-                ->where('publishedWorks.2.cover_preview_url', '/media/thumbnail?src=%2Fstorage%2Fportfolio%2Fpublications%2Fsure-health-cover.webp&w=320')
+                ->where('publishedWorks.2.cover_url', '/repository-media/portfolio/publications/sure-health-cover.webp')
+                ->where('publishedWorks.2.cover_preview_url', null)
                 ->where('publishedWorks.2.external_url', 'https://online.fliphtml5.com/utpit/pzyy/')
                 ->where('projects.0.title', 'Governed MCH Forecasting and Risk Prediction DSS')
                 ->where('projects.0.category', 'Health informatics DSS')
                 ->where('projects.0.repo_url', 'https://github.com/bmontalvossct/Forecasting-and-Risk-Prediction')
-                ->where('projects.0.thumbnail_url', '/storage/portfolio/projects/mch-forecasting-risk-dss.png')
+                ->where('projects.0.thumbnail_url', '/repository-media/portfolio/projects/mch-forecasting-risk-dss.png')
                 ->where('projects.1.title', 'ClassCheck')
                 ->where('projects.1.url', 'https://classcheck.brittmontalvo.dev')
                 ->where('projects.2.title', 'SDN Electronic Medical Records Dashboard')
                 ->where('projects.2.url', 'https://app.powerbi.com/view?r=eyJrIjoiMDBmNTFkOTYtMGQ1ZC00MTUzLWIxMmEtMzgwMTUwMmE5ODUzIiwidCI6IjE5NWQzN2JlLTllMGEtNDIwNS1hZGY0LWEyNTk5ZTllMWNjYSIsImMiOjEwfQ%3D%3D&pageName=ReportSection')
                 ->where('projects.3.title', 'Surigao del Norte State University Public Website')
                 ->where('projects.3.url', 'https://gamma.snsu.edu.ph')
-                ->where('projects.3.thumbnail_url', '/storage/portfolio/projects/snsu-gamma-home.png')
+                ->where('projects.3.thumbnail_url', '/repository-media/portfolio/projects/snsu-gamma-home.png')
                 ->where('projects.4.repo_url', 'https://github.com/kristoffmontalvo218/Amplifier-repo')
             );
 
@@ -169,7 +169,7 @@ class ProfilePageTest extends TestCase
             );
     }
 
-    public function test_profile_page_discovers_images_videos_and_pdf_media_from_portfolio_storage(): void
+    public function test_profile_page_does_not_expose_the_unused_media_archive(): void
     {
         $this->withoutVite();
         Storage::fake('public');
@@ -186,20 +186,7 @@ class ProfilePageTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('designMedia', 3)
-                ->where('designMedia.0.title', 'Brochure Design')
-                ->where('designMedia.0.media_type', 'pdf')
-                ->where('designMedia.0.type_label', 'Brochure PDF')
-                ->where('designMedia.0.media_url', '/storage/portfolio/Images/Brochure%20Design.pdf')
-                ->where('designMedia.0.thumbnail_url', '/images/design-previews/brochure-design.jpg')
-                ->where('designMedia.1.title', 'Campaign Poster')
-                ->where('designMedia.1.media_type', 'image')
-                ->where('designMedia.1.media_url', '/storage/portfolio/Images/Campaign%20Poster.jpg')
-                ->where('designMedia.2.title', 'Launch Reel')
-                ->where('designMedia.2.media_type', 'video')
-                ->where('designMedia.2.media_url', '/storage/portfolio/Videos/Launch%20Reel.mp4')
-                ->where('designMedia.2.thumbnail_url', '/storage/portfolio/design-thumbnails/Launch%20Reel.jpg')
-                ->where('designMedia', fn ($items) => collect($items)->doesntContain('title', 'Profile Video'))
+                ->missing('designMedia')
             );
 
         $this->get('/designs')
@@ -277,7 +264,7 @@ class ProfilePageTest extends TestCase
         $this->assertNull($entry->notification_error);
 
         $this->get('/')->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->has('guestbookEntries', 0));
+            ->assertInertia(fn (Assert $page) => $page->missing('guestbookEntries'));
 
         $this->withSession(['portfolio_admin_authenticated' => true])
             ->put("/admin/guestbook/{$entry->id}", [
@@ -293,11 +280,7 @@ class ProfilePageTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('guestbookEntries', 1)
-                ->where('guestbookEntries.0.name', 'Portfolio Reviewer')
-                ->where('guestbookEntries.0.role_or_organization', 'Research partner')
-                ->where('guestbookEntries.0.body', 'The portfolio presents the research and systems work clearly.')
-                ->missing('guestbookEntries.0.email')
+                ->missing('guestbookEntries')
             );
     }
 
@@ -328,7 +311,7 @@ class ProfilePageTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->has('guestbookEntries', 0));
+            ->assertInertia(fn (Assert $page) => $page->missing('guestbookEntries'));
     }
 
     public function test_guestbook_honeypot_does_not_store_or_send_a_note(): void
@@ -379,7 +362,8 @@ class ProfilePageTest extends TestCase
                 ->where('profile.avatar_url', '/images/profile-avatar.jpg')
                 ->where('archiveType', 'certificates')
                 ->where('alternate.url', '/badges')
-                ->has('items', 52)
+                ->has('items', 51)
+                ->where('items', fn ($items) => collect($items)->doesntContain('title', 'Applied Cybersecurity Operations'))
                 ->where('items.0.title', 'Lean Six Sigma: Yellow Belt')
                 ->where('items.0.category', 'project_management')
                 ->where('items.0.date', 'Jul 2026')
@@ -388,7 +372,7 @@ class ProfilePageTest extends TestCase
                 ->where('items.1.title', 'Sangfor Network Security and Endpoint Secure Technical Training')
                 ->where('items.1.category', 'cybersecurity')
                 ->where('items.1.date', 'Mar 2026')
-                ->where('items.1.image_url', '/storage/portfolio/organizations/sangfor.png')
+                ->where('items.1.image_url', '/repository-media/portfolio/organizations/sangfor.png')
                 ->where('items.1.verify_url', null)
             );
     }

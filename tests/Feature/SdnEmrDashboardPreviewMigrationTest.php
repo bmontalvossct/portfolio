@@ -36,9 +36,14 @@ class SdnEmrDashboardPreviewMigrationTest extends TestCase
 
         $this->withoutVite();
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->where('projects.0.thumbnail_url', '/images/projects/sdn-emr-dashboard-preview.png')
-            ->where('projects.0.gallery_urls', ['/images/projects/existing.png'])
-            ->where('projects.0.url', 'https://app.powerbi.com/view?r=existing-report')
+            ->where('projects', function ($projects): bool {
+                $project = collect($projects)->firstWhere('title', 'SDN Electronic Medical Records Dashboard');
+
+                return $project !== null
+                    && $project['thumbnail_url'] === '/images/projects/sdn-emr-dashboard-preview.png'
+                    && ! in_array('/images/projects/existing.png', $project['gallery_urls'], true)
+                    && $project['url'] !== 'https://app.powerbi.com/view?r=existing-report';
+            })
         );
     }
 

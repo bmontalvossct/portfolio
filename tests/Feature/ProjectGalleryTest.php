@@ -11,54 +11,49 @@ class ProjectGalleryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_save_ordered_gallery_and_public_page_receives_it(): void
+    public function test_public_page_shows_versioned_gallery_in_order_not_database_changes(): void
     {
         $this->withoutVite();
-        $session = ['portfolio_admin_authenticated' => true];
-        $this->withSession($session)->post('/admin/projects', [
-            'title' => 'Gallery project',
-            'gallery_urls_text' => "https://example.com/one.png\n/images/two.png\n/storage/portfolio/projects/three.jpg",
-        ])->assertSessionHasNoErrors();
+        Project::query()->create(['title' => 'Database-only project', 'gallery_urls' => ['/images/injected.png']]);
 
-        $project = Project::query()->firstOrFail();
-        $urls = ['https://example.com/one.png', '/images/two.png', '/storage/portfolio/projects/three.jpg'];
-        $this->assertSame($urls, $project->gallery_urls);
-        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page->where('projects.0.gallery_urls', $urls));
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('projects', function ($projects): bool {
+                $items = collect($projects);
+                $classcheck = $items->firstWhere('title', 'ClassCheck');
 
-        $this->withSession($session)->put("/admin/projects/{$project->id}", ['title' => 'Gallery project', 'gallery_urls_text' => ''])
-            ->assertSessionHasNoErrors();
-        $this->assertSame([], $project->fresh()->gallery_urls);
+                return $classcheck !== null
+                    && $classcheck['gallery_urls'] === ['/images/projects/classcheck-home.jpg', '/images/projects/classcheck-features.jpg']
+                    && ! $items->contains('title', 'Database-only project');
+            }));
     }
 
-    public function test_invalid_or_private_gallery_paths_are_rejected_and_admin_is_required(): void
+    public function test_admin_gallery_mutations_are_blocked_and_require_authentication(): void
     {
         $this->post('/admin/projects', ['title' => 'Denied'])->assertRedirect('/admin/login');
-
-        foreach (['http://example.com/a.png', '/storage/portfolio/certificates/private.pdf', '/images/../private.png', '/images/%2e%2e/private.png', 'javascript:alert(1)'] as $url) {
-            $this->withSession(['portfolio_admin_authenticated' => true])
-                ->post('/admin/projects', ['title' => 'Invalid', 'gallery_urls_text' => $url])
-                ->assertSessionHasErrors('gallery_urls_text');
-        }
-        $this->assertSame(0, Project::query()->count());
-    }
-
-    public function test_edit_without_gallery_or_thumbnail_preserves_existing_images(): void
-    {
         $project = Project::query()->create([
-            'title' => 'Existing project',
-            'thumbnail_url' => '/storage/portfolio/projects/existing.png',
+            'title' => 'Existing project', 'thumbnail_url' => '/images/projects/existing.png',
             'gallery_urls' => ['/images/projects/one.jpg', '/images/projects/two.jpg'],
         ]);
+        $before = $project->fresh()->toArray();
+        foreach (['http://example.com/a.png', '/storage/portfolio/certificates/private.pdf', '/images/../private.png', 'javascript:alert(1)'] as $url) {
+            $this->withSession(['portfolio_admin_authenticated' => true])
+                ->put("/admin/projects/{$project->id}", ['title' => 'Invalid', 'gallery_urls_text' => $url])
+                ->assertStatus(409);
+        }
+        $this->assertSame($before, $project->fresh()->toArray());
+    }
 
-        $this->withSession(['portfolio_admin_authenticated' => true])
-            ->put("/admin/projects/{$project->id}", [
-                'title' => 'Existing project',
-                'summary' => 'Updated project details.',
-            ])
-            ->assertSessionHasNoErrors();
-
-        $this->assertSame('/storage/portfolio/projects/existing.png', $project->fresh()->thumbnail_url);
-        $this->assertSame(['/images/projects/one.jpg', '/images/projects/two.jpg'], $project->fresh()->gallery_urls);
+    public function test_public_gallery_contains_no_private_document_paths(): void
+    {
+        $this->withoutVite();
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('projects', fn ($projects): bool => collect($projects)->every(
+                fn ($project): bool => collect($project['gallery_urls'] ?? [])->every(
+                    fn ($url): bool => ! str_contains(strtolower($url), 'certificates/')
+                        && ! str_contains(rawurldecode($url), '..')
+                        && ! str_starts_with(strtolower($url), 'javascript:')
+                )
+            )));
     }
 
     public function test_migration_backfills_only_classcheck(): void

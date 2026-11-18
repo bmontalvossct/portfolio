@@ -518,8 +518,19 @@ function retryGuestbookNotification(entry) {
             <span>{{ flash.error }}</span>
         </div>
 
+        <div class="notice" role="note">
+            <AlertCircle :size="16" />
+            <span>Public profile, projects, designs, tools, publications, experience, education, achievements, badges, and certificates are published from repository content. Update the repository and deploy to publish changes. Other admin tools remain available.</span>
+        </div>
+
         <main class="admin-main">
-            <section v-if="activeTab === 'profile'" class="editor-section">
+            <section v-if="['profile', 'projects', 'designs', 'tools', 'publications', 'work', 'education', 'achievements', 'badges', 'certificates'].includes(activeTab)" class="editor-section">
+                <div class="section-intro">
+                    <h1>Managed in the repository</h1>
+                    <p>This public content is maintained in the repository. Update it locally and deploy to publish changes.</p>
+                </div>
+            </section>
+            <section v-else-if="activeTab === 'profile'" class="editor-section">
                 <div class="section-intro">
                     <span class="kicker">01 / identity</span>
                     <h1>Profile details</h1>
@@ -579,7 +590,7 @@ function retryGuestbookNotification(entry) {
                             <div class="sync-source-copy"><span>Google Drive</span><strong>Certificates</strong></div>
                         </div>
                         <span class="sync-meta">{{ certificates.length }} records</span>
-                        <button class="sync-action" type="button" :disabled="syncingSource !== null" @click="syncSource('certificates')">
+                        <button class="sync-action" type="button" disabled title="Certificates are managed in the repository" @click="syncSource('certificates')">
                             <RefreshCw :size="15" :class="{ 'is-spinning': syncingSource === 'certificates' }" />
                             {{ syncingSource === 'certificates' ? 'Syncing' : 'Sync now' }}
                         </button>
@@ -591,7 +602,7 @@ function retryGuestbookNotification(entry) {
                             <div class="sync-source-copy"><span>Credly</span><strong>Credential badges</strong></div>
                         </div>
                         <span class="sync-meta">{{ credentialBadges.length }} records</span>
-                        <button class="sync-action" type="button" :disabled="syncingSource !== null" @click="syncSource('badges')">
+                        <button class="sync-action" type="button" disabled title="Badges are managed in the repository" @click="syncSource('badges')">
                             <RefreshCw :size="15" :class="{ 'is-spinning': syncingSource === 'badges' }" />
                             {{ syncingSource === 'badges' ? 'Syncing' : 'Sync now' }}
                         </button>

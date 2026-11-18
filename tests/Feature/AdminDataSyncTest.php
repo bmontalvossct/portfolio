@@ -28,58 +28,18 @@ class AdminDataSyncTest extends TestCase
         $this->post('/admin/sync/github')->assertRedirect('/admin/login');
     }
 
-    public function test_admin_can_sync_drive_certificates(): void
+    public function test_versioned_certificates_cannot_be_synced_from_admin(): void
     {
-        Http::fake([
-            'drive.google.com/drive/folders/*' => Http::response(<<<'HTML'
-                <html><body>
-                    <div data-id="1rwt2bAikR6gj7ot-kwBRGvbuvr5XmKAD" data-tooltip="Sangfor Network Security and Endpoint Secure Technical Training.pdf PDF"></div>
-                    <div data-id="adminsync12345678901234567890" data-tooltip="Responsible AI Workshop.pdf PDF"></div>
-                </body></html>
-                HTML),
-        ]);
-
-        $this->withSession($this->adminSession)
-            ->post('/admin/sync/certificates')
-            ->assertRedirect()
-            ->assertSessionHas('success', 'Drive certificate sync complete: 1 new, 1 preserved, 2 found.');
-
-        $this->assertDatabaseHas('certificates', [
-            'source' => 'google_drive',
-            'external_id' => 'adminsync12345678901234567890',
-            'title' => 'Responsible AI Workshop',
-        ]);
+        Http::fake();
+        $this->withSession($this->adminSession)->post('/admin/sync/certificates')->assertStatus(409);
+        Http::assertNothingSent();
     }
 
-    public function test_admin_can_sync_credly_badges(): void
+    public function test_versioned_badges_cannot_be_synced_from_admin(): void
     {
-        Http::fake([
-            '*credly.com/*' => Http::response([
-                'data' => [[
-                    'id' => 'admin-badge-1',
-                    'issued_at' => '2026-07-01',
-                    'public_url' => 'https://www.credly.com/badges/admin-badge-1',
-                    'badge_template' => [
-                        'name' => 'Responsible AI Foundations',
-                        'issuer' => ['name' => 'Example Institute'],
-                    ],
-                ]],
-            ]),
-        ]);
-
-        $this->withSession($this->adminSession)
-            ->post('/admin/sync/badges')
-            ->assertRedirect()
-            ->assertSessionHas('success', 'Synced 1 Credly badge(s).');
-
-        $this->assertDatabaseHas('credential_badges', [
-            'provider' => 'credly',
-            'external_id' => 'admin-badge-1',
-            'name' => 'Responsible AI Foundations',
-        ]);
-        $this->assertDatabaseMissing('credential_badges', [
-            'external_id' => 'credly-profile-brittm',
-        ]);
+        Http::fake();
+        $this->withSession($this->adminSession)->post('/admin/sync/badges')->assertStatus(409);
+        Http::assertNothingSent();
     }
 
     public function test_admin_can_refresh_the_github_contribution_cache(): void

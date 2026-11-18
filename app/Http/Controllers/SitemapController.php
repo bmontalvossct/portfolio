@@ -2,64 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Achievement;
-use App\Models\Certificate;
-use App\Models\CredentialBadge;
-use App\Models\DesignMedia;
-use App\Models\Education;
-use App\Models\GuestbookEntry;
-use App\Models\PortfolioTool;
-use App\Models\Profile;
-use App\Models\Project;
-use App\Models\PublishedWork;
-use App\Models\WorkExperience;
-use App\Support\Profile\DesignMediaArchive;
-use Illuminate\Database\Eloquent\Builder;
+use App\Support\Profile\VersionedPortfolioContent;
 use Illuminate\Http\Response;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class SitemapController extends Controller
 {
-    public function __invoke(DesignMediaArchive $designMediaArchive): Response
+    public function __invoke(): Response
     {
         $baseUrl = rtrim((string) config('seo.base_url', config('app.url')), '/');
-        $designMedia = $designMediaArchive->all();
+        $content = app(VersionedPortfolioContent::class);
+        $profile = $content->get('profile');
 
         $urls = [
             [
                 'loc' => $baseUrl.'/',
-                'lastmod' => $this->latest([
-                    Profile::query(),
-                    Achievement::query(),
-                    Project::query(),
-                    PublishedWork::query(),
-                    Education::query(),
-                    WorkExperience::query(),
-                    PortfolioTool::query(),
-                    GuestbookEntry::query()->where('status', 'approved')->whereNotNull('approved_at'),
-                    Certificate::query(),
-                    CredentialBadge::query(),
-                    DesignMedia::query(),
-                ]),
+                // A database timestamp cannot represent changes to versioned content.
+                'lastmod' => null,
                 'images' => $this->localImages(
                     collect()
                         ->push([
-                            'url' => Profile::query()->value('avatar_url'),
-                            'title' => Profile::query()->value('display_name'),
+                            'url' => $profile['avatar_url'] ?? null,
+                            'title' => $profile['display_name'] ?? null,
                         ])
-                        ->concat(Project::query()->get(['title', 'thumbnail_url'])->map(
-                            fn (Project $project): array => ['url' => $project->thumbnail_url, 'title' => $project->title],
+                        ->concat(collect($content->get('projects'))->map(
+                            fn (array $project): array => ['url' => $project['thumbnail_url'] ?? null, 'title' => $project['title'] ?? null],
                         ))
-                        ->concat(PublishedWork::query()->get(['title', 'cover_url'])->map(
-                            fn (PublishedWork $work): array => ['url' => $work->cover_url, 'title' => $work->title],
+                        ->concat(collect($content->get('publishedWorks'))->map(
+                            fn (array $work): array => ['url' => $work['cover_url'] ?? null, 'title' => $work['title'] ?? null],
                         ))
-                        ->concat($designMedia->map(
-                            fn (array $item): array => [
-                                'url' => $item['thumbnail_url'] ?: ($item['media_type'] === 'image' ? $item['media_url'] : null),
-                                'title' => $item['title'],
-                            ],
-                        )),
+                        ->concat([
+                            ['url' => '/creative-assets/magazine/page-0001.jpg', 'title' => 'Digital magazine cover'],
+                            ['url' => '/creative-assets/graphic-io.jpg', 'title' => 'IO graphic design'],
+                            ['url' => '/creative-assets/graphic-el-corso-2.jpg', 'title' => 'El Corso dimsum graphic design'],
+                            ['url' => '/creative-assets/graphic-el-corso.jpg', 'title' => 'El Corso whisky graphic design'],
+                            ['url' => '/creative-assets/palakasan-preview.png', 'title' => 'Video production preview'],
+                        ]),
                     $baseUrl,
                 ),
             ],
@@ -70,12 +48,12 @@ class SitemapController extends Controller
             ],
             [
                 'loc' => $baseUrl.'/badges',
-                'lastmod' => $this->latest([CredentialBadge::query()]),
+                'lastmod' => null,
                 'images' => [],
             ],
             [
                 'loc' => $baseUrl.'/certifications',
-                'lastmod' => $this->latest([Certificate::query()]),
+                'lastmod' => null,
                 'images' => [],
             ],
         ];
@@ -84,21 +62,6 @@ class SitemapController extends Controller
             ->view('seo.sitemap', ['urls' => $urls])
             ->header('Content-Type', 'application/xml; charset=UTF-8')
             ->header('Cache-Control', 'public, max-age=3600');
-    }
-
-    /**
-     * @param  array<int, Builder>  $queries
-     */
-    private function latest(array $queries): ?string
-    {
-        $latest = collect($queries)
-            ->map(fn (Builder $query): mixed => $query->max('updated_at'))
-            ->filter()
-            ->map(fn (mixed $timestamp): Carbon => Carbon::parse($timestamp))
-            ->sortDesc()
-            ->first();
-
-        return $latest?->toAtomString();
     }
 
     /**

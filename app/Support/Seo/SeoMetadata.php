@@ -2,7 +2,7 @@
 
 namespace App\Support\Seo;
 
-use App\Models\Profile;
+use App\Support\Profile\VersionedPortfolioContent;
 use Illuminate\Http\Request;
 
 class SeoMetadata
@@ -28,7 +28,7 @@ class SeoMetadata
         $path = '/'.trim($request->path(), '/');
         $path = $path === '/' ? '/' : rtrim($path, '/');
         $page = config("seo.pages.{$path}") ?? config('seo.pages./');
-        $profile = Profile::query()->first();
+        $profile = (object) app(VersionedPortfolioContent::class)->get('profile');
         $baseUrl = rtrim((string) config('seo.base_url', config('app.url')), '/');
         $canonical = $baseUrl.($path === '/' ? '/' : $path);
         $image = $this->absoluteUrl($profile?->avatar_url, $baseUrl)
@@ -46,7 +46,7 @@ class SeoMetadata
         ];
     }
 
-    private function schemaFor(string $path, string $canonical, string $baseUrl, ?Profile $profile): array
+    private function schemaFor(string $path, string $canonical, string $baseUrl, ?object $profile): array
     {
         $person = $this->personSchema($baseUrl, $profile);
         $website = [
@@ -135,7 +135,7 @@ class SeoMetadata
         ];
     }
 
-    private function personSchema(string $baseUrl, ?Profile $profile): array
+    private function personSchema(string $baseUrl, ?object $profile): array
     {
         $displayName = $profile?->display_name ?? 'Britt Kristoff B. Montalvo, MSIT';
         $name = preg_replace('/,\s*MSIT$/i', '', $displayName) ?: $displayName;

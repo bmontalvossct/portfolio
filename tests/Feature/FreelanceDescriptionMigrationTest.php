@@ -54,7 +54,7 @@ class FreelanceDescriptionMigrationTest extends TestCase
         $this->assertEquals($before, DB::table('work_experiences')->orderBy('id')->get());
     }
 
-    public function test_admin_update_preserves_all_freelance_lines_in_order(): void
+    public function test_admin_update_is_blocked_and_preserves_all_freelance_lines_in_order(): void
     {
         config(['portfolio.admin_token' => 'test-portfolio-token']);
         $id = DB::table('work_experiences')->insertGetId([
@@ -77,8 +77,7 @@ class FreelanceDescriptionMigrationTest extends TestCase
                 'sort_order' => 0,
                 'is_current' => true,
             ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            ->assertStatus(409);
 
         $this->assertCount(18, $lines);
         $this->assertSame($lines, json_decode(DB::table('work_experiences')->find($id)->responsibilities, true, flags: JSON_THROW_ON_ERROR));

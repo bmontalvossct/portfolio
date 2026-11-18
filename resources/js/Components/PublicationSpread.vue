@@ -6,13 +6,17 @@ const emit = defineEmits(['media-load']);
 function isDohPublication() {
     return String(props.work.title ?? '').toLowerCase().includes('sure-health');
 }
+function isIctisResearch() {
+    return String(props.work.title ?? '').trim().toLowerCase().replace(/^a\s+/, '') === 'hybrid time-series forecasting and underperformance risk prediction system for child immunization coverage in surigao del norte, philippines: evidence from fhsis quarterly data';
+}
 </script>
 
 <template>
     <article class="research-spread" :aria-label="work.title">
         <div class="research-cover">
             <div class="research-cover-content">
-                <img v-if="isDohPublication()" :src="'/storage/portfolio/organizations/department-of-health.png'" alt="Department of Health" class="research-publisher-logo" width="64" height="64" @load="emit('media-load')" @error="emit('media-load')">
+                <img v-if="isDohPublication()" :src="'/repository-media/portfolio/organizations/department-of-health.png'" alt="Department of Health" class="research-publisher-logo" width="64" height="64" @load="emit('media-load')" @error="emit('media-load')">
+                <img v-else-if="isIctisResearch()" :src="'/images/publications/ictis-thailand.png'" alt="ICTIS Thailand" class="research-publisher-logo research-publisher-logo--idap" width="104" height="64" @load="emit('media-load')" @error="emit('media-load')">
                 <img v-else-if="work.publication?.toLowerCase().includes('idap')" :src="'/images/publications/idap.png'" alt="International Data &amp; Analytics Proceedings (IDAP)" class="research-publisher-logo research-publisher-logo--idap" width="104" height="64" @load="emit('media-load')" @error="emit('media-load')">
                 <span v-else class="research-identity">{{ work.type_label }}</span>
                 <h3>{{ work.title }}</h3>

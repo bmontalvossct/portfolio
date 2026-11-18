@@ -76,19 +76,21 @@ class ScamReadyAseanRecognitionTest extends TestCase
     public function test_the_homepage_exposes_the_optional_preview_without_source_document_fields(): void
     {
         $this->withoutVite();
-        Achievement::query()->create(['title' => 'Other recognition', 'issuer' => 'Other issuer', 'sort_order' => 6]);
-
         $this->get('/')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('achievements', 2)
-                ->where('achievements.0.title', 'Scam Ready ASEAN Master Trainer')
-                ->where('achievements.0.certificate_preview_url', '/images/recognitions/scam-ready-asean-certificate.jpg')
-                ->where('achievements.0.achieved_on', null)
-                ->where('achievements.1.certificate_preview_url', null)
-                ->missing('achievements.0.file_url')
-                ->missing('achievements.0.local_path')
-                ->missing('achievements.0.audit_trail')
+                ->where('achievements', function ($items): bool {
+                    $items = collect($items);
+                    $recognition = $items->firstWhere('title', 'Scam Ready ASEAN Master Trainer');
+
+                    return $recognition !== null
+                        && $recognition['certificate_preview_url'] === '/images/recognitions/scam-ready-asean-certificate.jpg'
+                        && $recognition['achieved_on'] === null
+                        && $items->every(fn ($item): bool => ! array_key_exists('file_url', $item)
+                            && ! array_key_exists('local_path', $item)
+                            && ! array_key_exists('audit_trail', $item)
+                            && ($item['title'] === 'Scam Ready ASEAN Master Trainer' || $item['certificate_preview_url'] === null));
+                })
             );
     }
 
